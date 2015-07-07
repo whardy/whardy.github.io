@@ -1,0 +1,67 @@
+==================================================================
+https://keybase.io/whardy
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://whardy.me
+  * I am whardy (https://keybase.io/whardy) on keybase.
+  * I have a public key with fingerprint C401 B212 5D03 2A9B 7973  43AF 4C88 DF6F 2F59 1CFF
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "fingerprint": "c401b2125d032a9b797343af4c88df6f2f591cff",
+            "host": "keybase.io",
+            "key_id": "4c88df6f2f591cff",
+            "kid": "0101f505e74108137104a9c9f03bbbf62b4471b33c24ad773dab8c213e4024872bab0a",
+            "uid": "222049ffff235f3d2d9ab77f13c58019",
+            "username": "whardy"
+        },
+        "service": {
+            "hostname": "whardy.me",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1436292791,
+    "expire_in": 157680000,
+    "prev": "a34adb85b63a679c3b42f4cb411ff7cab3a329081f6f1d9932148fbdf44929b7",
+    "seqno": 2,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.0.20
+Comment: https://keybase.io/crypto
+
+yMITAnicbVJtSBRBGL6zs4+7iiyIiCjaAosO2/nY250zilKiIIogKTC5ZnZ3vE3d
+PffOS40IMrAfWohghIYVYakRFZQRRR8Ikv6RgupHQZ8YQadgnZJYzUr9CHr/zMzz
+Pu8z8z7z9i+Y5Qv6M9Lgm+Zlhe3+oceFNb6SjqV9RyXmGHVS9KhUYc4s3LLLTTfh
+WnZKiko6lgGDACqGjCAlTCUqwohyrGuawSMccoUAnXMpLMWdpFchZBhNmgWWIzBx
+iFmGQP/Dr5hJyEAGXJEVU8VA1gBSgYwp0QmXEWOMRyDDWAUMIR1iaqgqMijTdAiQ
+iWWINRUyymQq5Gpm5CCEMiZcBEQKRwY0CGWqygHSFU0GxCMmTdemVaZgH4lTVzR/
+LCwJLG3ppmeA18c/+QKxD0sJ10k5ulMp4HgqlYh6Vam6xAzNZLE/AjFm2YZwUBSk
+TTdpObYUBYKppyxPEWAUgQSqBIQlszZhuWbM8hiKGtFkEd41ZlpIUiS6ZZrCIohG
+VKIjhqEwnWEAOFd1yhBFkAjDhKfAIARBgDXODI4xgeKbJK+latuRolA8k5YLyaRV
+btNUjWtKx548Ohjw+YO+2bk53gz4gvMW/Z2Msu1zfWd+rVj4fVsh2hz6FAht2tNa
+PHk6nXFD9Qs+5RYPVU1c+9HZkL8/3Hw18uXlJXtgfvfWE2NjuRWxiqb43eS49Wpq
+Y9/P3ZvadhyfdtdVn4ySCxOLWXibgYdbem6QyePBJaP5gcaP/ucNhzbcr9b3vg5l
+6xorJ7bsW7buwOVTndMv1OUt3dmdt0c6B0ri40/L7hS/5fdWLb40J/uwR127sMWY
+12vsenqlNZPXNPj+XHBEz5bcGk2fv76769lZs8p+GA0V1RYlhqUPHyfa1tR/zRm+
++aC0ucveWPnodPHh3vbS2e7nl+s7fuH+1b0GbZi28nZlLnZHB7rn9wfaglMr34W/
+/QYphSeV
+=pYDR
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/whardy
+
+==================================================================
