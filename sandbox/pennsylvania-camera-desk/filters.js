@@ -29,7 +29,8 @@ export function prepareCameras(cameras, overrides = {}) {
     seen.add(id);
     return true;
   }).map(camera => {
-    const county = String(overrides[camera.id]?.county || camera.county || '').replace(/\s+county$/i, '').trim();
+    const countyLabel = String(overrides[camera.id]?.county || camera.county || '').replace(/\s+county$/i, '').trim();
+    const county = countyLabel.toLowerCase() === 'mckean' ? 'McKean' : countyLabel;
     const metro = countyMetro.get(county.toLowerCase()) || (camera.region && camera.region !== 'Pennsylvania' ? camera.region : 'Border & unlocated cameras');
     const result = {...camera, id:String(camera.id), county, metro, road:String(camera.road || 'Other roads')};
     result.searchText = normalize([result.name, result.id, result.siteId, result.road, result.county, result.metro, result.region].join(' '));
