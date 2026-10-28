@@ -1,0 +1,349 @@
+{
+  "generatedAt": "2026-10-28T22:53:11.836517Z",
+  "catalogFetchedAt": "2026-10-28T22:49:02.052821Z",
+  "source": "PennDOT open data county boundaries",
+  "sourceUrl": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0",
+  "queryUrl": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0/query?where=1%3D1&outFields=COUNTY_NAME&returnGeometry=true&outSR=4326&f=geojson",
+  "method": "Point in full-resolution PennDOT county polygons, requested in WGS84 (EPSG:4326); existing catalog counties unchanged",
+  "boundaryCountyCount": 67,
+  "candidateCount": 82,
+  "assignedCount": 78,
+  "overrides": {
+    "4691": {
+      "county": "Berks",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4692": {
+      "county": "Allegheny",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4693": {
+      "county": "Lackawanna",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4694": {
+      "county": "Fulton",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4697": {
+      "county": "Westmoreland",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4696": {
+      "county": "Fulton",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4749": {
+      "county": "Washington",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4695": {
+      "county": "Washington",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4755": {
+      "county": "Montgomery",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4698": {
+      "county": "Berks",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4701": {
+      "county": "Butler",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4700": {
+      "county": "Washington",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4748": {
+      "county": "Allegheny",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4699": {
+      "county": "Greene",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4703": {
+      "county": "Mercer",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4702": {
+      "county": "Butler",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4713": {
+      "county": "Venango",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4707": {
+      "county": "Centre",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4714": {
+      "county": "Clarion",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4718": {
+      "county": "Clarion",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4715": {
+      "county": "Jefferson",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4705": {
+      "county": "Mercer",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4708": {
+      "county": "Clinton",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4709": {
+      "county": "Clinton",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4711": {
+      "county": "Luzerne",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4750": {
+      "county": "Columbia",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4710": {
+      "county": "Columbia",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4706": {
+      "county": "Clearfield",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4704": {
+      "county": "Clearfield",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4717": {
+      "county": "Clearfield",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4716": {
+      "county": "Centre",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4712": {
+      "county": "Monroe",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4766": {
+      "county": "Mercer",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4721": {
+      "county": "Schuylkill",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4726": {
+      "county": "Dauphin",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4767": {
+      "county": "Franklin",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4720": {
+      "county": "Schuylkill",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4722": {
+      "county": "Luzerne",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4719": {
+      "county": "Susquehanna",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4723": {
+      "county": "Susquehanna",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4727": {
+      "county": "Lebanon",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4725": {
+      "county": "Cumberland",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4724": {
+      "county": "Cumberland",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4728": {
+      "county": "York",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4729": {
+      "county": "York",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4730": {
+      "county": "Wayne",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4731": {
+      "county": "Erie",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4762": {
+      "county": "Erie",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4732": {
+      "county": "Philadelphia",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4760": {
+      "county": "Blair",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4761": {
+      "county": "Centre",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4772": {
+      "county": "Union",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4736": {
+      "county": "Indiana",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4740": {
+      "county": "Montgomery",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4758": {
+      "county": "Somerset",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4754": {
+      "county": "Monroe",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4738": {
+      "county": "Northumberland",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4757": {
+      "county": "Somerset",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4751": {
+      "county": "Crawford",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4734": {
+      "county": "Venango",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4735": {
+      "county": "Tioga",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4739": {
+      "county": "Somerset",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4752": {
+      "county": "McKean",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4765": {
+      "county": "Somerset",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4756": {
+      "county": "Cambria",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4746": {
+      "county": "Mifflin",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4742": {
+      "county": "Juniata",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4764": {
+      "county": "Sullivan",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4759": {
+      "county": "Chester",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4737": {
+      "county": "York",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4743": {
+      "county": "Mifflin",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4741": {
+      "county": "Perry",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4744": {
+      "county": "Venango",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4745": {
+      "county": "Indiana",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4763": {
+      "county": "Potter",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4753": {
+      "county": "Bradford",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "4768": {
+      "county": "Wyoming",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    },
+    "6375": {
+      "county": "Adams",
+      "source": "https://gis.penndot.pa.gov/gis/rest/services/opendata/countyboundary/MapServer/0"
+    }
+  },
+  "unresolved": [
+    {
+      "id": "6310",
+      "reason": "No polygon match",
+      "matches": [],
+      "lat": 41.17667,
+      "lon": -80.539452
+    },
+    {
+      "id": "6309",
+      "reason": "No polygon match",
+      "matches": [],
+      "lat": 41.173561,
+      "lon": -80.579903
+    },
+    {
+      "id": "6364",
+      "reason": "Invalid Pennsylvania coordinates"
+    },
+    {
+      "id": "6365",
+      "reason": "Invalid Pennsylvania coordinates"
+    }
+  ]
+}
