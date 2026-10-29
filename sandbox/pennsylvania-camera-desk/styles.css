@@ -41,8 +41,8 @@ svg { display: block; flex-shrink: 0; }
 .brand-mark { width: 41px; height: 41px; color: var(--amber); }
 .brand-divider { margin: 0 5px; color: var(--amber); font-weight: 400; }
 .brand-light { font-weight: 450; letter-spacing: 1.1px; }
-.state-nav { align-self: stretch; display: flex; gap: 25px; align-items: stretch; font-size: 13px; }
-.state-nav a { display: flex; align-items: center; gap: 6px; color: #bfcbd1; position: relative; transition: color .15s; }
+.state-nav { align-self: stretch; display: flex; gap: 20px; align-items: stretch; font-size: 13px; }
+.state-nav a { display: flex; align-items: center; min-height: 44px; white-space: nowrap; gap: 6px; color: #bfcbd1; position: relative; transition: color .15s; }
 .state-nav a:hover, .state-nav a.current { color: #fff; }
 .state-nav a.current::after { content: ''; position: absolute; bottom: 13px; left: 0; width: 100%; height: 2px; background: var(--amber); }
 .state-abbr { display: none; }
@@ -336,3 +336,18 @@ body.dialog-open { overflow: hidden; }
 
 .source-warning { color: #8a5917; font-size: 11px; margin: 7px 0; }
 body.view-map .pagination, body.view-map .top-pagination { display: none; }
+
+/* Keep every state reachable in the header, including narrow phones. */
+@media (max-width: 1000px) {
+  .state-full { display: none; }
+  .state-abbr { display: inline; }
+  .state-nav { gap: 8px; }
+  .state-nav a { min-width: 44px; justify-content: center; }
+}
+@media (max-width: 700px) {
+  .header-inner { flex-wrap: wrap; gap: 4px; padding-top: 12px; padding-bottom: 0; }
+  .brand { flex-basis: 100%; }
+  .state-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; width: 100%; font-size: 12px; }
+  .state-nav a { min-width: 0; min-height: 44px; }
+  .state-nav a.current::after { left: 10%; bottom: 5px; width: 80%; }
+}
