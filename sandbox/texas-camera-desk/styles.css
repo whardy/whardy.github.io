@@ -319,7 +319,7 @@ body.view-map #map, #results[data-view='map'] #map { height: min(70vh, 800px); m
   .dialog-header h2 { font-size: 19px; }
   .dialog-footer { padding: 15px 17px; flex-direction: column; align-items: stretch; gap: 12px; }
   .dialog-footer p { font-size: 11px; }
-  .dialog-footer > div { justify-content: space-between; }
+  .dialog-footer > div { display: grid; grid-template-columns: 1fr; }
   .dialog-media img, .dialog-media video { max-height: calc(100dvh - 300px); min-height: 160px; }
 }
 @media (prefers-reduced-motion: reduce) {
