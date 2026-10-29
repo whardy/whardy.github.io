@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b40">
+  <meta name="description" content="Explore Virginia traffic cameras by metro area, county or city, and road. A responsive camera wall and map with public Virginia 511 snapshots and live video where available.">
+  <title>Virginia / Camera Desk — Virginia Traffic Cameras</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%23102b40'/%3E%3Cpath d='M19 49 27 15h10l8 34M32 20v8m0 8v8' stroke='%2321dbc8' stroke-width='4' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script src="vendor/leaflet.js" defer></script>
+  <script src="vendor/hls.min.js" defer></script>
+  <script src="app.js?v=4" type="module"></script>
+</head>
+<body class="view-wall">
+  <noscript><p>This camera explorer needs JavaScript. <a href="https://511.vdot.virginia.gov/">Visit the official Virginia 511 camera directory.</a></p></noscript>
+  <a class="skip-link" href="#results">Skip to cameras</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="Virginia Camera Desk home">
+        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M4 6h36v32H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m12 31 7-18h6l7 18M22 18v4m0 4v4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span>VIRGINIA <span class="brand-divider">/</span> <span class="brand-light">CAMERA DESK</span></span>
+      </a>
+      <nav class="state-nav" aria-label="Camera desks">
+        <a href="./" class="current" aria-current="page"><span class="state-abbr">VA</span><span class="state-full">Virginia</span></a>
+        <a href="../pennsylvania-camera-desk/"><span class="state-abbr">PA</span><span class="state-full">Pennsylvania</span><span aria-hidden="true">↗</span></a>
+        <a href="../ohio-road-atlas/"><span class="state-abbr">OH</span><span class="state-full">Ohio</span><span aria-hidden="true">↗</span></a>
+        <a href="../wv511-camera-desk/"><span class="state-abbr">WV</span><span class="state-full">West Virginia</span><span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow"><span class="signal-dot" aria-hidden="true"></span> VIRGINIA ROAD NETWORK</p>
+        <h1 id="page-title">Virginia <span>traffic cameras.</span></h1>
+        <p class="intro-copy">From the mountains to the coast. Find your road. See what’s ahead.</p>
+      </div>
+      <div class="catalog-stats" aria-label="Camera catalog statistics">
+        <div><strong id="catalog-count">—</strong><span>camera sites</span></div>
+        <div><strong id="metro-count">—</strong><span>metros & regions</span></div>
+        <div class="catalog-provider"><span class="provider-mark" aria-hidden="true">511</span><span>VDOT / Virginia 511<br>snapshots + live video</span></div>
+      </div>
+    </section>
+
+    <section class="filter-panel" aria-label="Find cameras">
+      <div class="filter-primary">
+        <label class="field search-field" for="search"><span>Find a camera</span><span class="input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.1 4.1"/></svg><input id="search" aria-label="Find a camera" type="search" placeholder="Search a road, place or camera…" autocomplete="off" spellcheck="false"></span></label>
+        <label class="field" for="metro"><span>Metro / region</span><select id="metro" aria-label="Metro / region"><option value="">All Virginia</option></select></label>
+      </div>
+      <div class="filter-secondary">
+        <label class="field" for="county"><span>County / city</span><select id="county" aria-label="County / city"><option value="">All counties & cities</option></select></label>
+        <label class="field" for="road"><span>Road</span><select id="road" aria-label="Road"><option value="">All roads</option></select></label>
+        <div class="filter-actions">
+          <button id="favorites-toggle" class="button secondary-button" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9z"/></svg>Saved cameras</button>
+          <button id="reset-filters" class="text-button" type="button">Reset filters <span aria-hidden="true">↺</span></button>
+        </div>
+      </div>
+      <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
+    </section>
+
+    <main id="results" data-view="wall">
+      <div class="results-toolbar">
+        <div class="results-heading"><h2 id="result-count">Loading cameras</h2><p id="result-detail" role="status" aria-live="polite">Preparing your view of Virginia.</p></div>
+        <div class="view-controls" role="group" aria-label="Camera layout">
+          <button id="view-wall" type="button" aria-pressed="true" title="Camera wall"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx=".5"/><rect x="12" y="3" width="5" height="5" rx=".5"/><rect x="3" y="12" width="5" height="5" rx=".5"/><rect x="12" y="12" width="5" height="5" rx=".5"/></svg><span>Wall</span></button>
+          <button id="view-split" type="button" aria-pressed="false" title="Map and cameras"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="1"/><path d="M10 3v14M3 10h7"/></svg><span>Split</span></button>
+          <button id="view-map" type="button" aria-pressed="false" title="Camera map"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m3 5 4-2 6 2 4-2v12l-4 2-6-2-4 2zM7 3v12m6-10v12"/></svg><span>Map</span></button>
+        </div>
+      </div>
+
+      <div class="feed-toolbar">
+        <div class="refresh-controls"><label class="switch-label" for="auto-refresh"><input id="auto-refresh" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span><span>Refresh every 60s</span></label><button id="refresh-button" class="refresh-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 7a6.5 6.5 0 1 0 .3 5M16 3v4h-4"/></svg>Refresh now</button></div>
+        <div class="top-pagination" aria-label="Quick page navigation"><button id="top-previous-page" type="button" aria-label="Previous page" disabled>←</button><span id="top-page-label">Page 1</span><button id="top-next-page" type="button" aria-label="Next page" disabled>→</button></div>
+      </div>
+
+      <div class="results-layout">
+        <section id="map-section" class="map-section" hidden aria-label="Camera map">
+          <div class="map-toolbar"><span><span class="map-dot" aria-hidden="true"></span>Camera locations</span><button id="fit-map" class="text-button" type="button">Fit cameras <span aria-hidden="true">⌖</span></button></div>
+          <div id="map" aria-label="Map of Virginia traffic cameras"></div>
+          <div class="map-footer"><label for="map-scope"><input id="map-scope" type="checkbox"> Only cameras in this map area</label><span>Select a marker to open a camera.</span></div>
+        </section>
+        <div class="wall-section">
+          <div id="camera-grid" class="camera-grid" aria-label="Traffic camera snapshots"></div>
+          <section id="empty-state" class="empty-state" hidden aria-live="polite"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="14" width="34" height="24" rx="4"/><path d="m15 14 4-6h10l4 6"/><circle cx="24" cy="26" r="7"/><path d="m8 7 32 34"/></svg><h3>No cameras in this view</h3><p>Try another area, a wider search, or reset your filters.</p></section>
+        </div>
+      </div>
+
+      <nav class="pagination" aria-label="Camera pages"><p id="pagination-summary">25 cameras per page</p><div><button id="previous-page" class="button secondary-button" type="button" disabled><span aria-hidden="true">←</span> Previous</button><span id="page-label" aria-live="polite">Page 1 of 1</span><button id="next-page" class="button secondary-button" type="button" disabled>Next <span aria-hidden="true">→</span></button></div></nav>
+    </main>
+
+    <aside class="source-note" aria-label="About these feeds"><span class="info-symbol" aria-hidden="true">i</span><div><p id="source-note">Images are supplied by VDOT / Virginia 511. Availability and image age vary by camera; some feeds may be delayed or temporarily offline.</p><p class="catalog-date">Camera catalog: <span id="catalog-date">loading</span>. Images refresh separately from this catalog.</p></div><a href="https://511.vdot.virginia.gov/" target="_blank" rel="noopener noreferrer">Open Virginia 511 <span aria-hidden="true">↗</span></a></aside>
+    <details class="data-details"><summary>About the camera data</summary><p>Camera locations and feeds are provided by VDOT / Virginia 511. Metro and regional groups are browsing areas, not official metropolitan boundaries. County and city filters help narrow the catalog. Only groups with cameras appear.</p><p>Snapshots refresh every 60 seconds while visible. “Fetched” records when your browser loaded the image, not when the camera captured it. Sources can return delayed images or offline notices. Locations are from the dated catalog above; reloading the page does not discover new cameras until the catalog is rebuilt.</p><p id="audit-summary"></p><p>Open a camera and choose “Watch live” to start video where available. Only the selected video plays. Closing it or hiding this tab stops playback. Availability depends on the source and your browser. Saved cameras stay in this browser.</p><p><a href="./source-audit.json" target="_blank" rel="noopener">View dated image check ↗</a> · <a href="https://511.vdot.virginia.gov/" target="_blank" rel="noopener noreferrer">Official camera directory ↗</a></p></details>
+    <footer class="site-footer"><span>VIRGINIA <span class="footer-slash">/</span> CAMERA DESK</span><p>Independent viewer · Camera images/data: VDOT / Virginia 511</p><a href="#page-title">Back to top ↑</a></footer>
+  </div>
+
+  <dialog id="camera-dialog" class="camera-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-header"><div><p class="eyebrow">VIRGINIA CAMERA</p><h2 id="dialog-title">Camera</h2><p id="dialog-subtitle"></p></div><button id="dialog-close" class="icon-button" type="button" aria-label="Close camera">✕</button></div>
+    <div class="media-switch" role="group" aria-label="Camera media"><button id="dialog-snapshot" type="button" aria-pressed="true">Snapshot</button><button id="dialog-play" type="button" aria-pressed="false">Watch live</button></div>
+    <div id="dialog-media" class="dialog-media"></div>
+    <p id="dialog-video-status" class="video-status" role="status" aria-live="polite"></p>
+    <div class="dialog-footer"><p id="dialog-status" role="status">Snapshot supplied by VDOT / Virginia 511.</p><div><button id="dialog-save" class="button secondary-button" type="button" aria-pressed="false">Save camera</button><a id="dialog-source" class="button primary-button" href="https://511.vdot.virginia.gov/" target="_blank" rel="noopener noreferrer">Open Virginia 511 <span aria-hidden="true">↗</span></a></div></div>
+  </dialog>
+</body>
+</html>
