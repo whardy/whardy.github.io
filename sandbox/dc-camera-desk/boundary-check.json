@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-03T23:15:30.428231Z",
+  "sources": {
+    "wards": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Administrative_Other_Boundaries_WebMercator/MapServer/53",
+    "quadrants": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Administrative_Other_Boundaries_WebMercator/MapServer/11"
+  },
+  "wardBoundaryCount": 8,
+  "quadrantBoundaryCount": 4,
+  "wardAssignedCount": 137,
+  "quadrantAssignedCount": 137,
+  "unassigned": []
+}

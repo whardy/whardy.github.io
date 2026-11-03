@@ -338,7 +338,7 @@ body.dialog-open { overflow: hidden; }
 body.view-map .pagination, body.view-map .top-pagination { display: none; }
 
 /* Keep every state reachable in the header, including narrow phones. */
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   .state-full { display: none; }
   .state-abbr { display: inline; }
   .state-nav { gap: 8px; }
@@ -347,7 +347,10 @@ body.view-map .pagination, body.view-map .top-pagination { display: none; }
 @media (max-width: 700px) {
   .header-inner { flex-wrap: wrap; gap: 4px; padding-top: 12px; padding-bottom: 0; }
   .brand { flex-basis: 100%; }
-  .state-nav { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; width: 100%; font-size: 12px; }
+  .state-nav { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px; width: 100%; font-size: 12px; }
   .state-nav a { min-width: 0; min-height: 44px; }
   .state-nav a.current::after { left: 10%; bottom: 5px; width: 80%; }
 }
+
+/* Eight camera desks remain visible at narrow widths. */
+@media (min-width:701px) and (max-width:1500px){.state-full{display:none}.state-abbr{display:inline}.state-nav{gap:8px}.state-nav a{min-width:38px;justify-content:center}}
