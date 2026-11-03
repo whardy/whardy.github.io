@@ -475,3 +475,6 @@ input[type='search'], select { background-color: #fbf9f3; border-color: #dcd7cc;
 }
 
 @media (min-width: 1051px) and (max-width: 1500px) { .state-full { display: none; } .state-abbr { display: inline; } .state-nav { gap: 10px; } .state-nav a { min-width: 40px; justify-content: center; } }
+
+/* Flexible camera navigation, including the cross-state Trip Desk. */
+@media (max-width:700px){.state-nav{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px}.state-nav a{min-width:0;padding-inline:0}}

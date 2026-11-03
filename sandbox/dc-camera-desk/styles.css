@@ -505,3 +505,6 @@ input[type='search'], select { border-radius: 3px; background-color: #f7f5f0; }
 
 .active-filters button, .active-filters .filter-chip { border-color: #e1c5c3; color: #8f2029; }
 .camera-card.is-saved { border-color: var(--accent); }
+
+/* Flexible camera navigation, including the cross-state Trip Desk. */
+@media (max-width:700px){.state-nav{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px}.state-nav a{min-width:0;padding-inline:0}}

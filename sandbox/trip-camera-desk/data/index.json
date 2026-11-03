@@ -1,0 +1,378 @@
+{
+  "schemaVersion": 1,
+  "builtAt": "2026-11-03T23:54:34.852746Z",
+  "totals": {
+    "statesAndDistricts": 9,
+    "views": 13993,
+    "locations": 13955,
+    "withCoordinates": 13990,
+    "withoutCoordinates": 3,
+    "mediaCounts": {
+      "video": 4148,
+      "snapshot": 8688,
+      "official": 1157
+    },
+    "availabilityCounts": {
+      "available": 11920,
+      "unavailable": 945,
+      "stale": 36,
+      "official": 1092
+    }
+  },
+  "states": [
+    {
+      "state": "WV",
+      "stateName": "West Virginia",
+      "file": "data/WV.json",
+      "siteUrl": "https://whardy.github.io/sandbox/wv511-camera-desk/",
+      "views": 133,
+      "locations": 133,
+      "bounds": [
+        -82.40494,
+        37.2735,
+        -77.764616,
+        40.09393
+      ],
+      "withCoordinates": 133,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "video": 133
+      },
+      "availabilityCounts": {
+        "available": 108,
+        "unavailable": 25
+      },
+      "imageStatusCounts": {
+        "unchecked": 133
+      },
+      "videoStatusCounts": {
+        "available": 108,
+        "unavailable": 25
+      },
+      "sourceUpdatedAt": "2026-10-25T22:03:54.301Z",
+      "auditCheckedAt": "2026-10-25T19:31:43.296Z",
+      "source": "WV511",
+      "sourceUrl": "https://wv511.org/",
+      "catalogUrl": "https://whardy.github.io/sandbox/wv511-camera-desk/data/cameras.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "6f8e54177685e0fdee57add152d8de29c8eacf8335e97882658c1a721e1c3b90",
+      "bytes": 155152
+    },
+    {
+      "state": "OH",
+      "stateName": "Ohio",
+      "file": "data/OH.json",
+      "siteUrl": "https://whardy.github.io/sandbox/ohio-road-atlas/",
+      "views": 1158,
+      "locations": 1154,
+      "bounds": [
+        -84.834216,
+        38.41215,
+        -80.52362,
+        41.93517
+      ],
+      "withCoordinates": 1158,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 1158
+      },
+      "availabilityCounts": {
+        "available": 1115,
+        "stale": 35,
+        "unavailable": 8
+      },
+      "imageStatusCounts": {
+        "available": 1115,
+        "stale": 35,
+        "unavailable": 8
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-10-25T21:38:19.193Z",
+      "auditCheckedAt": "2026-10-25T20:05:10.883693+00:00",
+      "source": "OHGO",
+      "sourceUrl": "https://www.ohgo.com/",
+      "catalogUrl": "https://whardy.github.io/sandbox/ohio-road-atlas/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "0ad15684caf88704e949b7a7c96a3a453721e204247b492f4e168ce189a1923a",
+      "bytes": 1383213
+    },
+    {
+      "state": "PA",
+      "stateName": "Pennsylvania",
+      "file": "data/PA.json",
+      "siteUrl": "https://whardy.github.io/sandbox/pennsylvania-camera-desk/",
+      "views": 1564,
+      "locations": 1564,
+      "bounds": [
+        -80.579903,
+        39.72343,
+        -74.7137,
+        42.250584
+      ],
+      "withCoordinates": 1562,
+      "withoutCoordinates": 2,
+      "mediaCounts": {
+        "snapshot": 1564
+      },
+      "availabilityCounts": {
+        "available": 1435,
+        "unavailable": 129
+      },
+      "imageStatusCounts": {
+        "available": 1435,
+        "unavailable": 129
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-10-28T22:49:02.052821Z",
+      "auditCheckedAt": "2026-10-28T22:51:53.582674Z",
+      "source": "511PA / PennDOT and participating agencies",
+      "sourceUrl": "https://511pa.com/cctv",
+      "catalogUrl": "https://whardy.github.io/sandbox/pennsylvania-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 78,
+      "sha256": "e751711bbee5f2f3645c29824abdc82cfd2042331b07f6a8f7db18fdb4b17316",
+      "bytes": 1843725
+    },
+    {
+      "state": "VA",
+      "stateName": "Virginia",
+      "file": "data/VA.json",
+      "siteUrl": "https://whardy.github.io/sandbox/virginia-camera-desk/",
+      "views": 1722,
+      "locations": 1722,
+      "bounds": [
+        -83.111006,
+        36.54263,
+        -75.99538,
+        39.44067
+      ],
+      "withCoordinates": 1721,
+      "withoutCoordinates": 1,
+      "mediaCounts": {
+        "video": 1722
+      },
+      "availabilityCounts": {
+        "available": 1674,
+        "unavailable": 48
+      },
+      "imageStatusCounts": {
+        "available": 1667,
+        "unavailable": 55
+      },
+      "videoStatusCounts": {
+        "available": 1660,
+        "unavailable": 62
+      },
+      "sourceUpdatedAt": "2026-10-29T00:00:55.971358Z",
+      "auditCheckedAt": "2026-10-29T00:09:38.119456Z",
+      "source": "Virginia511 / VDOT and participating agencies",
+      "sourceUrl": "https://511.vdot.virginia.gov/",
+      "catalogUrl": "https://whardy.github.io/sandbox/virginia-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 1713,
+      "sha256": "ecfa103c68c9f1293a733cf9214aeba0960bdcf424ff8a28f06172b672d2f1eb",
+      "bytes": 2450933
+    },
+    {
+      "state": "TX",
+      "stateName": "Texas",
+      "file": "data/TX.json",
+      "siteUrl": "https://whardy.github.io/sandbox/texas-camera-desk/",
+      "views": 5185,
+      "locations": 5185,
+      "bounds": [
+        -106.62547699999999,
+        25.910175,
+        -93.7281,
+        36.015988
+      ],
+      "withCoordinates": 5185,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 4028,
+        "official": 1157
+      },
+      "availabilityCounts": {
+        "available": 3644,
+        "unavailable": 448,
+        "stale": 1,
+        "official": 1092
+      },
+      "imageStatusCounts": {
+        "available": 3644,
+        "unavailable": 383,
+        "stale": 1,
+        "official": 1157
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-10-29T00:02:26.523112Z",
+      "auditCheckedAt": "2026-10-29T00:07:53.621029Z",
+      "source": "TxDOT ITS and City of Austin",
+      "sourceUrl": "https://www.txdot.gov/discover/live-traffic-cameras.html",
+      "catalogUrl": "https://whardy.github.io/sandbox/texas-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 5182,
+      "sha256": "542cae21f72504b0987d6b63f57015a2861e99951dd9334155d33228e4cce409",
+      "bytes": 6471405
+    },
+    {
+      "state": "MD",
+      "stateName": "Maryland",
+      "file": "data/MD.json",
+      "siteUrl": "https://whardy.github.io/sandbox/maryland-camera-desk/",
+      "views": 553,
+      "locations": 553,
+      "bounds": [
+        -79.46252,
+        38.064777,
+        -75.068146,
+        39.71775
+      ],
+      "withCoordinates": 553,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "video": 553
+      },
+      "availabilityCounts": {
+        "available": 538,
+        "unavailable": 15
+      },
+      "imageStatusCounts": {
+        "available": 528,
+        "unavailable": 25
+      },
+      "videoStatusCounts": {
+        "available": 536,
+        "unavailable": 17
+      },
+      "sourceUpdatedAt": "2026-11-03T22:57:49.164129Z",
+      "auditCheckedAt": "2026-11-03T23:00:54.397162Z",
+      "source": "Maryland CHART / MDOT SHA",
+      "sourceUrl": "https://chart.maryland.gov/TrafficCameras/GetTrafficCameras",
+      "catalogUrl": "https://whardy.github.io/sandbox/maryland-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "c8ed104ae010b23107492a108f2e3b2a78a04e36410d5c8e345c2c34aaebe90b",
+      "bytes": 813487
+    },
+    {
+      "state": "AZ",
+      "stateName": "Arizona",
+      "file": "data/AZ.json",
+      "siteUrl": "https://whardy.github.io/sandbox/arizona-camera-desk/",
+      "views": 678,
+      "locations": 644,
+      "bounds": [
+        -114.61384,
+        31.347748,
+        -109.0511787,
+        36.9870037100001
+      ],
+      "withCoordinates": 678,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 678
+      },
+      "availabilityCounts": {
+        "available": 585,
+        "unavailable": 93
+      },
+      "imageStatusCounts": {
+        "available": 585,
+        "unavailable": 93
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-11-03T22:58:21.830801Z",
+      "auditCheckedAt": "2026-11-03T23:00:44.555065Z",
+      "source": "ADOT / AZ511 public camera list and map",
+      "sourceUrl": "https://az511.gov/cctv",
+      "catalogUrl": "https://whardy.github.io/sandbox/arizona-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 123,
+      "sha256": "e5370333c22d48479c289d5a27377bef3ef105e1cb51bffbdd7061ed94e0f68d",
+      "bytes": 788103
+    },
+    {
+      "state": "DC",
+      "stateName": "District of Columbia",
+      "file": "data/DC.json",
+      "siteUrl": "https://whardy.github.io/sandbox/dc-camera-desk/",
+      "views": 137,
+      "locations": 137,
+      "bounds": [
+        -77.111605,
+        38.816052,
+        -76.913395,
+        38.990677
+      ],
+      "withCoordinates": 137,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 137
+      },
+      "availabilityCounts": {
+        "available": 59,
+        "unavailable": 78
+      },
+      "imageStatusCounts": {
+        "available": 59,
+        "unavailable": 78
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-11-03T23:15:30.428231Z",
+      "auditCheckedAt": "2026-11-03T23:14:02.604603+00:00",
+      "source": "DDOT public cameras via TrafficView",
+      "sourceUrl": "https://matoc.org/travel-info/",
+      "catalogUrl": "https://whardy.github.io/sandbox/dc-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "10c1ff8c33dad1d2cc23f99bbe03847e922ca281fad4d92f2a250f042987f1c4",
+      "bytes": 178142
+    },
+    {
+      "state": "NY",
+      "stateName": "New York",
+      "file": "data/NY.json",
+      "siteUrl": "https://whardy.github.io/sandbox/new-york-camera-desk/",
+      "views": 2863,
+      "locations": 2863,
+      "bounds": [
+        -79.7384137,
+        40.507726,
+        -72.4112218,
+        44.2896852
+      ],
+      "withCoordinates": 2863,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 1123,
+        "video": 1740
+      },
+      "availabilityCounts": {
+        "available": 2762,
+        "unavailable": 101
+      },
+      "imageStatusCounts": {
+        "available": 2762,
+        "unavailable": 101
+      },
+      "videoStatusCounts": {
+        "available": 1549,
+        "unavailable": 18,
+        "unchecked": 173
+      },
+      "sourceUpdatedAt": "2026-11-03T23:20:33Z",
+      "auditCheckedAt": "2026-11-03T23:35:31Z",
+      "source": "https://api-511x-nysdot.carsprogram.org/cameras/map-features",
+      "sourceUrl": "https://www.ohgo.com/",
+      "catalogUrl": "https://whardy.github.io/sandbox/new-york-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "6d8cf7e8463cdf9eb09b15eb9e32b23328818f423b311daca8a21f50be5f37b2",
+      "bytes": 3428771
+    }
+  ],
+  "notes": [
+    "Listed views are dated catalog entries, not a live count of working feeds or deduplicated physical devices across providers.",
+    "Locations count distinct state/provider/source site identifiers; OH and AZ may contain several views at one location.",
+    "State labels identify source catalogs; some catalogs include adjacent-state border connections.",
+    "Availability is the best available dated media check. Available does not prove image capture time or current playback.",
+    "Image/video capability and dated availability are independent. Video entries can have a working snapshot when their video was unavailable.",
+    "County, independent-city, and DC ward classifications remain distinct. Metro groupings are browsing conveniences.",
+    "Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.",
+    "No camera media was requested or recorded while building these shards."
+  ]
+}

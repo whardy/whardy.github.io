@@ -354,3 +354,6 @@ body.view-map .pagination, body.view-map .top-pagination { display: none; }
 
 /* Eight camera desks remain visible at narrow widths. */
 @media (min-width:701px) and (max-width:1500px){.state-full{display:none}.state-abbr{display:inline}.state-nav{gap:8px}.state-nav a{min-width:38px;justify-content:center}}
+
+/* Flexible camera navigation, including the cross-state Trip Desk. */
+@media (max-width:700px){.state-nav{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px}.state-nav a{min-width:0;padding-inline:0}}

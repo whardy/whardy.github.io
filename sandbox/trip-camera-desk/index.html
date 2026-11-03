@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172824">
+  <meta name="description" content="Plan a trip across state lines and explore public traffic cameras along your route. Live video, refreshing snapshots, maps and saved watchboards in one place.">
+  <title>Trip Camera Desk — Across states. One journey.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23172824'/%3E%3Cpath d='M18 47 27 17h10l9 30M22 35h20M32 21v7m0 9v7' fill='none' stroke='%23d7edb5' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css?v=20261103trip1">
+  <script src="vendor/leaflet.js" defer></script>
+  <script src="vendor/hls.min.js" defer></script>
+  <script src="app.js?v=20261103trip1" type="module"></script>
+</head>
+<body class="mode-plan">
+  <a class="skip-link" href="#main-content">Skip to trip planner</a>
+  <noscript><p class="noscript-message">Trip Camera Desk needs JavaScript to plan routes and display cameras. Use the state camera sites in the navigation for individual state information.</p></noscript>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="Trip Camera Desk home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 36 36"><path d="m9 29 6-22h6l6 22M12 21h12M18 9v5m0 10v5"/></svg></span><span>TRIP <span class="brand-light">CAMERA DESK</span></span></a>
+      <nav class="state-nav" aria-label="State camera desks">
+        <a href="https://whardy.github.io/sandbox/wv511-camera-desk/" aria-label="West Virginia cameras">WV</a>
+        <a href="https://whardy.github.io/sandbox/ohio-road-atlas/" aria-label="Ohio cameras">OH</a>
+        <a href="https://whardy.github.io/sandbox/pennsylvania-camera-desk/" aria-label="Pennsylvania cameras">PA</a>
+        <a href="https://whardy.github.io/sandbox/virginia-camera-desk/" aria-label="Virginia cameras">VA</a>
+        <a href="https://whardy.github.io/sandbox/texas-camera-desk/" aria-label="Texas cameras">TX</a>
+        <a href="https://whardy.github.io/sandbox/maryland-camera-desk/" aria-label="Maryland cameras">MD</a>
+        <a href="https://whardy.github.io/sandbox/arizona-camera-desk/" aria-label="Arizona cameras">AZ</a>
+        <a href="https://whardy.github.io/sandbox/dc-camera-desk/" aria-label="District of Columbia cameras">DC</a>
+        <a href="https://whardy.github.io/sandbox/new-york-camera-desk/" aria-label="New York cameras">NY</a>
+      </nav>
+      <span class="header-note"><span class="status-dot" aria-hidden="true"></span>A clearer road ahead</span>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">THE CROSS-STATE CAMERA DESK</p><h1 id="page-title">Across states. <span>One journey.</span></h1><p class="intro-copy">Plan your route. See the road ahead. Keep your cameras together.</p></div>
+      <div class="catalog-stats" aria-label="Camera catalog statistics"><div><strong id="catalog-total">—</strong><span>listed views</span></div><div><strong id="catalog-sites">—</strong><span>source locations</span></div><div><strong id="catalog-states">—</strong><span>jurisdictions</span></div></div>
+    </section>
+
+    <div class="app-toolbar">
+      <nav class="mode-nav" aria-label="Desk view">
+        <button id="mode-plan" data-mode="plan" class="mode-button is-active" aria-pressed="true" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m3 5 4-2 6 2 4-2v12l-4 2-6-2-4 2zM7 3v12m6-10v12"/></svg>Plan</button>
+        <button id="mode-wall" data-mode="wall" class="mode-button" aria-pressed="false" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="12" y="3" width="5" height="5" rx="1"/><rect x="3" y="12" width="5" height="5" rx="1"/><rect x="12" y="12" width="5" height="5" rx="1"/></svg>Route wall</button>
+        <button id="mode-board" data-mode="board" class="mode-button" aria-pressed="false" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 2.4 4.8 5.3.8-3.9 3.8.9 5.3-4.7-2.5-4.7 2.5.9-5.3L2.3 7.6l5.3-.8z"/></svg>Watchboard</button>
+        <button id="mode-explore" data-mode="explore" class="mode-button" aria-pressed="false" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m13 7-2 4-4 2 2-4z"/></svg>Explore</button>
+      </nav>
+      <div class="utility-actions"><button id="share-trip" class="text-button" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V2m-4 4 4-4 4 4M4 10v7h12v-7"/></svg>Share</button><button id="export-data" class="text-button" type="button">Export</button><button id="import-data" class="text-button" type="button">Import</button><input id="import-file" type="file" accept="application/json,.json" hidden></div>
+    </div>
+    <p id="app-status" class="app-status" role="status" aria-live="polite">Loading the camera catalog…</p>
+
+    <main id="main-content">
+      <div class="planner-area">
+        <aside class="trip-panel" aria-labelledby="trip-title">
+          <div class="panel-heading"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="trip-title">Where are you headed?</h2></div><span class="step-mark" aria-hidden="true">↗</span></div>
+          <form id="trip-form">
+            <div class="journey-inputs">
+              <div class="place-field"><div class="field-label-row"><label for="from-input">Start</label><button id="from-map" class="map-pick" type="button">Pick on map</button></div><div class="place-input-row"><span class="place-indicator start-indicator" aria-hidden="true"></span><input id="from-input" type="text" placeholder="City, address or coordinates" autocomplete="off" spellcheck="false" aria-controls="from-results"><button id="from-search" class="search-place" type="button" aria-label="Search start location"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg></button></div><div id="from-results" class="place-results" aria-label="Start location results"></div></div>
+              <div id="stops-list" class="stops-list"></div>
+              <div class="place-field"><div class="field-label-row"><label for="to-input">Destination</label><button id="to-map" class="map-pick" type="button">Pick on map</button></div><div class="place-input-row"><span class="place-indicator destination-indicator" aria-hidden="true"></span><input id="to-input" type="text" placeholder="Where would you like to go?" autocomplete="off" spellcheck="false" aria-controls="to-results"><button id="to-search" class="search-place" type="button" aria-label="Search destination"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg></button></div><div id="to-results" class="place-results" aria-label="Destination results"></div></div>
+            </div>
+            <button id="add-stop" class="text-button add-stop" type="button"><span aria-hidden="true">＋</span>Add a stop</button>
+            <div class="route-preferences"><label class="check-label"><input id="avoid-tolls" type="checkbox">Avoid tolls</label><label class="check-label"><input id="avoid-highways" type="checkbox">Avoid highways</label></div>
+            <div class="route-action-row"><button id="calculate-route" class="button primary-button" type="submit">Find my route <span aria-hidden="true">→</span></button><button id="clear-route" class="text-button" type="button">Clear</button></div>
+            <p id="routing-status" class="small-note" role="status">Search a place or choose two points on the map.</p>
+          </form>
+          <div class="saved-trip-tools"><label class="field" for="saved-trip-name"><span>Trip name</span><input id="saved-trip-name" type="text" maxlength="80" placeholder="My next road trip"></label><label for="saved-trip-select">Saved trips</label><div class="saved-trip-row"><select id="saved-trip-select"><option value="">Choose a saved trip</option></select><button id="load-trip" class="small-button" type="button">Load</button></div><div class="saved-trip-actions"><button id="save-trip" class="text-button" type="button">Save this trip</button><button id="delete-trip" class="text-button danger-link" type="button">Delete saved trip</button></div></div>
+          <details class="corridor-details"><summary>Follow a highway</summary><div class="corridor-fields"><label class="field" for="highway-select"><span>Highway</span><select id="highway-select"><option value="">Choose a highway</option></select></label><label class="field" for="travel-direction"><span>Travel direction</span><select id="travel-direction"><option value="">Any / unknown</option><option value="N">Northbound</option><option value="S">Southbound</option><option value="E">Eastbound</option><option value="W">Westbound</option></select></label></div><p class="small-note">Use the start and destination to choose a stretch of highway.</p><button id="apply-corridor" class="small-button" type="button">Apply highway filter</button></details>
+        </aside>
+
+        <section id="map-section" class="map-section" aria-label="Trip and camera map">
+          <div class="map-heading"><div><span class="status-dot" aria-hidden="true"></span><h2 id="map-title">The road ahead</h2></div><button id="fit-route" class="text-button" type="button">Fit route <span aria-hidden="true">⌖</span></button></div>
+          <div class="map-wrap"><div id="map" aria-label="Interactive trip and traffic camera map"></div><p id="map-select-hint" class="map-select-hint" role="status" hidden>Select a location on the map.</p></div>
+          <div id="route-summary" class="route-summary"><div><span>Distance</span><strong id="route-distance">—</strong></div><div><span>Estimated drive</span><strong id="route-duration">—</strong></div><div><span>Nearby cameras</span><strong id="route-camera-count">—</strong></div><div class="coverage-stat"><span>Camera coverage</span><strong id="route-coverage">Plan a trip to begin</strong></div></div>
+          <div id="route-alternatives" class="route-alternatives" aria-label="Route alternatives"></div><details id="coverage-details" class="coverage-details" hidden><summary>Camera coverage gaps</summary><p id="coverage-summary" class="small-note"></p><ol id="coverage-gaps"></ol></details>
+          <p class="map-footnote">Camera locations are approximate. Images show current conditions, not conditions predicted for your arrival.</p>
+        </section>
+      </div>
+
+      <section id="lookahead-panel" class="lookahead-panel" aria-labelledby="lookahead-title" hidden>
+        <div class="lookahead-heading"><div><p class="eyebrow">ALONG YOUR ROUTE</p><h2 id="lookahead-title">A little further ahead</h2></div><span id="lookahead-label" class="lookahead-value">Start of trip</span></div>
+        <label class="sr-only" for="lookahead-range">Position along the route</label><input id="lookahead-range" class="route-slider" type="range" min="0" max="1000" step="1" value="0">
+        <div class="lookahead-bottom"><p id="lookahead-count" class="small-note">Cameras near this point</p><div class="sampling-options"><label class="check-label"><input id="sample-cameras" type="checkbox">Representative cameras</label><label class="inline-field" for="sample-spacing">Every <select id="sample-spacing"><option value="5">5 miles</option><option value="10" selected>10 miles</option><option value="20">20 miles</option></select></label></div></div>
+        <div id="lookahead-cameras" class="lookahead-cameras"></div>
+      </section>
+
+      <section id="board-panel" class="board-panel" aria-labelledby="board-title">
+        <div class="board-heading"><div><p class="eyebrow">YOUR PERSONAL CAMERA WALL</p><h2 id="board-title">Keep an eye on your route.</h2><p id="board-note" class="small-note">Pin cameras from any state. Watchboards are saved in this browser.</p></div><button id="board-add-route" class="button secondary-button" type="button">Add route cameras</button></div>
+        <div class="board-controls"><label class="field" for="board-select"><span>Watchboard</span><select id="board-select"><option value="">Choose a watchboard</option></select></label><label class="field" for="board-name"><span>Board name</span><input id="board-name" type="text" maxlength="80" placeholder="My next road trip"></label><button id="new-board" class="button primary-button" type="button">New board</button><button id="rename-board" class="small-button" type="button">Rename</button><button id="board-share" class="small-button" type="button">Share board</button><button id="delete-board" class="text-button danger-link" type="button">Delete</button></div>
+      </section>
+
+      <section id="live-tray" class="live-tray" aria-labelledby="live-title" hidden>
+        <div class="live-heading"><div><p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>LIVE VIDEO</p><h2 id="live-title">Watch together</h2><p class="small-note">Independent feeds show their own capture times. Streams are not synchronized.</p></div><div class="live-controls"><label class="inline-field" for="live-limit">Video slots <select id="live-limit"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label><span id="live-count" class="small-note">0 active</span><button id="stop-all-video" class="small-button" type="button">Stop all</button></div></div>
+        <div id="live-slots" class="live-slots"></div>
+      </section>
+
+      <section id="camera-results" class="camera-results" aria-labelledby="results-title">
+        <div class="results-heading-row"><div class="results-heading" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="results-eyebrow">CAMERAS FOR YOUR JOURNEY</p><h2 id="results-title"><span id="result-count">—</span> <span id="result-detail">camera views</span></h2></div><div class="refresh-tools"><label class="check-label"><input id="snapshot-refresh" type="checkbox" checked>Refresh visible snapshots</label><button id="refresh-visible" class="text-button" type="button"><span aria-hidden="true">↻</span>Refresh now</button></div></div>
+        <div class="filter-panel" aria-label="Filter cameras">
+          <label class="field query-field" for="query"><span>Find a camera</span><input id="query" type="search" placeholder="Road, place or camera ID" autocomplete="off"></label>
+          <label class="field" for="state"><span>State</span><select id="state"><option value="">All states + DC</option></select></label>
+          <label class="field" for="metro"><span>City / area</span><select id="metro"><option value="">All areas</option></select></label>
+          <label class="field" for="jurisdiction"><span>County / jurisdiction</span><select id="jurisdiction"><option value="">All jurisdictions</option></select></label>
+          <label class="field" for="road"><span>Road</span><select id="road"><option value="">All roads</option></select></label>
+          <label class="field" for="media"><span>Media</span><select id="media"><option value="">All media</option><option value="video">Live video</option><option value="snapshot">Refreshing snapshot</option><option value="official">Official viewer</option></select></label>
+          <label class="field" for="status"><span>Last check</span><select id="status"><option value="">All availability</option><option value="available">Checked available</option><option value="unavailable">Unavailable / disabled</option><option value="stale">Older image at last check</option><option value="official">Official viewer only</option><option value="unchecked">Not checked</option></select></label>
+          <label class="field" for="corridor-width"><span>Within route</span><select id="corridor-width"><option value="0.25">¼ mile</option><option value="0.5">½ mile</option><option value="1" selected>1 mile</option><option value="3">3 miles</option><option value="5">5 miles</option></select></label>
+          <button id="reset-filters" class="text-button reset-filters" type="button">Reset filters <span aria-hidden="true">↺</span></button>
+        </div>
+        <div id="active-filters" class="active-filters" aria-label="Active camera filters"></div>
+        <div id="camera-grid" class="camera-grid" aria-label="Camera views"></div>
+        <section id="empty-state" class="empty-state" hidden><span class="empty-mark" aria-hidden="true">⌖</span><h3>No cameras in this view</h3><p>Plan a trip, widen the search area, or explore all camera locations.</p></section>
+        <nav class="pagination" aria-label="Camera pages"><p id="pagination-summary">25 cameras per page</p><div><button id="previous-page" class="button secondary-button" type="button" disabled>← Previous</button><span id="page-label">1 / 1</span><button id="next-page" class="button secondary-button" type="button" disabled>Next →</button></div></nav>
+      </section>
+    </main>
+
+    <aside class="source-note"><span class="info-symbol" aria-hidden="true">i</span><div><p id="source-note">Public transportation cameras from eight states and the District of Columbia. Feed access, image quality and availability vary by provider.</p><p class="small-note">“Fetched” is browser retrieval time. A dated availability check does not guarantee a working or fresh image now.</p></div></aside>
+    <details id="provider-details" class="provider-details"><summary>Sources, service limits and how this works</summary><div id="provider-information"><p>Routes, address search and map tiles come from separate services. Camera media loads from its provider or an existing authorized relay. Provider availability and usage limits apply.</p><p id="catalog-date">Catalog dates are loading.</p></div></details>
+    <footer class="site-footer"><a class="footer-brand" href="./">TRIP <span>CAMERA DESK</span></a><p>Independent public-camera viewer · Saved trips stay in this browser</p><a href="#page-title">Back to top ↑</a></footer>
+  </div>
+
+  <dialog id="camera-dialog" class="camera-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><div><p class="eyebrow">ROAD VIEW</p><h2 id="dialog-title">Camera</h2><p id="dialog-subtitle" class="small-note"></p></div><button id="dialog-close" class="icon-button" type="button" aria-label="Close camera">✕</button></div><div id="dialog-media" class="dialog-media"></div><div class="dialog-footer"><p id="dialog-status" class="small-note" role="status">Camera availability varies.</p><div><button id="dialog-pin" class="button secondary-button" type="button">Pin to watchboard</button><button id="dialog-play" class="button primary-button" type="button">Watch live</button><a id="dialog-source" class="button secondary-button" href="https://www.511.org/" target="_blank" rel="noopener noreferrer">Official viewer ↗</a></div></div></dialog>
+<dialog id="share-dialog" class="share-dialog" aria-labelledby="share-title"><div class="dialog-header"><div><p class="eyebrow">TAKE YOUR DESK WITH YOU</p><h2 id="share-title">Share this view</h2></div><button id="share-close" class="icon-button" type="button" aria-label="Close sharing">✕</button></div><div class="share-content"><label class="field" for="share-url"><span>Share link</span><textarea id="share-url" readonly rows="4"></textarea></label><p class="small-note">The link can include your selected route, places and camera IDs. Review it before sharing.</p><button id="share-copy" class="button primary-button" type="button">Copy link</button><p id="share-status" class="small-note" role="status" aria-live="polite"></p></div></dialog>
+</body>
+</html>

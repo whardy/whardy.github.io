@@ -65,6 +65,9 @@ for(const [,id] of app.matchAll(/\$\('([^']+)'\)/g))assert.ok(domIds.includes(id
 for(const [,url] of html.matchAll(/(?:src|href)="([^"#]+)"/g))if(!/^(https?:|data:)/.test(url))assert.ok(existsSync(resolve(root,url.split(/[?#]/)[0])),url);
 assert.match(app,/const PAGE_SIZE = 25;/);
 assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
-assert.equal((html.match(/class="state-abbr"/g)||[]).length,9);
+const nav=html.match(/<nav class="state-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
+const navUrls=[...nav.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
+assert.equal(new Set(navUrls).size,navUrls.length,'Navigation links remain unique');
+for(const path of ['wv511-camera-desk','ohio-road-atlas','pennsylvania-camera-desk','virginia-camera-desk','texas-camera-desk','maryland-camera-desk','arizona-camera-desk','dc-camera-desk','new-york-camera-desk','trip-camera-desk'])assert.ok(navUrls.includes(`https://whardy.github.io/sandbox/${path}/`),`Camera navigation includes ${path}`);
 assert.doesNotMatch(app,/chatgpt\.site|RELAY_ORIGIN|maryland\.gov/);
 console.log(`Passed: ${cameras.length} camera views, 9 areas, ${catalog.excludedFeatureCount} locations excluded, complete audits, source URLs, filters, map bounds, 25/page and assets.`);
