@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b2440">
+  <meta name="description" content="Explore public New York State traffic cameras from 511NY. Filter by area, county or borough, road, agency, and feed type. View current snapshots, live video, and a camera map.">
+  <title>New York Camera Grid — 511NY Traffic Cameras</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2711%27 fill=%27%230b2440%27/%3E%3Cpath d=%27M13 17h38M13 32h38M13 47h38%27 stroke=%27%23fff%27 stroke-width=%273%27/%3E%3Ccircle cx=%2731%27 cy=%2732%27 r=%277%27 fill=%27%23ffcc43%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css?v=20261103ny1">
+  <script src="vendor/leaflet.js" defer></script>
+  <script src="vendor/hls.min.js" defer></script>
+  <script src="app.js?v=20261103ny1" type="module"></script>
+</head>
+<body class="view-wall">
+  <noscript><p>This viewer needs JavaScript. <a href="https://511ny.org/map">Open the official 511NY map.</a></p></noscript>
+  <a class="skip-link" href="#results">Skip to camera feeds</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="New York Camera Grid home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span><strong>NEW YORK</strong><small>CAMERA GRID</small></span></a>
+      <nav class="state-nav" aria-label="Traffic camera sites">
+        <a href="https://whardy.github.io/sandbox/wv511-camera-desk/" aria-label="West Virginia cameras"><span class="state-abbr" aria-hidden="true">WV</span><span class="state-full" aria-hidden="true">West Virginia</span></a>
+        <a href="https://whardy.github.io/sandbox/ohio-road-atlas/" aria-label="Ohio cameras"><span class="state-abbr" aria-hidden="true">OH</span><span class="state-full" aria-hidden="true">Ohio</span></a>
+        <a href="https://whardy.github.io/sandbox/pennsylvania-camera-desk/" aria-label="Pennsylvania cameras"><span class="state-abbr" aria-hidden="true">PA</span><span class="state-full" aria-hidden="true">Pennsylvania</span></a>
+        <a href="https://whardy.github.io/sandbox/virginia-camera-desk/" aria-label="Virginia cameras"><span class="state-abbr" aria-hidden="true">VA</span><span class="state-full" aria-hidden="true">Virginia</span></a>
+        <a href="https://whardy.github.io/sandbox/texas-camera-desk/" aria-label="Texas cameras"><span class="state-abbr" aria-hidden="true">TX</span><span class="state-full" aria-hidden="true">Texas</span></a>
+        <a href="https://whardy.github.io/sandbox/maryland-camera-desk/" aria-label="Maryland cameras"><span class="state-abbr" aria-hidden="true">MD</span><span class="state-full" aria-hidden="true">Maryland</span></a>
+        <a href="https://whardy.github.io/sandbox/arizona-camera-desk/" aria-label="Arizona cameras"><span class="state-abbr" aria-hidden="true">AZ</span><span class="state-full" aria-hidden="true">Arizona</span></a>
+        <a href="https://whardy.github.io/sandbox/dc-camera-desk/" aria-label="District of Columbia cameras"><span class="state-abbr" aria-hidden="true">DC</span><span class="state-full" aria-hidden="true">District of Columbia</span></a>
+        <a href="https://whardy.github.io/sandbox/new-york-camera-desk/" aria-label="New York cameras" class="current" aria-current="page"><span class="state-abbr" aria-hidden="true">NY</span><span class="state-full" aria-hidden="true">New York</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-main"><p class="eyebrow"><span class="signal-dot" aria-hidden="true"></span> 511NY / PUBLIC CAMERA NETWORK</p><h1 id="page-title">New York, <em>in motion.</em></h1><p class="intro-copy">A clear view from city streets to the Thruway. Find a camera by area, corridor, borough, or agency.</p></div>
+      <div class="catalog-stats" aria-label="Camera catalog statistics"><div><strong id="catalog-count">—</strong><span>camera views</span></div><div><strong id="metro-count">—</strong><span>areas</span></div><div><strong>25</strong><span>per page</span></div></div>
+    </section>
+    <nav id="area-strip" class="area-strip" aria-label="Browse New York areas"></nav>
+
+    <section class="filter-panel" aria-label="Find traffic cameras">
+      <div class="filter-heading"><span>REFINE YOUR VIEW</span><span>Filter the camera network</span></div>
+      <div class="filter-grid">
+        <label class="field search-field" for="search"><span>Find a camera</span><span class="input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.1 4.1"/></svg><input id="search" type="search" placeholder="Road, place or camera…" autocomplete="off" spellcheck="false"></span></label>
+        <label class="field" for="metro"><span>Area</span><select id="metro"><option value="">All areas</option></select></label>
+        <label class="field" for="county"><span>County / borough</span><select id="county"><option value="">All counties & boroughs</option></select></label>
+        <label class="field" for="road"><span>Corridor / road</span><select id="road"><option value="">All corridors</option></select></label>
+        <label class="field" for="provider"><span>Agency</span><select id="provider"><option value="">All agencies</option></select></label>
+        <label class="field" for="delivery"><span>Feed status</span><select id="delivery"><option value="">All cameras</option><option value="video">Video responded</option><option value="snapshot">Still responded</option><option value="unavailable">No response or error</option></select></label>
+      </div>
+      <div class="filter-actions"><button id="favorites-toggle" class="button secondary-button" type="button" aria-pressed="false">☆ Saved cameras</button><button id="reset-filters" class="text-button" type="button">Reset filters ↺</button></div>
+      <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
+    </section>
+
+    <main id="results" data-view="wall">
+      <div class="results-toolbar"><div class="results-heading"><p class="section-kicker">CAMERA DIRECTORY</p><h2><span id="result-count">Loading</span> <span class="result-noun">matching views</span></h2><p id="result-detail" role="status" aria-live="polite">Preparing the camera grid.</p></div><div class="view-controls" role="group" aria-label="Camera layout"><button id="view-wall" type="button" aria-pressed="true" title="Camera wall"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg><span>Wall</span></button><button id="view-split" type="button" aria-pressed="false" title="Map and cameras"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14"/><path d="M10 3v14M3 10h7"/></svg><span>Split</span></button><button id="view-map" type="button" aria-pressed="false" title="Camera map"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m3 5 4-2 6 2 4-2v12l-4 2-6-2-4 2zM7 3v12m6-10v12"/></svg><span>Map</span></button></div></div>
+      <div class="feed-toolbar"><div class="refresh-controls"><label class="switch-label" for="auto-refresh"><input id="auto-refresh" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span><span>Refresh every 60s</span></label><button id="refresh-button" class="refresh-button" type="button">↻ Refresh now</button></div><div class="top-pagination" aria-label="Quick page navigation"><button id="top-previous-page" type="button" aria-label="Previous page" disabled>←</button><span id="top-page-label">Page 1</span><button id="top-next-page" type="button" aria-label="Next page" disabled>→</button></div></div>
+      <div class="results-layout"><section id="map-section" class="map-section" hidden aria-label="Camera map"><div class="map-toolbar"><span><span class="map-dot" aria-hidden="true"></span> CAMERA LOCATIONS</span><button id="fit-map" class="text-button" type="button">Fit cameras ⌖</button></div><div id="map" aria-label="Map of New York traffic cameras"></div><div class="map-footer"><label for="map-scope"><input id="map-scope" type="checkbox"> Only cameras in this map area</label><span>Select a marker to open a feed.</span></div></section><div class="wall-section"><div id="camera-grid" class="camera-grid" aria-label="Traffic camera feeds"></div><section id="empty-state" class="empty-state" hidden aria-live="polite"><h3>No cameras match</h3><p>Try a wider search, another area, or reset your filters.</p></section></div></div>
+      <nav class="pagination" aria-label="Camera pages"><p id="pagination-summary">25 cameras per page</p><div><button id="previous-page" class="button secondary-button" type="button" disabled>← Previous</button><span id="page-label" aria-live="polite">Page 1 of 1</span><button id="next-page" class="button secondary-button" type="button" disabled>Next →</button></div></nav>
+    </main>
+
+    <aside class="source-note" aria-label="About these feeds"><span class="info-symbol" aria-hidden="true">i</span><div><p id="source-note">Public camera locations and feeds come from 511NY. Still images and streams may be delayed or temporarily unavailable.</p><p class="catalog-date">Catalog checked: <span id="catalog-date">loading</span>. Visible images refresh separately.</p></div><a href="https://511ny.org/map" target="_blank" rel="noopener noreferrer">Official 511NY map ↗</a></aside>
+    <details class="data-details"><summary>About the camera data</summary><p>This independent viewer uses 511NY’s public camera map. Feed owners include NYSDOT and NYC DOT. County and borough labels are assigned using New York State GIS boundaries; out-of-state and invalid coordinates are excluded. Areas are browsing groups, not official metropolitan boundaries.</p><p>Only visible still images refresh, every 60 seconds while this tab is active. “Fetched” records when your browser requested a picture, not when the camera captured it. Video loads only after you select Watch live. Reloading this page does not discover newly added cameras until the dated catalog is rebuilt.</p><p id="audit-summary"></p><p>Saved cameras stay in your browser. This page does not record or archive images or video.</p><p><a href="./source-audit.json" target="_blank" rel="noopener">Dated feed check ↗</a> · <a href="https://511ny.org/map" target="_blank" rel="noopener noreferrer">511NY camera map ↗</a> · <a href="https://gis.ny.gov/civil-boundaries" target="_blank" rel="noopener noreferrer">NYS county boundaries ↗</a></p></details>
+    <footer class="site-footer"><strong>NY / CAMERA GRID</strong><span>Independent viewer · Feeds and map data: 511NY, NYSDOT, NYC DOT</span><a href="#page-title">Back to top ↑</a></footer>
+  </div>
+
+  <dialog id="camera-dialog" class="camera-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><div><p class="eyebrow">NEW YORK CAMERA</p><h2 id="dialog-title">Camera</h2><p id="dialog-subtitle"></p></div><button id="dialog-close" class="icon-button" type="button" aria-label="Close camera">✕</button></div><div class="media-switch" role="group" aria-label="Camera media"><button id="dialog-snapshot" type="button" aria-pressed="true">Current still</button><button id="dialog-play" type="button" aria-pressed="false">Watch live</button></div><div id="dialog-media" class="dialog-media"></div><p id="dialog-video-status" class="video-status" role="status" aria-live="polite"></p><div class="dialog-footer"><p id="dialog-status" role="status">Feed supplied through 511NY.</p><div><button id="dialog-save" class="button secondary-button" type="button" aria-pressed="false">Save camera</button><a id="dialog-source" class="button primary-button" href="https://511ny.org/map" target="_blank" rel="noopener noreferrer">Open 511NY ↗</a></div></div></dialog>
+</body>
+</html>
