@@ -310,8 +310,11 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
             if state == 'NY':
                 item['sourceCounty'] = camera.get('sourceCounty')
             if state == 'CA':
-                for field in ('district', 'nearbyPlace', 'facingDirection', 'elevationFeet', 'postmile', 'postmilePrefix', 'routeSuffix', 'alignment', 'milepost', 'inService', 'recordTimestamp', 'snapshotUpdateSeconds', 'sourceVideoUrl', 'sourceLocationId', 'locationGrouping', 'sourceCaptureTime', 'sourceDisabled', 'sourceStatus', 'catalogOrigin', 'sourceSnapshotUpdateMinutes'):
+                for field in ('district', 'nearbyPlace', 'facingDirection', 'elevationFeet', 'postmile', 'postmilePrefix', 'routeSuffix', 'alignment', 'milepost', 'inService', 'recordTimestamp', 'snapshotUpdateSeconds', 'sourceVideoUrl', 'sourceLocationId', 'locationGrouping', 'sourceCaptureTime', 'sourceDisabled', 'sourceStatus', 'catalogOrigin', 'sourceSnapshotUpdateMinutes', 'sourceCounty', 'countySource', 'geographicOverride'):
                     item[field] = camera.get(field)
+                item['mediaHealth'] = camera.get('mediaHealth') or {}
+                if provider_key == 'sccroads':
+                    item['officialLinkType'] = 'regional-map'
                 item['description'] = clean_text(camera.get('description') or camera.get('imageDescription'))
                 # Catalog metadata modification dates are not image capture dates.
                 item['sourceCaptureTime'] = camera.get('sourceCaptureTime') or camera.get('captureTime')

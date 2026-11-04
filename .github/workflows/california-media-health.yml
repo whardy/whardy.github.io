@@ -1,0 +1,95 @@
+name: California media health
+
+on:
+  schedule:
+    # Rotate through a bounded share of the public endpoints each day.
+    - cron: '37 9 * * *'
+  workflow_dispatch:
+    inputs:
+      endpoints:
+        description: Unique media endpoints to check in this run
+        type: choice
+        required: true
+        default: '10'
+        options:
+          - '10'
+          - '1000'
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: california-media-health
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pinned audit decoders
+        run: python -m pip install -r sandbox/california-camera-desk/_tools/requirements-audit.txt
+      - name: Check oldest California endpoints
+        env:
+          REQUESTED_LIMIT: ${{ github.event_name == 'schedule' && '1000' || inputs.endpoints }}
+        run: |
+          set -euo pipefail
+          case "$REQUESTED_LIMIT" in 10|1000) ;; *) echo 'Invalid audit limit' >&2; exit 1;; esac
+          python sandbox/california-camera-desk/_tools/audit-media.py \
+            --output sandbox/california-camera-desk \
+            --limit "$REQUESTED_LIMIT" --rotate-oldest \
+            --workers 3 --request-gap 0.5 --timeout 12 \
+            --success-ttl-hours 168 --failure-ttl-hours 48
+          python sandbox/california-camera-desk/_tools/check-audit.py
+          python sandbox/california-camera-desk/_tools/check-data.py
+      - name: Rebuild only the California Trip shard
+        run: |
+          set -euo pipefail
+          output_dir="$(mktemp -d)"
+          python sandbox/trip-camera-desk/_tools/build-catalog.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --output "$output_dir" \
+            --california-source "$GITHUB_WORKSPACE/sandbox/california-camera-desk"
+          python - "$output_dir" <<'PY'
+          import pathlib, sys
+          generated = pathlib.Path(sys.argv[1])
+          published = pathlib.Path('sandbox/trip-camera-desk/data')
+          for shard in published.glob('*.json'):
+              if shard.name in {'CA.json', 'index.json'}:
+                  continue
+              candidate = generated / shard.name
+              if not candidate.exists() or candidate.read_bytes() != shard.read_bytes():
+                  raise SystemExit(f'Unrelated state shard changed: {shard.name}')
+          (published / 'CA.json').write_bytes((generated / 'CA.json').read_bytes())
+          (published / 'index.json').write_bytes((generated / 'index.json').read_bytes())
+          PY
+          node sandbox/trip-camera-desk/_tools/check-health.mjs
+      - name: Commit changed audit files
+        id: commit
+        run: |
+          set -euo pipefail
+          git add sandbox/california-camera-desk/camera-catalog.json \
+            sandbox/california-camera-desk/source-audit.json \
+            sandbox/trip-camera-desk/data/CA.json \
+            sandbox/trip-camera-desk/data/index.json
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name 'California Camera Desk audit'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh bounded California media health checks'
+          git push origin HEAD:master
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      - name: Request GitHub Pages build
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import {createMediaManager} from '../media.js';
+import {createMediaManager,classifyCaltransPlaceholder} from '../media.js';
 
 // Exercise the real media coordinator without contacting camera servers. The
 // fake browser supplies visibility and video outcomes; no playback policy is
 // assumed from this test in place of browser/device verification.
 const originals=new Map();
 const replace=(key,value)=>{originals.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{value,writable:true,configurable:true});};
-const observers=[],documentEvents=new Map(),videos=[],outcomes=[],images=[],intervals=[];
+const observers=[],documentEvents=new Map(),videos=[],outcomes=[],images=[],intervals=[];let canvasPixels=null,canvasBlocked=false;
 let timerId=0;const timers=new Map();
 class Element {
   constructor(tag='div') {this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.dataset={};this.attributes=new Map();this.textContent='';this.hidden=false;this.listeners=new Map();const classes=new Set();this.classList={add:(...v)=>v.forEach(x=>classes.add(x)),remove:(...v)=>v.forEach(x=>classes.delete(x)),contains:v=>classes.has(v),toggle:(v,on)=>{if(on??!classes.has(v))classes.add(v);else classes.delete(v);}};}
@@ -23,7 +23,7 @@ class Element {
   emit(type){for(const listener of [...(this.listeners.get(type)||[])]){listener.callback({type,target:this});if(listener.once)this.listeners.get(type).delete(listener);}}
 }
 class Video extends Element {
-  constructor(){super('video');this.controls=false;this.muted=false;this.defaultMuted=false;this.playsInline=false;this.autoplay=false;this.paused=true;this.currentTime=0;this.readyState=0;this.playCalls=0;videos.push(this);}
+  constructor(){super('video');this.controls=false;this.muted=false;this.defaultMuted=false;this.playsInline=false;this.autoplay=false;this.paused=true;this.currentTime=0;this.readyState=0;this.videoWidth=640;this.playCalls=0;videos.push(this);}
   canPlayType(){return 'probably';}
   set src(value){this._src=value;if(value)this.atSource={controls:this.controls,muted:this.muted,defaultMuted:this.defaultMuted,playsInline:this.playsInline,autoplay:this.autoplay,inlineAttribute:this.hasAttribute('playsinline'),mutedAttribute:this.hasAttribute('muted')};}
   get src(){return this._src||'';}
@@ -37,14 +37,16 @@ class VisibilityObserver {
   unobserve(target){this.targets.delete(target);}
   disconnect(){this.targets.clear();}
 }
-const document={hidden:false,createElement:tag=>tag==='video'?new Video():new Element(tag),addEventListener(type,callback){if(!documentEvents.has(type))documentEvents.set(type,new Set());documentEvents.get(type).add(callback);}};
+class Canvas extends Element {constructor(){super('canvas');}getContext(){return {drawImage(){},getImageData(){if(canvasBlocked)throw new Error('canvas blocked');return {data:canvasPixels};}};}}
+const document={hidden:false,createElement:tag=>tag==='video'?new Video():tag==='canvas'?new Canvas():new Element(tag),addEventListener(type,callback){if(!documentEvents.has(type))documentEvents.set(type,new Set());documentEvents.get(type).add(callback);}};
 replace('document',document);replace('window',{Hls:{isSupported:()=>false}});replace('navigator',{userAgent:'iPhone test browser'});replace('matchMedia',()=>({matches:false}));replace('IntersectionObserver',VisibilityObserver);replace('Image',class extends Element{constructor(){super('img');this.naturalWidth=640;images.push(this);}});
 replace('setTimeout',(callback,delay)=>{const id=++timerId;timers.set(id,{callback,delay});return id;});replace('clearTimeout',id=>timers.delete(id));replace('setInterval',callback=>{intervals.push(callback);return intervals.length;});
 const flush=async()=>{for(let i=0;i<6;i++)await Promise.resolve();};
+const runTimer=async delay=>{const row=[...timers].find(([,item])=>item.delay===delay);assert.ok(row,`missing ${delay} ms timer`);timers.delete(row[0]);row[1].callback();await flush();};
 function visible(container,value){for(const observer of observers)if(observer.targets.has(container))observer.callback([{target:container,isIntersecting:value}]);}
 function tabHidden(value){document.hidden=value;for(const callback of documentEvents.get('visibilitychange')||[])callback();}
 const wv=id=>({id:`WV:wv511:${id}`,state:'WV',name:id,videoUrl:`https://vtc1.roadsummary.com/rtplive/${id}/playlist.m3u8`,imageUrl:null,disabled:false});
-const ca=id=>({id:`CA:caltrans:D03:${id}`,state:'CA',name:id,videoUrl:`https://example.com/${id}/playlist.m3u8`,imageUrl:null,videoStatus:'available',disabled:false});
+const ca=id=>({id:`CA:caltrans:D03:${id}`,state:'CA',name:id,videoUrl:`https://example.com/${id}/playlist.m3u8`,imageUrl:null,videoStatus:'available',disabled:false,mediaHealth:{video:{status:'available',verificationMethod:'ffmpeg-decoded-segment',checkedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()}}});
 const md={id:'MD:mdot:sample',state:'MD',name:'Maryland sample',videoUrl:'https://strmr3.sha.maryland.gov/rtplive/sample/playlist.m3u8',imageUrl:null,disabled:false};
 const videoIn=container=>container.children.find(node=>node.tagName==='VIDEO');
 const playCount=()=>videos.reduce((sum,video)=>sum+video.playCalls,0);
@@ -52,6 +54,13 @@ const managers=[];
 function manager(options){const m=createMediaManager(options);managers.push(m);return m;}
 
 try {
+  canvasPixels=new Uint8ClampedArray(320*220*4);for(let i=0;i<canvasPixels.length;i+=4)canvasPixels.set([255,255,255,255],i);
+  const blueProbes=[[240,95,0,0,124],[130,100,2,4,113],[120,105,5,4,124],[170,135,1,2,108],[60,140,0,3,118],[100,140,1,0,117],[150,140,10,12,115],[230,145,0,0,127],[250,150,0,0,117]];
+  for(const [x,y,r,g,b]of blueProbes)canvasPixels.set([r,g,b,255],(y*320+x)*4);
+  const template={naturalWidth:320,naturalHeight:260};assert.equal(classifyCaltransPlaceholder(template),true);
+  canvasPixels.set([200,20,30,255],(95*320+240)*4);assert.equal(classifyCaltransPlaceholder(template),false,'different current pixels can prove recovery');
+  canvasPixels.set([0,0,124,255],(95*320+240)*4);canvasBlocked=true;assert.equal(classifyCaltransPlaceholder(template),null,'blocked canvas keeps dated audit classification');canvasBlocked=false;
+  assert.equal(classifyCaltransPlaceholder({naturalWidth:640,naturalHeight:480}),false);
   // Visible WV entries start automatically, configure native inline/muted
   // attributes before playback, and remain under the same global video cap.
   const m=manager();const scope=new Element();const a=new Element(),b=new Element(),c=new Element(),manual=new Element();scope.append(a,b,c,manual);
@@ -83,7 +92,7 @@ try {
   assert.equal(failures.count,0);assert.equal(playCount()-beforeBlocked,1);for(let i=0;i<3;i++){visible(blocked,true);await flush();}assert.equal(playCount()-beforeBlocked,1,'Policy rejection must not loop');
   failures.refresh();await flush();assert.equal(failures.count,1,'Explicit retry may start a previously blocked preview');
   visible(blocked,false);await flush();failures.snapshot(badSource,wv('BAD'));visible(badSource,true);await flush();const bad=videoIn(badSource);assert.ok(bad);const beforeError=playCount();
-  bad.error={code:4,message:'Invalid source'};bad.emit('error');await flush();assert.equal(failures.count,0);assert.equal(videoIn(badSource),undefined);for(let i=0;i<3;i++){visible(badSource,true);await flush();}assert.equal(playCount(),beforeError,'Media failure must not trigger a retry loop');
+  bad.error={code:4,message:'Invalid source'};bad.emit('error');await flush();assert.equal(failures.count,1,'one bounded reconnect is allowed');await runTimer(3500);bad.emit('error');await flush();assert.equal(failures.count,0);assert.equal(videoIn(badSource),undefined);for(let i=0;i<3;i++){visible(badSource,true);await flush();}assert.equal(playCount(),beforeError+1,'Media failure must not trigger further automatic retries');
   failures.dispose(failureScope);await flush();assert.equal(failures.count,0);
 
   // A modal owns autoplay capacity while it is open; closing it restores the
@@ -104,7 +113,7 @@ try {
 
   // A dated failed CA video check does not auto-request it; the snapshot is
   // still usable and an explicit play action remains possible.
-  const unavailableManager=manager();const unavailable=new Element();unavailableManager.snapshot(unavailable,{...ca('FAILED'),videoStatus:'unavailable',imageUrl:'https://example.com/current.jpg',snapshotUpdateSeconds:300});
+  const unavailableManager=manager();const unavailable=new Element();unavailableManager.snapshot(unavailable,{...ca('FAILED'),videoStatus:'unavailable',mediaHealth:{video:{status:'unavailable',verificationMethod:'ffmpeg-decoded-segment',checkedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()}},imageUrl:'https://example.com/current.jpg',snapshotUpdateSeconds:300});
   visible(unavailable,true);await flush();assert.equal(unavailableManager.count,0);assert.equal(videoIn(unavailable),undefined);assert.ok(images.at(-1).src.includes('current.jpg'));
   images.at(-1).onload();unavailableManager.dispose(unavailable);
 
@@ -112,7 +121,7 @@ try {
   // snapshot registration and does not retry the bad stream automatically.
   const fallbackManager=manager();const fallbackView=new Element();fallbackManager.snapshot(fallbackView,{...ca('FALLBACK'),imageUrl:'https://example.com/fallback.jpg'});
   visible(fallbackView,true);await flush();const failedVideo=videoIn(fallbackView);assert.ok(failedVideo);
-  const beforeFallback=images.length;failedVideo.error={code:4,message:'Failed segment'};failedVideo.emit('error');await flush();
+  const beforeFallback=images.length;failedVideo.error={code:4,message:'Failed segment'};failedVideo.emit('error');await flush();assert.equal(fallbackManager.count,1);await runTimer(3500);failedVideo.emit('error');await flush();
   assert.equal(fallbackManager.count,0);assert.equal(images.length,beforeFallback+1,'Stream failure must enqueue the snapshot fallback');
   const fallbackImage=images.at(-1);fallbackImage.onload();assert.ok(fallbackView.children.includes(fallbackImage),'Successful fallback image is rendered');
   visible(fallbackView,true);await flush();assert.equal(fallbackManager.count,0,'A successful snapshot must not retry failed video');fallbackManager.dispose(fallbackView);
@@ -128,9 +137,58 @@ try {
     snapshotManager.refresh();await flush();assert.equal(images.length,requestCount+2,'Explicit Refresh remains available');images.at(-1).onload();
     snapshotManager.dispose(snapshotView);
   } finally {Date.now=originalNow;}
+  // Failed visible requests also honor the source interval. A later refresh
+  // failure leaves the last decoded image and its successful health intact.
+  const retryEvents=[],retryManager=manager({onHealth:event=>retryEvents.push(event)}),retryView=new Element(),retryInterval=intervals.at(-1),retryNow=Date.now;let retryClock=2000000;
+  Date.now=()=>retryClock;
+  try {
+    retryManager.snapshot(retryView,{...ca('RETRY-IMAGE'),videoUrl:null,imageUrl:'https://example.com/retry.jpg',snapshotUpdateSeconds:300});visible(retryView,true);await flush();images.at(-1).onerror();
+    const failedCount=images.length;retryClock+=60000;retryInterval();await flush();assert.equal(images.length,failedCount,'a failed source is not retried every scheduler minute');
+    retryClock+=240000;retryInterval();await flush();assert.equal(images.length,failedCount+1,'failed source may retry at its nominal interval');const goodImage=images.at(-1);goodImage.onload();
+    retryManager.refresh();await flush();assert.equal(images.length,failedCount+2,'manual refresh bypasses the nominal interval');images.at(-1).onerror();
+    assert(retryView.children.includes(goodImage),'failed refresh retains the last decoded image');assert.equal(retryEvents.at(-1).phase,'refresh-failed');assert.equal(retryEvents.at(-1).status,undefined,'refresh failure does not erase earlier successful session health');
+    assert(retryView.children.find(node=>node.className==='media-time')?.textContent.startsWith('Refresh failed'));
+    retryManager.dispose(retryView);
+  } finally {Date.now=retryNow;}
+  // A video is not LIVE merely because the browser fired `playing`. It must
+  // decode and advance. A later stall gets one reconnect, then a failure.
+  const healthEvents=[],stallManager=manager({onHealth:event=>healthEvents.push(event)}),stallView=new Element(),stallScope=new Element();stallScope.append(stallView);
+  stallManager.snapshot(stallView,ca('STALL'));visible(stallView,true);await flush();const stalled=videoIn(stallView);assert.ok(stalled);
+  assert(!healthEvents.some(event=>event.phase==='playing'),'playing event alone is not advancing video');
+  stalled.currentTime=2;stalled.emit('timeupdate');await flush();assert(healthEvents.some(event=>event.phase==='playing'));
+  stalled.emit('stalled');await flush();assert.equal(healthEvents.at(-1).phase,'buffering','stalled event must clear LIVE immediately without failing source');
+  stalled.currentTime=2.5;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.at(-1).phase,'playing','advancing playback recovers LIVE');
+  const oldClock=Date.now;let stallClock=oldClock();Date.now=()=>stallClock;
+  try{stallClock+=13000;await runTimer(3500);assert(healthEvents.some(event=>event.phase==='reconnecting'));
+    await runTimer(3500);stallClock+=31000;await runTimer(3500);assert(healthEvents.some(event=>event.phase==='failed'&&event.failureCategory==='no-decoded-progress'));
+    assert.equal(stallManager.count,0);
+  }finally{Date.now=oldClock;stallManager.dispose(stallScope);}
+  // A shared endpoint has one player even when a second view is selected.
+  const shared=manager();const sharedScope=new Element(),first=new Element(),second=new Element();sharedScope.append(first,second);const firstCamera=ca('SHARED'),secondCamera={...ca('OTHER'),videoUrl:firstCamera.videoUrl};
+  shared.snapshot(first,firstCamera);shared.snapshot(second,secondCamera);visible(first,true);visible(second,true);await flush();assert.equal(shared.count,1);
+  const moved=shared.play(second,secondCamera);await flush();assert.ok(moved);assert.equal(shared.count,1);assert.equal(videoIn(first),undefined);shared.stopEndpoint(firstCamera.videoUrl);await flush();assert.equal(shared.count,0,'stopping the selected shared stream must not restart another copy');shared.dispose(sharedScope);
+  const placeholderEvents=[],placeholderManager=manager({onHealth:event=>placeholderEvents.push(event)}),placeholderView=new Element();
+  placeholderManager.snapshot(placeholderView,{...ca('PLACEHOLDER'),providerKey:'caltrans',videoUrl:null,imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/unavailable.jpg',mediaHealth:{snapshot:{status:'unavailable',failureCategory:'placeholder',checkedAt:new Date().toISOString()}}});
+  visible(placeholderView,true);await flush();images.at(-1).onload();assert(placeholderEvents.some(event=>event.phase==='known-placeholder'));
+  assert(!placeholderEvents.some(event=>event.kind==='snapshot'&&event.status==='available'),'canvas uncertainty keeps known audit placeholder failure');
+  placeholderManager.refresh();await flush();const currentPlaceholder=images.at(-1);currentPlaceholder.naturalWidth=320;currentPlaceholder.naturalHeight=260;assert.equal(currentPlaceholder.crossOrigin,'anonymous');currentPlaceholder.onload();
+  assert(placeholderEvents.some(event=>event.failureCategory==='placeholder'&&event.verificationMethod==='browser-placeholder-probes'));
+  placeholderManager.refresh();await flush();const recoveredImage=images.at(-1);recoveredImage.naturalWidth=320;recoveredImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(95*320+240)*4);recoveredImage.onload();
+  assert(placeholderEvents.some(event=>event.status==='available'&&event.verifiedNonPlaceholder===true),'different current pixels may recover a dated placeholder failure');
+  placeholderManager.dispose(placeholderView);
+  const placeholderAuto=manager({autoplayCA:false}),placeholderAutoView=new Element(),placeholderAutoCamera={...ca('PLACEHOLDER-AUTO'),providerKey:'caltrans',imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/maintenance.jpg',mediaHealth:{video:ca('PLACEHOLDER-AUTO').mediaHealth.video,snapshot:{status:'unavailable',failureCategory:'placeholder',checkedAt:new Date().toISOString()}}};
+  placeholderAuto.snapshot(placeholderAutoView,placeholderAutoCamera);visible(placeholderAutoView,true);await flush();const maintenanceImage=images.at(-1);maintenanceImage.naturalWidth=320;maintenanceImage.naturalHeight=260;canvasPixels.set([0,0,124,255],(95*320+240)*4);maintenanceImage.onload();
+  placeholderAuto.setCAAutoplay(true);await flush();const maintenanceVideo=videoIn(placeholderAutoView);assert.ok(maintenanceVideo);maintenanceVideo.error={code:4,message:'Invalid source'};maintenanceVideo.emit('error');await flush();await runTimer(3500);maintenanceVideo.emit('error');await flush();
+  assert(placeholderAutoView.children.some(node=>node.className==='media-time'&&node.textContent.includes('Provider maintenance image')),'video fallback must not relabel an old maintenance image as a working snapshot');placeholderAuto.dispose(placeholderAutoView);
+  const corsEvents=[],corsManager=manager({onHealth:event=>corsEvents.push(event)}),corsView=new Element();corsManager.snapshot(corsView,{...ca('CORS'),providerKey:'caltrans',videoUrl:null,imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/cors.jpg'});visible(corsView,true);await flush();const withCors=images.at(-1),beforeRetry=images.length;withCors.onerror();await flush();assert.equal(images.length,beforeRetry+1,'one no-CORS image retry remains possible');assert.equal(images.at(-1).crossOrigin,undefined);images.at(-1).onload();assert(corsEvents.some(event=>event.kind==='snapshot'&&event.status==='available'));corsManager.dispose(corsView);
+  const flaggedEvents=[],flaggedManager=manager({onHealth:event=>flaggedEvents.push(event)}),flaggedView=new Element(),flaggedBefore=images.length;
+  flaggedManager.snapshot(flaggedView,{...ca('PROVIDER-OUT'),videoUrl:null,imageUrl:'https://example.com/provider-flag.jpg',sourceDisabled:true,disabled:true});
+  visible(flaggedView,true);await flush();assert.equal(images.length,flaggedBefore+1,'provider service flag must not suppress a visible snapshot probe');images.at(-1).onload();
+  assert(flaggedEvents.some(event=>event.kind==='snapshot'&&event.status==='available'));flaggedManager.dispose(flaggedView);
   assert.equal(observers.reduce((sum,observer)=>sum+observer.targets.size,0),0,'Disposed views must not retain visibility observations');
   assert.equal(timers.size,0,'Connection timeouts must be cleared after stop/dispose');
   console.log('Passed WV and CA autoplay: muted inline/no native controls, shared stream cap, manual priority, offscreen/tab resume, blocked/source failure retry guards, autoplay toggle, stop-all hold, modal scope, independent CA preference, snapshot fallback and nominal refresh intervals, and disposal cleanup.');
 } finally {
+  await flush();
   for(const [key,descriptor]of originals){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}
 }
