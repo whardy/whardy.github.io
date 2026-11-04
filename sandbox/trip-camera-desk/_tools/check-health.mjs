@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {californiaHealth,mediaCheck,matchesCaliforniaHealth,recordMediaResult} from '../health.js?v=20261104cahealth2';
+import {californiaHealth,healthDescription,mediaCheck,matchesCaliforniaHealth,recordMediaResult} from '../health.js?v=20261104cahealth2';
 import {filterCameras,loadStates,matchingRouteViews,statusForCamera} from '../catalog.js';
 import {prepareRoute,coverageGaps} from '../geometry.js';
 
@@ -22,6 +22,7 @@ const cameras=[videoWorks,imageWorks,manifestOnly,expired,unavailable,official];
 const filters={query:'',state:'',metro:'',jurisdiction:'',road:'',media:'',status:'',caHealth:'working'};
 
 assert.equal(californiaHealth(videoWorks).checkedVideo,true,'A decoded segment is a recent video check');
+assert.match(healthDescription({...videoWorks,mediaHealth:{...videoWorks.mediaHealth,video:{...videoWorks.mediaHealth.video,browserCors:false}}}),/cross-origin video delivery blocked/);
 assert.equal(californiaHealth(videoWorks).working,false,'A decoded segment alone is not browser-verified playback');
 assert.equal(californiaHealth(imageWorks).working,true,'A decoded snapshot is usable even if its video failed');
 assert.equal(californiaHealth(imageWorks).checkedVideo,false,'A working JPG never qualifies as working video');

@@ -77,5 +77,5 @@ export function healthDescription(camera, now = Date.now()) {
       'hls-segment-structure':'playlist and segment structure only','image-structure':'image structure only'})[check.verificationMethod] || check.verificationMethod || 'method unreported';
     return `${kind}: ${check.status === 'available' ? 'checked' : 'failed'} (${method})${check.status === 'unavailable' && (check.failureCategory || check.reason) ? ` · ${check.failureCategory || check.reason}` : ''}${check.checkedAt ? ` · ${new Date(check.checkedAt).toLocaleString()}` : ''}`;
   };
-  return [describe(health.video,'Video'),describe(health.snapshot,'Snapshot')].filter(Boolean).join(' · ') || 'Official viewer only';
+  return [describe(health.video,'Video'),camera.mediaHealth?.video?.browserCors===false?'Browser cross-origin video delivery blocked at audit':null,describe(health.snapshot,'Snapshot')].filter(Boolean).join(' · ') || 'Official viewer only';
 }
