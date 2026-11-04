@@ -1,0 +1,1 @@
+{"type":"module","private":true,"scripts":{"check":"node _tools/check.mjs && node _tools/check-media.mjs && python3 _tools/check-data.py"}}

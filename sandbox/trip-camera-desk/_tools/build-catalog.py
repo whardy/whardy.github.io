@@ -28,6 +28,7 @@ STATES = [
     ('AZ', 'Arizona', 'arizona-camera-desk', 'az511'),
     ('DC', 'District of Columbia', 'dc-camera-desk', 'ddot'),
     ('NY', 'New York', 'new-york-camera-desk', '511ny'),
+    ('CA', 'California', 'california-camera-desk', 'caltrans'),
 ]
 PUBLIC_ROOT = 'https://whardy.github.io/sandbox/'
 RELAY_ROOT = 'https://texas-camera-relay.wintrytiger33.chatgpt.site'
@@ -92,7 +93,7 @@ def normalize_road(value):
     def format_ref(match):
         number = re.match(r'(\d+)([A-Z]?)$', match[3], re.I)
         return f'{match[1]}{match[2].upper()}-{int(number[1])}{number[2].upper()}'
-    road = re.sub(r'(^|[\s/&(])(US|VA|MD|OH|TX|AZ|WV|PA|NY|RT|SR|SH|FM|RM|LP|SP|BW|I)\s*\.?\s*-?\s*(\d+[A-Z]?)\b',
+    road = re.sub(r'(^|[\s/&(])(US|VA|MD|OH|TX|AZ|WV|PA|NY|CA|RT|SR|SH|FM|RM|LP|SP|BW|I)\s*\.?\s*-?\s*(\d+[A-Z]?)\b',
                   format_ref, road, flags=re.I)
     return road
 
@@ -100,7 +101,7 @@ def normalize_road(value):
 def route_refs(camera, road, primary_only=False):
     source = road if primary_only else ' '.join([road, clean_text(camera.get('name'))] + list(camera.get('routes') or []))
     source = normalize_road(source)
-    refs = re.findall(r'\b(I|US|SR|RT|VA|MD|OH|TX|AZ|WV|PA|NY|SH|FM|RM|LP|SP|BW)-(\d+[A-Z]?)\b', source, flags=re.I)
+    refs = re.findall(r'\b(I|US|SR|RT|VA|MD|OH|TX|AZ|WV|PA|NY|CA|SH|FM|RM|LP|SP|BW)-(\d+[A-Z]?)\b', source, flags=re.I)
     return sorted(set(f'{prefix.upper()}-{number.upper()}' for prefix, number in refs))
 
 
@@ -178,8 +179,8 @@ def geography(state, camera, overrides, groups):
     return county, kind, metro
 
 
-def build_state(repository, state, state_name, slug, base_provider):
-    path = repository / 'sandbox' / slug
+def build_state(repository, state, state_name, slug, base_provider, source_path=None):
+    path = source_path or repository / 'sandbox' / slug
     published = PUBLIC_ROOT + slug + '/'
     is_wv = state == 'WV'
     container = read_json(path / 'data/cameras.json') if is_wv else read_json(path / 'camera-catalog.json')
@@ -199,12 +200,14 @@ def build_state(repository, state, state_name, slug, base_provider):
         for view in camera.get('views', [camera]) if state == 'OH' else [camera]:
             source_id = str(view['id'])
             provider_key = 'austin' if state == 'TX' and source_id.startswith('austin-') else ('nycdot' if camera.get('provider') == 'NYC DOT' else 'nysdot') if state == 'NY' else base_provider
-            ident = f'{state}:{provider_key}:{source_id}'
+            if state == 'CA':
+                provider_key = source_id.split(':', 1)[0] if ':' in source_id else base_provider
+            ident = f'{state}:{source_id}' if state == 'CA' and ':' in source_id else f'{state}:{provider_key}:{source_id}'
             raw_site_id = str(camera.get('siteId', camera['id']))
-            site_id = f'{state}:{provider_key}:{raw_site_id}'
+            site_id = f'{state}:{raw_site_id}' if state == 'CA' and ':' in raw_site_id else f'{state}:{provider_key}:{raw_site_id}'
             county, kind, metro = geography(state, camera, overrides, groups)
             raw_road = clean_text(camera.get('sourceRoad') or camera.get('road') or camera.get('primaryRoad') or camera.get('route')) or 'Other roads'
-            road = normalize_road(raw_road)
+            road = normalize_road(camera.get('road') or raw_road) if state == 'CA' else normalize_road(raw_road)
             lat, lon = coordinates(camera)
             checked = audit_by_id.get(source_id, {})
             if state == 'OH':
@@ -245,6 +248,11 @@ def build_state(repository, state, state_name, slug, base_provider):
             else:
                 availability = 'unchecked'
             merged_direction = {**camera, 'direction': view.get('direction', camera.get('direction'))}
+            if state == 'CA':
+                # Published travel side is separate from a view's facing direction.
+                merged_direction['name'] = ''
+                if clean_text(merged_direction.get('direction')).lower() in {'not reported', 'unknown', 'n/a'}:
+                    merged_direction['direction'] = ''
             direction, bearing, direction_source = direction_info(merged_direction)
             item = {
                 'id': ident, 'siteId': site_id, 'sourceId': source_id, 'sourceSiteId': raw_site_id,
@@ -270,6 +278,17 @@ def build_state(repository, state, state_name, slug, base_provider):
             }
             if state == 'NY':
                 item['sourceCounty'] = camera.get('sourceCounty')
+            if state == 'CA':
+                for field in ('district', 'nearbyPlace', 'facingDirection', 'elevationFeet', 'postmile', 'postmilePrefix', 'routeSuffix', 'alignment', 'milepost', 'inService', 'recordTimestamp', 'snapshotUpdateSeconds', 'sourceVideoUrl', 'sourceLocationId', 'locationGrouping', 'sourceCaptureTime', 'sourceDisabled', 'sourceStatus', 'catalogOrigin', 'sourceSnapshotUpdateMinutes'):
+                    item[field] = camera.get(field)
+                item['description'] = clean_text(camera.get('description') or camera.get('imageDescription'))
+                # Catalog metadata modification dates are not image capture dates.
+                item['sourceCaptureTime'] = camera.get('sourceCaptureTime') or camera.get('captureTime')
+                item['sourceTimestamp'] = item['sourceCaptureTime']
+                # A completed sampled audit is not a check of every view.
+                item['auditCheckedAt'] = camera.get('checkedAt') or checked.get('checkedAt')
+                item['imageCheckedAt'] = camera.get('imageCheckedAt') or (checked.get('image') or {}).get('checkedAt')
+                item['videoCheckedAt'] = camera.get('videoCheckedAt') or (checked.get('video') or {}).get('checkedAt')
             cameras.append(item)
     cameras.sort(key=lambda c: c['id'])
     assert len({c['id'] for c in cameras}) == len(cameras), f'Duplicate normalized ID in {state}'
@@ -284,23 +303,35 @@ def build_state(repository, state, state_name, slug, base_provider):
         'imageStatusCounts': dict(Counter(c['imageStatus'] for c in cameras)),
         'videoStatusCounts': dict(Counter(c['videoStatus'] for c in cameras if c['videoUrl'])),
         'sourceUpdatedAt': fetched_at, 'auditCheckedAt': audit_at,
-        'source': catalog.get('source'), 'sourceUrl': catalog.get('sourceUrl') or ('https://wv511.org/' if is_wv else 'https://www.ohgo.com/'),
+        'source': catalog.get('source') or ('Caltrans CWWP2 and participating county providers' if state == 'CA' else None), 'sourceUrl': catalog.get('sourceUrl') or ('https://cwwp2.dot.ca.gov/' if state == 'CA' else 'https://wv511.org/' if is_wv else 'https://www.ohgo.com/'),
         'catalogUrl': published + ('data/cameras.json' if is_wv else 'camera-catalog.json'),
         'geographyOverridesApplied': len(overrides),
     }
+    if state == 'CA':
+        stats['auditCoverage'] = audit.get('coverage')
+        stats['sourceAuditUrl'] = published + 'source-audit.json'
     return {'schemaVersion': 1, 'state': state, 'stateName': state_name, 'sourceUpdatedAt': fetched_at, 'auditCheckedAt': audit_at, 'cameras': cameras}, stats
 
 
 def main():
     project = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--repository', type=Path, default=project.parent / 'whardy-github-pages')
+    default_repository = next((parent / 'whardy-github-pages' for parent in project.parents if (parent / 'whardy-github-pages/sandbox').is_dir()), None)
+    if default_repository is None:
+        default_repository = next((parent for parent in project.parents if (parent / 'sandbox').is_dir()), project.parent / 'whardy-github-pages')
+    parser.add_argument('--repository', type=Path, default=default_repository)
     parser.add_argument('--output', type=Path, default=project / 'dist/data')
+    parser.add_argument('--california-source', type=Path, help='Override California catalog directory; default uses maintained source when available, published copy otherwise.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     states, all_cameras = [], []
     for state, name, slug, provider in STATES:
-        shard, stats = build_state(args.repository, state, name, slug, provider)
+        ca_source = args.california_source if state == 'CA' else None
+        if state == 'CA' and ca_source is None:
+            maintained = args.repository.parent / 'california-camera-desk/dist'
+            if (maintained / 'camera-catalog.json').exists():
+                ca_source = maintained
+        shard, stats = build_state(args.repository, state, name, slug, provider, ca_source)
         payload = (json.dumps(shard, separators=(',', ':'), ensure_ascii=False) + '\n').encode()
         (args.output / f'{state}.json').write_bytes(payload)
         stats['sha256'] = hashlib.sha256(payload).hexdigest()
@@ -320,12 +351,13 @@ def main():
         'states': states,
         'notes': [
             'Listed views are dated catalog entries, not a live count of working feeds or deduplicated physical devices across providers.',
-            'Locations count distinct state/provider/source site identifiers; OH and AZ may contain several views at one location.',
+            'Locations count distinct state/provider/source site identifiers; OH, AZ and CA may contain several views at one source location; this is not an independently verified count of physical devices.',
             'State labels identify source catalogs; some catalogs include adjacent-state border connections.',
             'Availability is the best available dated media check. Available does not prove image capture time or current playback.',
             'Image/video capability and dated availability are independent. Video entries can have a working snapshot when their video was unavailable.',
             'County, independent-city, and DC ward classifications remain distinct. Metro groupings are browsing conveniences.',
             'Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.',
+            'California Caltrans recordTimestamp is catalog metadata, not image capture time. Direction describes travel side separately from facingDirection. County postmiles are not a statewide route odometer.',
             'No camera media was requested or recorded while building these shards.',
         ],
     }

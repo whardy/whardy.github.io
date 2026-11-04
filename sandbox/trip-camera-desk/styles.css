@@ -318,3 +318,6 @@ h3.card-title { margin:0 0 6px; }
 /* WV previews use external Start/Stop actions instead of native overlays. */
 .wv-inline-video { pointer-events:none; }
 .wv-inline-video::-webkit-media-controls, .wv-inline-video::-webkit-media-controls-start-playback-button { display:none!important; }
+
+/* California uses the same external, accessible playback actions as WV. */
+.ca-inline-video{pointer-events:none}.ca-inline-video::-webkit-media-controls,.ca-inline-video::-webkit-media-controls-enclosure,.ca-inline-video::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none}

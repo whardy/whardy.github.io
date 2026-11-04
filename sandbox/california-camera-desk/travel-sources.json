@@ -1,0 +1,50 @@
+{
+  "fetchedAt": "2026-11-04T03:27:47Z",
+  "chainControls": {
+    "sourcePage": "https://cwwp2.dot.ca.gov/chain-controls.html",
+    "nominalUpdateSeconds": 60,
+    "timeZone": "America/Los_Angeles",
+    "districts": [
+      {
+        "district": "D01",
+        "url": "https://cwwp2.dot.ca.gov/data/d1/cc/ccStatusD01.json"
+      },
+      {
+        "district": "D02",
+        "url": "https://cwwp2.dot.ca.gov/data/d2/cc/ccStatusD02.json"
+      },
+      {
+        "district": "D03",
+        "url": "https://cwwp2.dot.ca.gov/data/d3/cc/ccStatusD03.json"
+      },
+      {
+        "district": "D06",
+        "url": "https://cwwp2.dot.ca.gov/data/d6/cc/ccStatusD06.json"
+      },
+      {
+        "district": "D07",
+        "url": "https://cwwp2.dot.ca.gov/data/d7/cc/ccStatusD07.json"
+      },
+      {
+        "district": "D08",
+        "url": "https://cwwp2.dot.ca.gov/data/d8/cc/ccStatusD08.json"
+      },
+      {
+        "district": "D09",
+        "url": "https://cwwp2.dot.ca.gov/data/d9/cc/ccStatusD09.json"
+      },
+      {
+        "district": "D10",
+        "url": "https://cwwp2.dot.ca.gov/data/d10/cc/ccStatusD10.json"
+      },
+      {
+        "district": "D11",
+        "url": "https://cwwp2.dot.ca.gov/data/d11/cc/ccStatusD11.json"
+      }
+    ],
+    "officialUrl": "https://quickmap.dot.ca.gov/",
+    "note": "Manual on-demand checks. Record publication time differs from status last-change time. Missing feed is not no restrictions."
+  },
+  "highwayConditionsUrl": "https://roads.dot.ca.gov/",
+  "laneClosuresUrl": "https://cwwp2.dot.ca.gov/lane-closure.html"
+}

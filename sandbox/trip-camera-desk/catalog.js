@@ -8,7 +8,7 @@ export async function loadStates(index,codes){
       const response=await fetch('./'+entry.file);if(!response.ok)throw new Error(`${entry.stateName} catalog could not load.`);
       const data=await response.json();
       if(!Array.isArray(data.cameras))throw new Error('Invalid camera catalog.');
-      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,...(camera.routeRefs||[])].join(' ').toLowerCase()})));
+      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,camera.district,camera.nearbyPlace,camera.description,camera.facingDirection,...(camera.routeRefs||[])].join(' ').toLowerCase()})));
     })().finally(()=>pending.delete(entry.state)));
     await pending.get(entry.state);
   }));

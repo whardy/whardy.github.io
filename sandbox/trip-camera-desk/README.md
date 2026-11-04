@@ -2,14 +2,14 @@
 
 Public site: https://whardy.github.io/sandbox/trip-camera-desk/
 
-A responsive trip planner and public traffic-camera desk combining West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, and the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
+A responsive trip planner and public traffic-camera desk combining West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, California, and the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
 
 ## Use the desk
 
 - **Plan:** choose a start, destination and up to six intermediate stops through manual place search, latitude/longitude entry, or map selection. Calculate real driving directions and select an alternative when available. A route corridor finds cameras across state lines, ordered by progress along the journey.
 - **Route wall:** browse 25 camera views per page, with state, area, jurisdiction, road, media and dated-availability filters. Highway and direction filters apply to the selected trip stretch. Unknown direction is retained and labeled.
 - **Look ahead:** move along the route to see nearby camera checkpoints and elapsed driving estimates. Representative selection picks cameras at intervals, with additional choices near routing-service highway junctions where camera coverage exists.
-- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Visible WV feeds also autoplay muted by default. Desktop defaults to two live slots; narrow screens default to one, with a selectable limit of one, two or four. Independent feeds are not synchronized.
+- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Visible WV and supported California feeds also autoplay muted by default. Desktop defaults to two live slots; narrow screens default to one, with a selectable limit of one, two or four. Independent feeds are not synchronized.
 - **Explore:** browse and map the full catalog without calculating a trip.
 - **Saved trips:** keep up to 50 trips and 30 boards with up to 500 camera IDs per board in this browser. Export/import JSON to transfer them, or deliberately share a trip or board link. Large shares require JSON export instead of a URL.
 
@@ -17,39 +17,46 @@ The map clusters markers, highlights the selected route, shows a moving look-ahe
 
 ## Dated catalog and availability
 
-The November 3, 2026 unified build contains **13,993 views at 13,955 source-catalog locations**. These are source/site identifiers, not independently deduplicated physical devices. Three views have no usable coordinates and remain available in lists while being excluded from geographic matching.
+The California integration contains **18,103 views at 17,725 source-catalog locations** across 10 catalogs (nine states and DC). These are source/site identifiers, not independently deduplicated physical devices. 3 views have no usable coordinates and remain searchable while excluded from geographic matching.
 
-| Catalog | Locations | Views | Latest source availability check |
+| Catalog | Source locations | Listed views | Latest dated availability check |
 | --- | ---: | ---: | --- |
-| West Virginia | 133 | 133 | October 25, 2026 |
-| Ohio | 1,154 | 1,158 | October 25, 2026 |
-| Pennsylvania | 1,564 | 1,564 | October 28, 2026 |
-| Virginia | 1,722 | 1,722 | October 29, 2026 |
-| Texas | 5,185 | 5,185 | October 29, 2026 |
-| Maryland | 553 | 553 | November 3, 2026 |
-| Arizona | 644 | 678 | November 3, 2026 |
-| District of Columbia | 137 | 137 | November 3, 2026 |
-| New York | 2,863 | 2,863 | November 3, 2026 |
+| West Virginia | 133 | 133 | 2026-10-25T19:31:43.296Z |
+| Ohio | 1,154 | 1,158 | 2026-10-25T20:05:10.883693+00:00 |
+| Pennsylvania | 1,564 | 1,564 | 2026-10-28T22:51:53.582674Z |
+| Virginia | 1,722 | 1,722 | 2026-10-29T00:09:38.119456Z |
+| Texas | 5,185 | 5,185 | 2026-10-29T00:07:53.621029Z |
+| Maryland | 553 | 553 | 2026-11-03T23:00:54.397162Z |
+| Arizona | 644 | 678 | 2026-11-03T23:00:44.555065Z |
+| District of Columbia | 137 | 137 | 2026-11-03T23:14:02.604603+00:00 |
+| New York | 2,863 | 2,863 | 2026-11-03T23:35:31Z |
+| California | 3,770 | 4,110 | 2026-11-04T03:30:33Z |
 
-The build records **4,148 video-capable views, 8,688 snapshot views, and 1,157 official-viewer entries**. Capability describes the configured connection, not a promise of current playback. Dated combined availability records 11,920 available, 945 unavailable, 36 stale, and 1,092 official-only views. Official-only capability and availability can differ when a provider marks an external entry disabled.
+Media categories are configured capabilities: **6,474 video**, **10,007 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 13,180 available, 1,066 unavailable, 36 stale, 1,557 official, 2,264 unchecked.
+
+California contributes **4,110 views at 3,770 source location groups**: 3,645 Caltrans snapshot-capable views, including 2,326 configured HLS capabilities, and 465 Santa Clara County official-viewer views grouped at 126 intersections. The GIS comparison supplied 33 additional currently reachable views absent from the district files; their older GIS provenance remains explicit.
+
+The California audit is a **dated partial sample**, completed 2026-11-04 03:30:33 UTC (November 3 Pacific time): 1,358 of 5,964 unique media endpoints checked, including 1,218 image checks and 140 HLS manifest checks. Manifest reachability is separate from browser decoding. Unchecked media remain explicitly unchecked, with no fabricated per-view check date. See the California source audit and `auditCoverage` in `data/index.json`. Source service status, media capability, and dated reachability remain independent.
+
+Navigation may link additional state sites; `data/index.json` defines the catalogs actually combined by this release.
 
 The source dates, per-media checks, overrides, counts and shard hashes are in `data/index.json` and the state shards. The build reuses existing checks; it does not perform a new full feed audit. Reloading refreshes visible images, not the catalog inventory. “Fetched” is browser retrieval time and does not establish capture time or freshness.
 
 ## Media delivery
 
-West Virginia, Virginia, Maryland and New York support established public HLS connections where available. Other states mainly provide refreshing snapshots and official-viewer links. Snapshots load only when visible, with at most four requests in progress and a 60-second refresh interval. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
+West Virginia, Virginia, Maryland, New York and California support public HLS connections where available. Other states mainly provide refreshing snapshots and official-viewer links. Snapshots load only when visible, with at most four requests in progress and a minimum 60-second refresh interval. California nominal image update intervals are respected when longer. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
 
 Texas keeps its existing owned relay at `https://texas-camera-relay.wintrytiger33.chatgpt.site` for media already dependent on it. This site does not change that relay's deployment or allowlist. Austin sources retain direct delivery; external-only TranStar views remain official-viewer links. Publishing this directory cannot fix a separate relay or provider outage.
 
 No media is stored in this repository. The release does not record footage or create an image-history archive. Mobile viewport testing does not substitute for testing on physical iOS hardware; native playback controls and a user-start action remain available for autoplay restrictions.
 
-### WV autoplay
+### WV and California autoplay
 
-Visible WV feeds start muted and inline by default, including camera-wall previews, enlarged views and WV watchboard slots. Native controls are hidden for WV to avoid the large pause/play overlay; external Watch live/Stop video actions remain available. Other states retain their native controls and user-start behavior.
+Visible WV and supported California feeds start muted and inline by default, including camera-wall previews, enlarged views and WV watchboard slots. Native controls are hidden for WV and California to avoid the large pause/play overlay; external Watch live/Stop video actions remain available. Other states retain their native controls and user-start behavior.
 
-The **Autoplay WV** checkbox pauses or resumes WV previews and remembers the preference in this browser. Automatic previews share the existing global video-slot limit (two on desktop, one by default on narrow screens); manually selected streams take priority. Offscreen previews release their slots and resume when visible. Enlarging a camera pauses automatic previews behind the dialog. **Stop all** disables WV autoplay until it is enabled again.
+The separate **Autoplay WV** and **Autoplay CA** checkboxes remember their preferences in this browser. The established WV preference key is unchanged. Automatic previews share the existing global video-slot limit (two on desktop, one by default on narrow screens); manually selected streams take priority. Offscreen previews release their slots and resume when visible. Enlarging a camera pauses automatic previews behind the dialog. **Stop all** disables both autoplay preferences until deliberately enabled again. Individual visible previews expose a Stop video action. Dated failed California video checks retain snapshots and require an explicit video retry.
 
-A browser autoplay rejection or source error suppresses automatic retries for that view. Use Watch live, Refresh now, or re-enable Autoplay WV to retry. iOS power-saving and browser policies can still require a tap; the site keeps a user-start fallback instead of repeatedly requesting blocked playback. See [WebKit’s autoplay policy](https://webkit.org/blog/6784/new-video-policies-for-ios/).
+A browser autoplay rejection or source error suppresses automatic retries for that view. Use Watch live, Refresh now, or re-enable the relevant autoplay preference to retry. iOS power-saving and browser policies can still require a tap; the site keeps a user-start fallback instead of repeatedly requesting blocked playback. See [WebKit’s autoplay policy](https://webkit.org/blog/6784/new-video-policies-for-ios/).
 
 ## Routing, search and operating cost
 
@@ -67,18 +74,18 @@ Place queries and route coordinates are sent to the selected service; camera and
 
 ## Source and maintenance
 
-The editable local project is `trip-camera-desk/` in the existing camera-site workspace. No package installation or frontend build is needed. Node.js runs checks; Python 3 previews the static files and compiles metadata.
+The maintained source for this published California integration is `california-camera-desk/.integration/trip-camera-desk/` in the existing camera-site workspace. No package installation or frontend build is needed. Node.js runs checks; Python 3 previews the static files and compiles metadata.
 
-From the workspace root, rebuild only the unified catalog from the nine maintained published bundles:
+The maintained source for this California release is `california-camera-desk/.integration/trip-camera-desk/`. It was isolated from other concurrent state work to preserve the nine existing catalog IDs and add California only. From this release directory, rebuild the unified catalog:
 
 ```sh
-python3 trip-camera-desk/scripts/build-catalog.py
+python3 scripts/build-catalog.py
 ```
 
-The default source repository is the sibling `whardy-github-pages/` checkout. To use another checkout or output directory:
+The compiler discovers the enclosing workspace’s `whardy-github-pages/` checkout or the enclosing published repository. California uses its maintained `california-camera-desk/dist/` catalog when present, with the published catalog as fallback. To use another checkout or output directory:
 
 ```sh
-python3 trip-camera-desk/scripts/build-catalog.py --repository /path/to/whardy.github.io --output /path/to/output/data
+python3 scripts/build-catalog.py --repository /path/to/whardy.github.io --california-source /path/to/california-camera-desk/dist --output /path/to/output/data
 ```
 
 Refresh and audit individual state catalogs with their own maintained tools first when new source data is required. Then rebuild the unified shards, run checks, review changed counts and dates, and publish the index and all changed shards together. The compiler preserves state/provider/view IDs, location IDs, primary-road versus crossing-road references, county/city/ward/borough distinctions, geographic overrides, and missing coordinates.
@@ -89,12 +96,14 @@ From the local project directory:
 node scripts/check.mjs
 node scripts/check-routing.mjs
 node scripts/check-media.mjs
+python3 scripts/check-data.py
+node scripts/check-california.mjs
 python3 -m http.server 4190 --bind 127.0.0.1 --directory dist
 ```
 
-`node scripts/check-routing.mjs --live` deliberately sends a small set of requests to the selected routing and search providers. Routine checks use only local data and synthetic geometry.
+`node scripts/check-california.mjs --live` checks the five California trips, real route ordering, timed lookahead and California–Arizona coverage. It retains large response shapes only in a local `.route-check-cache/`, with the small report in `docs/california-route-validation.json`. `node scripts/check-routing.mjs --live` deliberately sends a small set of requests to the selected routing and search providers. Routine checks use only local data and synthetic geometry.
 
-Publish `dist/` to `sandbox/trip-camera-desk/` in `whardy/whardy.github.io`, include this README in the published directory, and preserve vendor licenses. The nine existing site headers link to Trip Desk. Changes to their bundled headers require their own maintained build steps. Keep unrelated state projects and work intact.
+Publish `dist/` to `sandbox/trip-camera-desk/` in `whardy/whardy.github.io`, include this README in the published directory, and preserve vendor licenses. Existing state-site headers link to Trip Desk and California. Changes to their bundled headers require their own maintained build steps. Keep unrelated state projects and work intact.
 
 ## Primary sources
 
@@ -103,6 +112,7 @@ Publish `dist/` to `sandbox/trip-camera-desk/` in `whardy/whardy.github.io`, inc
 - [OSRM API](https://project-osrm.org/docs/v5.24.0/api/)
 - [Photon public-demo policy](https://github.com/komoot/photon#demo-server)
 - [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/) and [attribution](https://www.openstreetmap.org/copyright)
+- [California Caltrans CCTV sources and fair-use policy](https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html) and [California Camera Desk](https://whardy.github.io/sandbox/california-camera-desk/)
 - Individual state providers, catalog URLs and source-site links in [the data index](data/index.json)
 - [Leaflet](https://leafletjs.com/) and [hls.js](https://github.com/video-dev/hls.js/)
 

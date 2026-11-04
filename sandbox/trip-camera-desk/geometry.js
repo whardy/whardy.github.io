@@ -37,8 +37,8 @@ export function extractRouteRefs(values) {
   const result = new Set();
   for (const raw of Array.isArray(values) ? values : [values]) {
     const text = String(raw || '').toUpperCase().replace(/[‐‑–—]/g, '-').replace(/FARM[ -]+TO[ -]+MARKET(?: ROAD)?/g,'FM').replace(/RANCH[ -]+TO[ -]+MARKET(?: ROAD)?/g,'RM').replace(/BELTWAY/g,'BW').replace(/\bLOOP\b/g,'LP').replace(/\bSPUR\b/g,'SP');
-    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|SR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
-    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY'}[m[1]]}-${m[2]}`);
+    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|SR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY|CA)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
+    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK|CALIFORNIA)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY',CALIFORNIA:'CA'}[m[1]]}-${m[2]}`);
   }
   return [...result];
 }

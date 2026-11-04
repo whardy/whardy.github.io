@@ -1,0 +1,98 @@
+{
+  "D01": {
+    "url": "https://cwwp2.dot.ca.gov/data/d1/cctv/cctvStatusD01.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:46Z",
+    "file": "caltrans-D01.json",
+    "district": "D01",
+    "views": 149
+  },
+  "D02": {
+    "url": "https://cwwp2.dot.ca.gov/data/d2/cctv/cctvStatusD02.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:45Z",
+    "file": "caltrans-D02.json",
+    "district": "D02",
+    "views": 91
+  },
+  "D03": {
+    "url": "https://cwwp2.dot.ca.gov/data/d3/cctv/cctvStatusD03.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:46Z",
+    "file": "caltrans-D03.json",
+    "district": "D03",
+    "views": 274
+  },
+  "D04": {
+    "url": "https://cwwp2.dot.ca.gov/data/d4/cctv/cctvStatusD04.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:48Z",
+    "file": "caltrans-D04.json",
+    "district": "D04",
+    "views": 771
+  },
+  "D05": {
+    "url": "https://cwwp2.dot.ca.gov/data/d5/cctv/cctvStatusD05.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:47Z",
+    "file": "caltrans-D05.json",
+    "district": "D05",
+    "views": 181
+  },
+  "D06": {
+    "url": "https://cwwp2.dot.ca.gov/data/d6/cctv/cctvStatusD06.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:47Z",
+    "file": "caltrans-D06.json",
+    "district": "D06",
+    "views": 128
+  },
+  "D07": {
+    "url": "https://cwwp2.dot.ca.gov/data/d7/cctv/cctvStatusD07.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:49Z",
+    "file": "caltrans-D07.json",
+    "district": "D07",
+    "views": 592
+  },
+  "D08": {
+    "url": "https://cwwp2.dot.ca.gov/data/d8/cctv/cctvStatusD08.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:49Z",
+    "file": "caltrans-D08.json",
+    "district": "D08",
+    "views": 505
+  },
+  "D09": {
+    "url": "https://cwwp2.dot.ca.gov/data/d9/cctv/cctvStatusD09.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:49Z",
+    "file": "caltrans-D09.json",
+    "district": "D09",
+    "views": 23
+  },
+  "D10": {
+    "url": "https://cwwp2.dot.ca.gov/data/d10/cctv/cctvStatusD10.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:50Z",
+    "file": "caltrans-D10.json",
+    "district": "D10",
+    "views": 154
+  },
+  "D11": {
+    "url": "https://cwwp2.dot.ca.gov/data/d11/cctv/cctvStatusD11.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:51Z",
+    "file": "caltrans-D11.json",
+    "district": "D11",
+    "views": 324
+  },
+  "D12": {
+    "url": "https://cwwp2.dot.ca.gov/data/d12/cctv/cctvStatusD12.json",
+    "status": "cached",
+    "fetchedAt": "2026-11-04T03:23:53Z",
+    "file": "caltrans-D12.json",
+    "district": "D12",
+    "views": 420
+  }
+}

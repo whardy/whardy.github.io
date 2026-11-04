@@ -1,22 +1,23 @@
 {
   "schemaVersion": 1,
-  "builtAt": "2026-11-03T23:54:34.852746Z",
+  "builtAt": "2026-11-04T03:31:18.473554Z",
   "totals": {
-    "statesAndDistricts": 9,
-    "views": 13993,
-    "locations": 13955,
-    "withCoordinates": 13990,
+    "statesAndDistricts": 10,
+    "views": 18103,
+    "locations": 17725,
+    "withCoordinates": 18100,
     "withoutCoordinates": 3,
     "mediaCounts": {
-      "video": 4148,
-      "snapshot": 8688,
-      "official": 1157
+      "video": 6474,
+      "snapshot": 10007,
+      "official": 1622
     },
     "availabilityCounts": {
-      "available": 11920,
-      "unavailable": 945,
+      "available": 13180,
+      "unavailable": 1066,
       "stale": 36,
-      "official": 1092
+      "official": 1557,
+      "unchecked": 2264
     }
   },
   "states": [
@@ -363,16 +364,74 @@
       "geographyOverridesApplied": 0,
       "sha256": "6d8cf7e8463cdf9eb09b15eb9e32b23328818f423b311daca8a21f50be5f37b2",
       "bytes": 3428771
+    },
+    {
+      "state": "CA",
+      "stateName": "California",
+      "file": "data/CA.json",
+      "siteUrl": "https://whardy.github.io/sandbox/california-camera-desk/",
+      "views": 4110,
+      "locations": 3770,
+      "bounds": [
+        -124.201573,
+        32.55138,
+        -114.550306,
+        41.99656
+      ],
+      "withCoordinates": 4110,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 1319,
+        "video": 2326,
+        "official": 465
+      },
+      "availabilityCounts": {
+        "available": 1260,
+        "unavailable": 121,
+        "unchecked": 2264,
+        "official": 465
+      },
+      "imageStatusCounts": {
+        "available": 1216,
+        "unavailable": 2,
+        "unchecked": 2427,
+        "official": 465
+      },
+      "videoStatusCounts": {
+        "available": 86,
+        "unavailable": 54,
+        "unchecked": 2186
+      },
+      "sourceUpdatedAt": "2026-11-04T03:30:33Z",
+      "auditCheckedAt": "2026-11-04T03:30:33Z",
+      "source": "Caltrans CWWP2 and official Santa Clara County local-road viewer",
+      "sourceUrl": "https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html",
+      "catalogUrl": "https://whardy.github.io/sandbox/california-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "auditCoverage": {
+        "scope": "Dated partial endpoint sample",
+        "listedUniqueEndpoints": 5964,
+        "checkedUniqueEndpoints": 1358,
+        "uncheckedUniqueEndpoints": 4606,
+        "method": "Retained completed endpoint checks plus stratified district/media samples and all GIS supplement candidates; no continuous streaming.",
+        "imageChecks": 1218,
+        "videoManifestChecks": 140,
+        "samplePerDistrictMedia": 12
+      },
+      "sourceAuditUrl": "https://whardy.github.io/sandbox/california-camera-desk/source-audit.json",
+      "sha256": "14927298eded0c1b5346c7e8484fec6d4eb54c7a106f3c9604a23a3af6424cee",
+      "bytes": 7567450
     }
   ],
   "notes": [
     "Listed views are dated catalog entries, not a live count of working feeds or deduplicated physical devices across providers.",
-    "Locations count distinct state/provider/source site identifiers; OH and AZ may contain several views at one location.",
+    "Locations count distinct state/provider/source site identifiers; OH, AZ and CA may contain several views at one source location; this is not an independently verified count of physical devices.",
     "State labels identify source catalogs; some catalogs include adjacent-state border connections.",
     "Availability is the best available dated media check. Available does not prove image capture time or current playback.",
     "Image/video capability and dated availability are independent. Video entries can have a working snapshot when their video was unavailable.",
     "County, independent-city, and DC ward classifications remain distinct. Metro groupings are browsing conveniences.",
     "Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.",
+    "California Caltrans recordTimestamp is catalog metadata, not image capture time. Direction describes travel side separately from facingDirection. County postmiles are not a statewide route odometer.",
     "No camera media was requested or recorded while building these shards."
   ]
 }

@@ -1,0 +1,151 @@
+{
+  "checkedAt": "2026-11-04T03:31:26.078Z",
+  "note": "Real driving routes, ordinary estimates without live traffic. Views within one mile, including cautious crossing/parallel/uncertain matches; counts are not visual coverage.",
+  "summaries": [
+    {
+      "name": "Los Angeles → San Diego",
+      "provider": "Valhalla / FOSSGIS",
+      "routeCount": 3,
+      "routes": [
+        {
+          "distanceKm": 194.9,
+          "durationMinutes": 122,
+          "views": 303,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 227,
+          "uncertainOrCrossing": 76,
+          "coverageGaps": 2
+        },
+        {
+          "distanceKm": 201,
+          "durationMinutes": 126,
+          "views": 254,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 74,
+          "uncertainOrCrossing": 180,
+          "coverageGaps": 2
+        },
+        {
+          "distanceKm": 230.4,
+          "durationMinutes": 146,
+          "views": 220,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 134,
+          "uncertainOrCrossing": 86,
+          "coverageGaps": 2
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "name": "Bay Area → Sacramento",
+      "provider": "Valhalla / FOSSGIS",
+      "routeCount": 2,
+      "routes": [
+        {
+          "distanceKm": 141.6,
+          "durationMinutes": 90,
+          "views": 210,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 148,
+          "uncertainOrCrossing": 62,
+          "coverageGaps": 1
+        },
+        {
+          "distanceKm": 179.2,
+          "durationMinutes": 116,
+          "views": 140,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 81,
+          "uncertainOrCrossing": 59,
+          "coverageGaps": 7
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "name": "Sacramento → Tahoe → Reno",
+      "provider": "Valhalla / FOSSGIS",
+      "routeCount": 1,
+      "routes": [
+        {
+          "distanceKm": 268.1,
+          "durationMinutes": 170,
+          "views": 123,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 104,
+          "uncertainOrCrossing": 19,
+          "coverageGaps": 7
+        }
+      ],
+      "warnings": [
+        "This routing service supports alternatives only for trips without intermediate stops."
+      ]
+    },
+    {
+      "name": "Long I-5 journey",
+      "provider": "Valhalla / FOSSGIS",
+      "routeCount": 1,
+      "routes": [
+        {
+          "distanceKm": 1234.4,
+          "durationMinutes": 760,
+          "views": 499,
+          "states": [
+            "CA"
+          ],
+          "roadMatches": 401,
+          "uncertainOrCrossing": 98,
+          "coverageGaps": 35
+        }
+      ],
+      "warnings": [
+        "This routing service supports alternatives only for trips without intermediate stops."
+      ]
+    },
+    {
+      "name": "Los Angeles → Phoenix",
+      "provider": "Valhalla / FOSSGIS",
+      "routeCount": 2,
+      "routes": [
+        {
+          "distanceKm": 601.6,
+          "durationMinutes": 355,
+          "views": 237,
+          "states": [
+            "CA",
+            "AZ"
+          ],
+          "roadMatches": 163,
+          "uncertainOrCrossing": 74,
+          "coverageGaps": 19
+        },
+        {
+          "distanceKm": 664.2,
+          "durationMinutes": 429,
+          "views": 237,
+          "states": [
+            "CA",
+            "AZ"
+          ],
+          "roadMatches": 166,
+          "uncertainOrCrossing": 71,
+          "coverageGaps": 17
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}

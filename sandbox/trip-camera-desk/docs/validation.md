@@ -14,3 +14,16 @@
 - Existing site navigation: all eight sites retain their nine state links and add Trip Desk. Each ten-link header fits320px with no horizontal overflow. WV/OH builds and all seven static-site checks passed.
 
 Feed checks are observations, not guarantees. This release reuses the dated source audits instead of running a new mass media audit. Public-service requests remain bounded, user-triggered, and subject to the published provider policies.
+
+
+## California release validation
+
+The maintained California release lives in `california-camera-desk/.integration/trip-camera-desk/`. It preserves all nine previous catalog shards and adds California only. It does not publish unrelated in-progress catalogs.
+
+The source compiler checks district/provider namespacing, separate source locations and directional views, missing coordinates, geography overrides, CA road normalization, and independent video/snapshot availability. Caltrans record metadata is not reported as image capture time; published travel-side direction does not fall back to a camera’s viewing description or name.
+
+Automated media coordination checks preserve WV behavior and verify an independent CA autoplay preference, shared global stream capacity, manual priority, muted inline attributes before source assignment, hidden native controls, offscreen/tab cleanup, modal scope, source/policy rejection retry guards, Stop all hold, provider nominal snapshot intervals, and snapshot fallback. Browser media playback is a separate verification.
+
+Five real routes are checked with actual camera catalogs: Los Angeles–San Diego; San Francisco–Sacramento; Sacramento–South Lake Tahoe–Reno; a long I-5 trip through Santa Clarita, Santa Nella and Williams to Yreka; and Los Angeles–Phoenix. See `california-route-validation.json` for the dated report. For every returned route, checks verify advancing journey order, bounded route distance/time, midpoint interpolation, camera matching uncertainty and explicit gap reporting. Multi-stop routes correctly report the provider’s lack of alternatives. Ordinary ETAs do not include live traffic.
+
+All nine pre-existing state shard SHA-256 hashes match the previously published `edaf611` release byte for byte; California is the only new catalog shard. This confirms preservation of existing IDs, source URLs, dated audits, and geographic overrides.
