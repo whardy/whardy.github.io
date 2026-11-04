@@ -21,7 +21,7 @@ export function cameraHealth(camera,now=Date.now()){
   const browserVideo=recentlyCheckedVideo&&video.verificationMethod==='browser-playback';
   const working=workingSnapshot||browserVideo;
   const unavailable=!official&&!working&&!recentlyCheckedVideo&&(camera.sourceDisabled||hasSnapshot&&snapshot.recent&&snapshot.status==='unavailable'&&snapshot.failureCategory==='placeholder'||[hasVideo?video:null,hasSnapshot?snapshot:null].filter(Boolean).every(check=>check.recent&&check.status==='unavailable'));
-  return {video,snapshot,hasVideo,hasSnapshot,official,workingSnapshot,recentlyCheckedVideo,browserVideo,working,unavailable,unchecked:!official&&!working&&!unavailable};
+  return {video,snapshot,hasVideo,hasSnapshot,official,workingSnapshot,recentlyCheckedVideo,browserVideo,working,unavailable,unchecked:!official&&!working&&!recentlyCheckedVideo&&!unavailable};
 }
 export function summarizeHealth(cameras,now=Date.now()){
   const summary={workingViews:0,decodedSnapshotViews:0,browserPlayedVideoViews:0,sourceDecodedVideoViews:0};

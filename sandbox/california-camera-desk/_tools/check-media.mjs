@@ -102,6 +102,10 @@ try {
   modalManager.setAutoplayScope(dialog);modalManager.snapshot(dialog,wv('DIALOG'));visible(dialog,true);await flush();assert.equal(videoIn(wall),undefined);assert.ok(videoIn(dialog));assert.equal(modalManager.count,1);
   modalManager.dispose(dialog);modalManager.setAutoplayScope(null);await flush();assert.ok(videoIn(wall));assert.equal(modalManager.count,1);
   modalManager.dispose(root);await flush();assert.equal(modalManager.count,0);
+  const manualModal=manager(),manualWall=new Element(),manualDialog=new Element(),manualRoot=new Element();manualRoot.append(manualWall,manualDialog);
+  assert.ok(manualModal.play(manualWall,ca('MANUAL-WALL')));await flush();assert.equal(manualModal.count,1);
+  manualModal.setAutoplayScope(manualDialog);await flush();assert.equal(manualModal.count,0,'Opening a dialog stops manually started wall video behind it');
+  manualModal.dispose(manualRoot);
   // California has its own preference but shares video capacity, inline
   // configuration and manual priority. Disabling it must not pause WV.
   const california=manager();const caRoot=new Element(),caView=new Element(),wvView=new Element();caRoot.append(caView,wvView);
@@ -156,6 +160,8 @@ try {
   stallManager.snapshot(stallView,ca('STALL'));visible(stallView,true);await flush();const stalled=videoIn(stallView);assert.ok(stalled);
   assert(!healthEvents.some(event=>event.phase==='playing'),'playing event alone is not advancing video');
   stalled.currentTime=2;stalled.emit('timeupdate');await flush();assert(healthEvents.some(event=>event.phase==='playing'));
+  const initialSuccesses=healthEvents.filter(event=>event.phase==='playing'&&event.status==='available').length,renewNow=Date.now;let renewClock=renewNow();Date.now=()=>renewClock+6*60000;
+  try{stalled.currentTime=2.3;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.filter(event=>event.phase==='playing'&&event.status==='available').length,initialSuccesses+1,'Advancing long-running video renews browser health before expiry');}finally{Date.now=renewNow;}
   stalled.emit('stalled');await flush();assert.equal(healthEvents.at(-1).phase,'buffering','stalled event must clear LIVE immediately without failing source');
   stalled.currentTime=2.5;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.at(-1).phase,'playing','advancing playback recovers LIVE');
   const oldClock=Date.now;let stallClock=oldClock();Date.now=()=>stallClock;

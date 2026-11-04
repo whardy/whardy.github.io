@@ -151,6 +151,8 @@ try {
   assert.equal(stalledManager.isPlaying(stalledCamera.id),true);assert.ok(healthEvents.includes('video:available'));
   const realNow=Date.now;let stallNow=realNow();Date.now=()=>stallNow;
   try {
+    stallNow+=6*60000;stalledVideo.currentTime=4;stalledVideo.emit('timeupdate');await flush();
+    assert.equal(healthEvents.filter(event=>event==='video:available').length,2,'Advancing long-running playback renews browser health before expiry');
     stallNow+=19000;
     const firstWatch=[...timers].find(([,timer])=>timer.delay===5000);assert.ok(firstWatch);
     timers.delete(firstWatch[0]);firstWatch[1].callback();await flush();

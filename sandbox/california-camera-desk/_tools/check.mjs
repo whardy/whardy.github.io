@@ -33,6 +33,7 @@ const byId=id=>healthCases.find(c=>c.id===id);
 assert(availabilityMatch(byId('snapshot-works-video-fails'),'working'));
 assert(!availabilityMatch(byId('snapshot-works-video-fails'),'video'),'a working JPG must not qualify failed video');
 assert(availabilityMatch(byId('video-decoded-snapshot-fails'),'video'));
+assert(!availabilityMatch(byId('video-decoded-snapshot-fails'),'unchecked'),'a recently decoded video is not an unchecked camera');
 assert(!availabilityMatch(byId('video-decoded-snapshot-fails'),'working'),'source-decoded segments do not prove browser playback');
 byId('video-decoded-snapshot-fails').sessionHealth={video:checked('available','browser-playback')};
 assert(availabilityMatch(byId('video-decoded-snapshot-fails'),'working'),'advancing playback in this session qualifies');

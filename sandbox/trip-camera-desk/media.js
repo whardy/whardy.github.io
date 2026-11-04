@@ -143,7 +143,7 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
     const video=document.createElement('video');video.controls=!inlineVideo(camera);video.playsInline=true;video.muted=true;video.defaultMuted=true;video.autoplay=true;if(camera.state!=='FL'||!native||camera.videoCrossOrigin==='anonymous')video.crossOrigin='anonymous';video.preload='none';video.setAttribute('muted','');video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.setAttribute('autoplay','');video.setAttribute('aria-label',`Live traffic video: ${camera.name}`);
     if(inlineVideo(camera)){video.disablePictureInPicture=true;video.disableRemotePlayback=true;video.classList.add(`${camera.state.toLowerCase()}-inline-video`);}
     const label=document.createElement('span');label.className='media-time';label.textContent='Connecting…';container.append(video,label);
-    let hls=null,timer,watchdog,retryTimer,stopped=false,reconnecting=false,retries=0,progressAt=0,lastTime=0,verified=false;
+    let hls=null,timer,watchdog,retryTimer,stopped=false,reconnecting=false,retries=0,progressAt=0,lastTime=0,lastHealthAt=0,verified=false;
     const player={container,camera,video,autoItem,seen:false,stop(message='Video stopped'){
       if(stopped)return;stopped=true;clearTimeout(timer);clearTimeout(watchdog);clearTimeout(retryTimer);videoObserver.unobserve(container);hls?.destroy();video.pause();video.removeAttribute('src');video.load();video.remove();label.textContent=message;players.delete(player);
       if(autoItem){autoItem.player=null;restorePreview(autoItem,message);}
@@ -155,7 +155,9 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
       const time=Number(video.currentTime)||0;
       if(time<=lastTime+0.2||video.readyState<2||video.videoWidth<=0||video.videoHeight<=0)return;
       lastTime=time;progressAt=Date.now();
-      if(!verified){verified=true;player.verified=true;label.textContent='LIVE · advancing video';recordMediaResult(camera,'video','available');onHealth(camera,'video','available');onChange(players.size);onStatus('Video is advancing in this browser. Separate feeds are not synchronized.');}
+      const newlyVerified=!verified;
+      if(newlyVerified){verified=true;player.verified=true;label.textContent='LIVE · advancing video';onChange(players.size);onStatus('Video is advancing in this browser. Separate feeds are not synchronized.');}
+      if(newlyVerified||Date.now()-lastHealthAt>=5*60000){lastHealthAt=Date.now();recordMediaResult(camera,'video','available');onHealth(camera,'video','available');}
     };
     const checkProgress=()=>{
       if(stopped||camera.state!=='CA'||document.hidden)return;
@@ -165,7 +167,7 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
     };
     const connect=()=>{
       if(stopped)return;
-      reconnecting=false;verified=false;player.verified=false;lastTime=Number(video.currentTime)||0;progressAt=Date.now();
+      reconnecting=false;verified=false;player.verified=false;lastTime=Number(video.currentTime)||0;progressAt=Date.now();lastHealthAt=0;
       clearTimeout(timer);timer=setTimeout(()=>fail('connection-timeout'),30000);
       if(native){video.src=source.href;attempt();}
       else if(window.Hls?.isSupported()){
