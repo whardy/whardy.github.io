@@ -159,3 +159,7 @@ python3 _tools/build-catalog.py --repository ../.. --output data
 For previewing a maintained catalog before publication, repeat `--state-source STATE=/absolute/catalog/directory` as needed. Publish the rebuilt index and changed shards together. The compiler requests no camera media.
 
 Unconfirmed or partially edited route points remain off the map until validated. Find my route resolves typed coordinate pairs together; malformed saved trips are rejected before changing the active draft.
+
+## Florida access
+
+Florida Camera Desk uses FL511’s official embedded map and regional links. FL511’s published conditions require FDOT’s express written consent for independent reuse of its camera content. This Trip Desk release provides official Florida links for Florida route sections and Explore mode, but does not index, match, pin, or play individual FL511 cameras. FL511 views are not used in camera counts or coverage-gap calculations; Florida stretches may appear as gaps. Individual camera integration requires an applicable FDOT data/video agreement or another verified permitted source.

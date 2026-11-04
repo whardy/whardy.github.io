@@ -8,10 +8,10 @@
   <title>Trip Camera Desk — Across states. One journey.</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23172824'/%3E%3Cpath d='M18 47 27 17h10l9 30M22 35h20M32 21v7m0 9v7' fill='none' stroke='%23d7edb5' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=20261104or2">
+  <link rel="stylesheet" href="styles.css?v=20261104fl2">
   <script src="vendor/leaflet.js" defer></script>
   <script src="vendor/hls.min.js" defer></script>
-  <script src="app.js?v=20261104ordraft2" type="module"></script>
+  <script src="app.js?v=20261104fl2" type="module"></script>
 </head>
 <body class="mode-plan">
   <a class="skip-link" href="#main-content">Skip to trip planner</a>
@@ -32,6 +32,7 @@
         <a href="https://whardy.github.io/sandbox/washington-camera-desk/" aria-label="Washington cameras">WA</a>
         <a href="https://whardy.github.io/sandbox/california-camera-desk/" aria-label="California cameras">CA</a>
         <a href="https://whardy.github.io/sandbox/oregon-camera-desk/" aria-label="Oregon cameras">OR</a>
+        <a href="https://whardy.github.io/sandbox/florida-camera-desk/" aria-label="Florida cameras">FL</a>
       </nav>
       <span class="header-note"><span class="status-dot" aria-hidden="true"></span>A clearer road ahead</span>
     </div>
@@ -81,6 +82,12 @@
           <p class="map-footnote">Camera locations are approximate. Images show current conditions, not conditions predicted for your arrival.</p>
         </section>
       </div>
+
+      <section id="florida-context" class="florida-context" aria-labelledby="florida-context-title" hidden>
+        <div class="florida-context-copy"><p class="eyebrow">OFFICIAL FLORIDA VIEWS</p><h2 id="florida-context-title">Check the Florida stretch.</h2><p id="florida-context-note">FL511 camera views open in its official map. Florida cameras are not counted in this independent catalog.</p></div>
+        <div class="florida-context-actions"><a class="button primary-button" href="https://whardy.github.io/sandbox/florida-camera-desk/">Florida Camera Desk <span aria-hidden="true">↗</span></a><a class="button secondary-button" href="https://www.fl511.com/cctv" target="_blank" rel="noopener noreferrer">Official FL511 viewer <span aria-hidden="true">↗</span></a></div>
+        <div id="florida-route-regions" class="florida-route-regions" aria-label="Florida regions along this route"></div>
+      </section>
 
       <section id="lookahead-panel" class="lookahead-panel" aria-labelledby="lookahead-title" hidden>
         <div class="lookahead-heading"><div><p class="eyebrow">ALONG YOUR ROUTE</p><h2 id="lookahead-title">A little further ahead</h2></div><span id="lookahead-label" class="lookahead-value">Start of trip</span></div>

@@ -4,6 +4,7 @@ import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointA
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
 import {createCameraMap} from './map.js?v=20261104ordraft1';
 import {createMediaManager} from './media.js?v=20261104or2';
+import {FLORIDA_REGIONS,floridaRouteRegions} from './florida.js';
 
 const $=id=>document.getElementById(id), nf=new Intl.NumberFormat('en-US');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -193,7 +194,27 @@ function render(){
   for(const mode of ['plan','wall','board','explore']){$(`mode-${mode}`).setAttribute('aria-pressed',String(mode===model.mode));$(`mode-${mode}`).classList.toggle('is-active',mode===model.mode);}
   $('board-panel').hidden=model.mode!=='board';$('map-section').hidden=!['plan','explore'].includes(model.mode);$('live-tray').hidden=model.mode!=='board';
   $('map-title').textContent=model.mode==='explore'?'Explore the camera network':'The road ahead';$('fit-route').textContent=model.mode==='explore'?'Fit cameras ⌖':'Fit route ⌖';
-  renderRoute();renderLibrary();renderResults();requestAnimationFrame(()=>cameraMap?.resize());updateURL();
+  renderRoute();renderFloridaContext();renderLibrary();renderResults();requestAnimationFrame(()=>cameraMap?.resize());updateURL();
+}
+function renderFloridaContext(){
+  const regions=model.route?floridaRouteRegions(model.route):[];
+  const showingRoute=(model.mode==='plan'||model.mode==='wall')&&regions.length>0;
+  const section=$('florida-context');
+  section.hidden=!(showingRoute||model.mode==='explore');
+  if(section.hidden)return;
+  const indexed=model.index?.states?.some(state=>state.state==='FL');
+  $('florida-context-title').textContent=showingRoute?'Check the Florida stretch.':'Explore Florida’s official camera map.';
+  $('florida-context-note').textContent=indexed
+    ?'Open FL511 for official Florida conditions and camera views alongside this route.'
+    :showingRoute
+      ?"Your route enters Florida. Open FL511 for official camera views. Those views are absent from Trip Desk's camera count and coverage calculation, so Florida stretches may appear as gaps."
+      :'FL511 camera views are available through its official map. They are not included in this independent camera catalog or its filters.';
+  const links=$('florida-route-regions');links.replaceChildren();
+  if(!showingRoute)return;
+  for(const slug of regions){
+    const link=document.createElement('a');link.href=`https://whardy.github.io/sandbox/florida-camera-desk/?region=${slug}`;
+    link.textContent=`${FLORIDA_REGIONS[slug]} ↗`;link.setAttribute('aria-label',`Open official Florida cameras for ${FLORIDA_REGIONS[slug]}`);links.append(link);
+  }
 }
 async function setMode(mode){
   if(!['plan','wall','board','explore'].includes(mode))return;
