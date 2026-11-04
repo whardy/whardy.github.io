@@ -9,7 +9,7 @@ A responsive trip planner and public traffic-camera desk combining West Virginia
 - **Plan:** choose a start, destination and up to six intermediate stops through manual place search, latitude/longitude entry, or map selection. Calculate real driving directions and select an alternative when available. A route corridor finds cameras across state lines, ordered by progress along the journey.
 - **Route wall:** browse 25 camera views per page, with state, area, jurisdiction, road, media and dated-availability filters. Highway and direction filters apply to the selected trip stretch. Unknown direction is retained and labeled.
 - **Look ahead:** move along the route to see nearby camera checkpoints and elapsed driving estimates. Representative selection picks cameras at intervals, with additional choices near routing-service highway junctions where camera coverage exists.
-- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Desktop defaults to two live slots; narrow screens default to one, with a selectable limit of one, two or four. Independent feeds are not synchronized.
+- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Visible WV feeds also autoplay muted by default. Desktop defaults to two live slots; narrow screens default to one, with a selectable limit of one, two or four. Independent feeds are not synchronized.
 - **Explore:** browse and map the full catalog without calculating a trip.
 - **Saved trips:** keep up to 50 trips and 30 boards with up to 500 camera IDs per board in this browser. Export/import JSON to transfer them, or deliberately share a trip or board link. Large shares require JSON export instead of a URL.
 
@@ -42,6 +42,14 @@ West Virginia, Virginia, Maryland and New York support established public HLS co
 Texas keeps its existing owned relay at `https://texas-camera-relay.wintrytiger33.chatgpt.site` for media already dependent on it. This site does not change that relay's deployment or allowlist. Austin sources retain direct delivery; external-only TranStar views remain official-viewer links. Publishing this directory cannot fix a separate relay or provider outage.
 
 No media is stored in this repository. The release does not record footage or create an image-history archive. Mobile viewport testing does not substitute for testing on physical iOS hardware; native playback controls and a user-start action remain available for autoplay restrictions.
+
+### WV autoplay
+
+Visible WV feeds start muted and inline by default, including camera-wall previews, enlarged views and WV watchboard slots. Native controls are hidden for WV to avoid the large pause/play overlay; external Watch live/Stop video actions remain available. Other states retain their native controls and user-start behavior.
+
+The **Autoplay WV** checkbox pauses or resumes WV previews and remembers the preference in this browser. Automatic previews share the existing global video-slot limit (two on desktop, one by default on narrow screens); manually selected streams take priority. Offscreen previews release their slots and resume when visible. Enlarging a camera pauses automatic previews behind the dialog. **Stop all** disables WV autoplay until it is enabled again.
+
+A browser autoplay rejection or source error suppresses automatic retries for that view. Use Watch live, Refresh now, or re-enable Autoplay WV to retry. iOS power-saving and browser policies can still require a tap; the site keeps a user-start fallback instead of repeatedly requesting blocked playback. See [WebKit’s autoplay policy](https://webkit.org/blog/6784/new-video-policies-for-ios/).
 
 ## Routing, search and operating cost
 
@@ -80,6 +88,7 @@ From the local project directory:
 ```sh
 node scripts/check.mjs
 node scripts/check-routing.mjs
+node scripts/check-media.mjs
 python3 -m http.server 4190 --bind 127.0.0.1 --directory dist
 ```
 

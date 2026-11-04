@@ -8,10 +8,10 @@
   <title>Trip Camera Desk — Across states. One journey.</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23172824'/%3E%3Cpath d='M18 47 27 17h10l9 30M22 35h20M32 21v7m0 9v7' fill='none' stroke='%23d7edb5' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=20261104wa">
+  <link rel="stylesheet" href="styles.css?v=20261104wvauto1">
   <script src="vendor/leaflet.js" defer></script>
   <script src="vendor/hls.min.js" defer></script>
-  <script src="app.js?v=20261103trip1" type="module"></script>
+  <script src="app.js?v=20261103wvauto1" type="module"></script>
 </head>
 <body class="mode-plan">
   <a class="skip-link" href="#main-content">Skip to trip planner</a>
@@ -98,7 +98,7 @@
       </section>
 
       <section id="camera-results" class="camera-results" aria-labelledby="results-title">
-        <div class="results-heading-row"><div class="results-heading" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="results-eyebrow">CAMERAS FOR YOUR JOURNEY</p><h2 id="results-title"><span id="result-count">—</span> <span id="result-detail">camera views</span></h2></div><div class="refresh-tools"><label class="check-label"><input id="snapshot-refresh" type="checkbox" checked>Refresh visible snapshots</label><button id="refresh-visible" class="text-button" type="button"><span aria-hidden="true">↻</span>Refresh now</button></div></div>
+        <div class="results-heading-row"><div class="results-heading" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="results-eyebrow">CAMERAS FOR YOUR JOURNEY</p><h2 id="results-title"><span id="result-count">—</span> <span id="result-detail">camera views</span></h2></div><div class="refresh-tools"><label class="check-label" title="Visible WV feeds start muted within the selected video-slot limit"><input id="wv-autoplay" type="checkbox" checked>Autoplay WV</label><label class="check-label"><input id="snapshot-refresh" type="checkbox" checked>Refresh visible snapshots</label><button id="refresh-visible" class="text-button" type="button"><span aria-hidden="true">↻</span>Refresh now</button></div></div>
         <div class="filter-panel" aria-label="Filter cameras">
           <label class="field query-field" for="query"><span>Find a camera</span><input id="query" type="search" placeholder="Road, place or camera ID" autocomplete="off"></label>
           <label class="field" for="state"><span>State</span><select id="state"><option value="">All states + DC</option></select></label>

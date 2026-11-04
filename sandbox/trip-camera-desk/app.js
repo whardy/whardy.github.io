@@ -3,7 +3,7 @@ import {searchPlaces,calculateRoutes,PROVIDERS} from './routing.js';
 import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js';
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
 import {createCameraMap} from './map.js';
-import {createMediaManager} from './media.js';
+import {createMediaManager} from './media.js?v=20261103wvauto1';
 
 const $=id=>document.getElementById(id), nf=new Intl.NumberFormat('en-US');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -13,7 +13,9 @@ const date=value=>value?new Date(value).toLocaleDateString('en-US',{month:'short
 const emptyFilters=()=>({query:'',state:'',metro:'',jurisdiction:'',road:'',media:'',status:''});
 const model={index:null,mode:'plan',library:loadLibrary(),points:[{key:'from',name:'Columbus, Ohio',lat:39.9623,lon:-82.9991},{key:'to',name:'Washington, DC',lat:38.9072,lon:-77.0369}],routes:[],route:null,routeWarnings:[],matches:[],gaps:[],filters:emptyFilters(),page:1,corridorMeters:1609.344,lookahead:0,highway:'',direction:'',selected:null,liveSlots:[],busy:false,dirty:false};
 let cameraMap=null, routeAbort=null, searchAbort=new Map(), modalReturn=null, modalPlayer=null, filtersTimer;
-const media=createMediaManager({onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
+const readWVAutoplay=()=>{try{return localStorage.getItem('trip-camera-desk-wv-autoplay')!=='off';}catch{return true;}};
+const media=createMediaManager({autoplayWV:readWVAutoplay(),onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
+function setWVAutoplay(value){$('wv-autoplay').checked=!!value;media.setWVAutoplay(value);try{localStorage.setItem('trip-camera-desk-wv-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function announce(message){$('app-status').textContent=message;}
 function persist(){if(!saveLibrary(model.library))announce('Changes are available for this visit. Browser storage is full or unavailable; use Export to keep a copy.');}
 const board=()=>model.library.boards.find(b=>b.id===model.library.activeBoardId)||model.library.boards[0];
@@ -215,9 +217,10 @@ function openCamera(id){
   $('dialog-title').textContent=camera.name;$('dialog-subtitle').textContent=[camera.stateName,camera.road,camera.jurisdiction].filter(Boolean).join(' · ');
   $('dialog-status').textContent=`${camera.provider}. ${camera.description||''} Availability checked ${date(camera.auditCheckedAt||camera.videoCheckedAt)}. Fetched time is retrieval time.`;
   $('dialog-source').href=safeLink(camera.officialUrl);$('dialog-play').hidden=!camera.videoUrl;$('dialog-play').disabled=!!camera.disabled;$('dialog-play').textContent='Watch live';
-  media.snapshot($('dialog-media'),camera);updateDialogPin();if(!$('camera-dialog').open)$('camera-dialog').showModal();cameraMap?.update(baseCameras(),camera.id);updateURL();
+  media.setAutoplayScope($('dialog-media'));
+  media.snapshot($('dialog-media'),camera,{onPlay:player=>{modalPlayer=player;$('dialog-play').textContent='Stop video';},onEnd:message=>{modalPlayer=null;$('dialog-play').textContent='Watch live';$('dialog-status').textContent=message;}});updateDialogPin();if(!$('camera-dialog').open)$('camera-dialog').showModal();cameraMap?.update(baseCameras(),camera.id);updateURL();
 }
-function closeCamera(){const id=model.selected?.id;modalPlayer?.stop();modalPlayer=null;media.dispose($('dialog-media'));model.selected=null;$('camera-dialog').close();if(modalReturn?.isConnected)modalReturn.focus();else ([...document.querySelectorAll('.camera-card')].find(card=>card.dataset.cameraId===id)?.querySelector('.card-title')||$(`mode-${model.mode}`)).focus();updateURL();}
+function closeCamera(){const id=model.selected?.id;modalPlayer?.stop();modalPlayer=null;media.dispose($('dialog-media'));model.selected=null;$('camera-dialog').close();media.setAutoplayScope(null);if(modalReturn?.isConnected)modalReturn.focus();else ([...document.querySelectorAll('.camera-card')].find(card=>card.dataset.cameraId===id)?.querySelector('.card-title')||$(`mode-${model.mode}`)).focus();updateURL();}
 function renderLiveSlots(){
   const container=$('live-slots');media.dispose(container);container.replaceChildren();
   if(!model.liveSlots.length){container.innerHTML='<p class="live-empty">Choose Watch live on a supported camera to add it here. Your pinned camera cards appear below.</p>';return;}
@@ -225,13 +228,13 @@ function renderLiveSlots(){
     const camera=cameraById(slot.id);if(!camera)continue;slot.player=null;
     const article=document.createElement('article');article.className='live-slot';article.dataset.cameraId=camera.id;
     article.innerHTML=`<div class="card-top"><span class="state-tag">${esc(camera.state)}</span><strong>${esc(camera.name)}</strong><button class="text-button" data-live="remove" type="button" aria-label="Remove ${esc(camera.name)} from video slots">✕</button></div><div class="live-slot-media"></div><p class="small-note live-slot-status">Choose Watch live to connect.</p><div class="live-slot-actions"><button class="small-button" type="button" data-live="play">Watch live</button><button class="text-button" type="button" data-live="pin">${board().cameraIds.includes(camera.id)?'Pinned':'Pin camera'}</button><a class="text-button" href="${esc(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official ↗</a></div>`;
-    container.append(article);media.snapshot(article.querySelector('.live-slot-media'),camera);
+    container.append(article);media.snapshot(article.querySelector('.live-slot-media'),camera,{onPlay:player=>{slot.player=player;slot.wanted=true;article.querySelector('[data-live="play"]').textContent='Stop video';},onEnd:message=>{slot.player=null;if(!message.includes('offscreen'))slot.wanted=false;article.querySelector('[data-live="play"]').textContent='Watch live';article.querySelector('.live-slot-status').textContent=message;},onStatus:message=>article.querySelector('.live-slot-status').textContent=message});
     article.addEventListener('click',event=>{const action=event.target.closest('[data-live]')?.dataset.live;if(action==='remove'){slot.player?.stop();media.dispose(article);model.liveSlots=model.liveSlots.filter(s=>s!==slot);article.remove();}else if(action==='pin'){if(!board().cameraIds.includes(camera.id))togglePin(camera.id);event.target.textContent='Pinned';}else if(action==='play')playSlot(slot,article);});
   }
 }
 function playSlot(slot,article){
   const container=article.querySelector('.live-slot-media'),button=article.querySelector('[data-live="play"]'),status=article.querySelector('.live-slot-status');
-  if(slot.player){slot.wanted=false;slot.player.stop();slot.player=null;media.snapshot(container,cameraById(slot.id));button.textContent='Watch live';return;}
+  if(slot.player){slot.wanted=false;slot.player.stop();slot.player=null;media.snapshot(container,cameraById(slot.id),{autoplay:false});button.textContent='Watch live';return;}
   slot.wanted=true;
   slot.player=media.play(container,cameraById(slot.id),{onStatus:message=>status.textContent=message,onEnd:message=>{slot.player=null;if(!message.includes('offscreen'))slot.wanted=false;button.textContent='Watch live';status.textContent=message;}});
   if(slot.player)button.textContent='Stop video';
@@ -287,7 +290,7 @@ function bindEvents(){
   $('reset-filters').addEventListener('click',()=>{model.filters=emptyFilters();model.highway='';model.direction='';$('highway-select').value='';$('travel-direction').value='';model.page=1;renderResults();updateURL();});
   $('apply-corridor').addEventListener('click',()=>{if(!model.route){announce('Find a route between your start and destination, then apply the highway filter to that stretch.');return;}model.highway=$('highway-select').value;model.direction=$('travel-direction').value;model.page=1;renderResults();announce('Highway filter applied to your selected route. Unknown camera direction is retained and labeled.');});
   $('previous-page').addEventListener('click',()=>{model.page--;renderResults();$('camera-results').scrollIntoView({block:'start'});});$('next-page').addEventListener('click',()=>{model.page++;renderResults();$('camera-results').scrollIntoView({block:'start'});});
-  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());
+  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());$('wv-autoplay').checked=readWVAutoplay();$('wv-autoplay').addEventListener('change',()=>setWVAutoplay($('wv-autoplay').checked));
   $('board-select').addEventListener('change',async()=>{model.library.activeBoardId=$('board-select').value;await ensureBoardCameras();persist();renderLibrary();renderResults();});
   $('new-board').addEventListener('click',()=>{if(model.library.boards.length>=30){announce('You can keep 30 boards. Export or remove a board first.');return;}const name=$('board-name').value.trim()||'My watchboard';const b={id:newId(),name,cameraIds:[]};model.library.boards.push(b);model.library.activeBoardId=b.id;persist();renderLibrary();renderResults();});
   $('rename-board').addEventListener('click',()=>{const name=$('board-name').value.trim();if(name){board().name=name;persist();renderLibrary();renderResults();}});
@@ -301,10 +304,10 @@ function bindEvents(){
   $('export-data').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({format:'trip-camera-desk',version:1,exportedAt:new Date().toISOString(),...model.library},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trip-camera-desk-saved.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   $('import-data').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',async()=>{const file=$('import-file').files[0];if(!file)return;try{if(file.size>2_000_000)throw new Error('Import is larger than 2 MB.');const value=JSON.parse(await file.text());if(value.format!=='trip-camera-desk'||value.version!==1||!Array.isArray(value.boards)||!Array.isArray(value.trips))throw new Error('Choose a Trip Camera Desk export.');mergeLibrary(model.library,value);persist();await ensureBoardCameras();renderLibrary();renderResults();announce('Import complete. Existing items were kept; new items were added up to the 30-board and 50-trip limits.');}catch(error){announce(error.message);}$('import-file').value='';});
   $('live-limit').value=String(media.limit);$('live-limit').addEventListener('change',()=>{media.setLimit($('live-limit').value);while(model.liveSlots.length>media.limit)model.liveSlots.pop().player?.stop();renderLiveSlots();});
-  $('stop-all-video').addEventListener('click',()=>{media.stopAll();for(const slot of model.liveSlots)slot.player=null;renderLiveSlots();});
+  $('stop-all-video').addEventListener('click',()=>{setWVAutoplay(false);media.stopAll();for(const slot of model.liveSlots){slot.player=null;slot.wanted=false;}renderLiveSlots();});
   $('dialog-close').addEventListener('click',closeCamera);$('camera-dialog').addEventListener('cancel',event=>{event.preventDefault();closeCamera();});
   $('dialog-pin').addEventListener('click',()=>model.selected&&togglePin(model.selected.id));$('dialog-play').addEventListener('click',()=>{
-    if(modalPlayer){modalPlayer.stop();modalPlayer=null;media.snapshot($('dialog-media'),model.selected);$('dialog-play').textContent='Watch live';return;}
+    if(modalPlayer){modalPlayer.stop();modalPlayer=null;media.snapshot($('dialog-media'),model.selected,{autoplay:false});$('dialog-play').textContent='Watch live';return;}
     modalPlayer=media.play($('dialog-media'),model.selected,{onStatus:message=>$('dialog-status').textContent=message,onEnd:message=>{modalPlayer=null;$('dialog-play').textContent='Watch live';$('dialog-status').textContent=message;}});if(modalPlayer)$('dialog-play').textContent='Stop video';
   });
 }
