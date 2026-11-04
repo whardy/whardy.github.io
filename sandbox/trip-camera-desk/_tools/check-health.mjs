@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {californiaHealth,mediaCheck,matchesCaliforniaHealth,recordMediaResult} from '../health.js?v=20261104cahealth2';
-import {filterCameras,loadStates,matchingRouteViews} from '../catalog.js';
+import {filterCameras,loadStates,matchingRouteViews,statusForCamera} from '../catalog.js';
 import {prepareRoute,coverageGaps} from '../geometry.js';
 
 const now=Date.now(),stamp=offset=>new Date(now+offset).toISOString();
@@ -40,6 +40,24 @@ assert.deepEqual(filterCameras(cameras,{...filters,caHealth:'video'}).map(c=>c.i
 assert.deepEqual(filterCameras(cameras,{...filters,caHealth:'official'}).map(c=>c.id),[official.id]);
 assert.equal(matchesCaliforniaHealth({state:'WV'},'working'),true,'California health choice leaves other states unchanged');
 
+// Facet counts and selection share exactly one status classification, including
+// video candidates that have decoded at the source but not played here.
+const legacyCamera={id:'WV:wv511:dated',state:'WV',searchText:'dated',availability:'stale'};
+const statusCases=[...cameras,legacyCamera];
+assert.deepEqual(statusCases.map(camera=>statusForCamera(camera)),
+  ['video-checked','available','unchecked','stale','unavailable','official','stale']);
+const statusFilters={...filters,caHealth:'all'};
+const facetCounts=new Map();
+for(const camera of filterCameras(statusCases,statusFilters,'status')){
+  const status=statusForCamera(camera);facetCounts.set(status,(facetCounts.get(status)||0)+1);
+}
+for(const [status,count]of facetCounts){
+  assert.equal(filterCameras(statusCases,{...statusFilters,status}).length,count,`${status} facet count must match selected results`);
+}
+assert.equal(statusForCamera(legacyCamera),'stale','Other states keep dated availability semantics');
+assert.equal(statusForCamera({...legacyCamera,availability:undefined}),undefined,'Missing legacy availability is not invented');
+assert.equal(filterCameras(statusCases,{...statusFilters,status:'invalid-status'}).length,0,'Unknown status never passes California cameras');
+
 const route=prepareRoute({coordinates:[[-122,37],[-121.9,37]],distanceMeters:9000,durationSeconds:600});
 const along=[{...imageWorks,routeDistanceMeters:2000,routeOffsetMeters:200},
   {...unavailable,routeDistanceMeters:6000,routeOffsetMeters:200},
@@ -53,8 +71,10 @@ assert.equal(coverageGaps(route,allNear,{radiusMeters:1609.344,minGapMeters:3218
 
 recordMediaResult(videoWorks,'video','available');
 assert.equal(californiaHealth(videoWorks).working,true,'Advancing browser playback qualifies during this session');
+assert.equal(statusForCamera(videoWorks),'available','Browser progress moves a video candidate into working status');
 recordMediaResult(videoWorks,'video','unavailable','playback-stalled');
 assert.equal(californiaHealth(videoWorks).checkedVideo,false,'A session stall overrides a dated successful audit');
+assert.equal(statusForCamera(videoWorks),'unavailable','Browser failure updates the status facet classification');
 recordMediaResult(imageWorks,'video','blocked','autoplay-policy');
 assert.equal(californiaHealth(imageWorks).video.status,'unavailable','Autoplay policy is not recorded as a new source failure');
 recordMediaResult(unavailable,'snapshot','available');

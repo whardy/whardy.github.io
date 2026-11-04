@@ -1,4 +1,4 @@
-import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet,matchingRouteViews} from './catalog.js?v=20261104cahealth2';
+import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet,matchingRouteViews,statusForCamera} from './catalog.js?v=20261104cahealth2';
 import {searchPlaces,calculateRoutes,PROVIDERS} from './routing.js';
 import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104fl3';
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
@@ -156,20 +156,33 @@ function baseCameras(){
   if($('sample-cameras').checked)cameras=representativeCameras(cameras,{intervalMeters:Number($('sample-spacing').value)*1609.344,route:model.route});
   return cameras;
 }
+function updateStatusChoices(base=baseCameras()){
+  const filters=model.mode==='board'?{...model.filters,caHealth:'all'}:model.filters;
+  const hasCA=base.some(camera=>camera.state==='CA'),hasOther=base.some(camera=>camera.state!=='CA');
+  const names={available:hasCA?(hasOther?'Working here (CA) / checked available':'Working here'):'Checked available',
+    'video-checked':'Recently checked CA video candidate',unavailable:'Unavailable / disabled',
+    stale:hasCA?(hasOther?'Expired CA check / older image':'Expired check'):'Older image at last check',
+    official:'Official viewer only',unchecked:hasCA?'Unchecked / not checked':'Not checked'};
+  const choices=new Map();for(const camera of filterCameras(base,filters,'status')){const value=statusForCamera(camera);if(value)choices.set(value,(choices.get(value)||0)+1);}
+  const select=$('status');select.innerHTML='<option value="">All availability</option>'+[...choices].sort(([a],[b])=>a.localeCompare(b)).map(([value,count])=>`<option value="${esc(value)}">${esc(names[value]||value)} (${nf.format(count)})</option>`).join('');
+  if(model.filters.status&&!choices.has(model.filters.status))select.add(new Option(`${names[model.filters.status]||model.filters.status} (0)`,model.filters.status));select.value=model.filters.status;
+}
 function renderFilters(base){
+  const filters=model.mode==='board'?{...model.filters,caHealth:'all'}:model.filters;
   for(const [key,label]of [['state','All states + DC'],['metro','All cities / areas'],['jurisdiction','All jurisdictions'],['provider','All providers'],['district','All districts'],['road','All roads']]){
     const select=$(key);let choices;
-    if(key==='state')choices=model.mode==='explore'?model.index.states.map(s=>[s.state,s.views,s.stateName]):facet(base,model.filters,key).map(([code,count])=>[code,count,model.index.states.find(s=>s.state===code)?.stateName||code]);
-    else choices=facet(base,model.filters,key);
+    if(key==='state')choices=model.mode==='explore'?model.index.states.map(s=>[s.state,s.views,s.stateName]):facet(base,filters,key).map(([code,count])=>[code,count,model.index.states.find(s=>s.state===code)?.stateName||code]);
+    else choices=facet(base,filters,key);
     select.innerHTML=`<option value="">${label}</option>`+choices.map(([value,count,name])=>`<option value="${esc(value)}">${esc(name||value)} (${nf.format(count)})</option>`).join('');
     if(model.filters[key]&&!choices.some(([value])=>value===model.filters[key]))select.add(new Option(`${model.filters[key]} (0)`,model.filters[key]));
     select.value=model.filters[key];
   }
-  for(const [key,field,label,names] of [['media','mediaType','All media',{video:'Live video',snapshot:'Refreshing snapshot',official:'Official viewer'}],['status','availability','All availability',{available:'Checked available',unavailable:'Unavailable / disabled',stale:'Older image at last check',official:'Official viewer only',unchecked:'Not checked'}]]){
-    const choices=new Map();for(const camera of filterCameras(base,model.filters,key)){const value=camera[field];if(value)choices.set(value,(choices.get(value)||0)+1);}
+  for(const [key,field,label,names] of [['media','mediaType','All media',{video:'Live video',snapshot:'Refreshing snapshot',official:'Official viewer'}]]){
+    const choices=new Map();for(const camera of filterCameras(base,filters,key)){const value=camera[field];if(value)choices.set(value,(choices.get(value)||0)+1);}
     const select=$(key);select.innerHTML=`<option value="">${label}</option>`+[...choices].sort(([a],[b])=>a.localeCompare(b)).map(([value,count])=>`<option value="${esc(value)}">${esc(names[value]||value)} (${nf.format(count)})</option>`).join('');
     if(model.filters[key]&&!choices.has(model.filters[key]))select.add(new Option(`${names[model.filters[key]]||model.filters[key]} (0)`,model.filters[key]));select.value=model.filters[key];
   }
+  updateStatusChoices(base);
   $('query').value=model.filters.query;
   $('ca-health-field').hidden=model.mode==='board'||!base.some(camera=>camera.state==='CA');$('ca-health').value=model.filters.caHealth;updateCaliforniaHealthChoices(base);
   const chips=$('active-filters');chips.replaceChildren();
@@ -216,7 +229,7 @@ function refreshVisibleHealth(){
     const badge=card.querySelector('.media-badge');if(badge)badge.textContent=mediaBadge(camera);
     const check=card.querySelector('.availability-badge');if(check){check.textContent=briefCheckText(camera);check.title=checkText(camera);}
   }
-  updateCaliforniaHealthChoices();
+  updateCaliforniaHealthChoices();updateStatusChoices();
   renderCoverage();
   const current=sortResults(filterCameras(baseCameras(),model.mode==='board'?{...model.filters,caHealth:'all'}:model.filters));
   model.mapResults=current;

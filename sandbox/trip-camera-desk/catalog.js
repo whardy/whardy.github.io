@@ -30,21 +30,26 @@ export function statesAlongRoute(index,route,corridorMeters=1609){
   const west=bounds[0]-lonPad,east=bounds[2]+lonPad,south=bounds[1]-latPad,north=bounds[3]+latPad;
   return index.states.filter(s=>s.bounds&&s.bounds[0]<=east&&s.bounds[2]>=west&&s.bounds[1]<=north&&s.bounds[3]>=south).map(s=>s.state);
 }
+// California's media checks can change during this visit. Use the same
+// mutually exclusive classification for the status facet and its filtering.
+// Other catalogs retain their existing dated availability values.
+export function statusForCamera(camera,now=Date.now()){
+  if(camera.state!=='CA')return camera.availability;
+  const health=californiaHealth(camera,now);
+  if(health.working)return 'available';
+  if(health.checkedVideo)return 'video-checked';
+  if(health.official)return 'official';
+  if(health.unavailable)return 'unavailable';
+  if(health.snapshot.status==='expired'||health.video.status==='expired')return 'stale';
+  return 'unchecked';
+}
 export function filterCameras(cameras,filters,exclude=''){
   const words=String(filters.query||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
   return cameras.filter(c=>{
     if(exclude!=='query'&&words.some(w=>!c.searchText.includes(w)))return false;
     for(const key of ['state','metro','jurisdiction','provider','district','road'])if(exclude!==key&&filters[key]&&c[key]!==filters[key])return false;
     if(exclude!=='media'&&filters.media&&c.mediaType!==filters.media)return false;
-    if(exclude!=='status'&&filters.status){
-      if(c.state==='CA'){
-        const health=californiaHealth(c);
-        const matches=({available:health.working,unavailable:health.unavailable,
-          unchecked:health.unchecked,official:health.official,
-          stale:health.snapshot.status==='expired'||health.video.status==='expired'})[filters.status];
-        if(matches===false)return false;
-      }else if(c.availability!==filters.status)return false;
-    }
+    if(exclude!=='status'&&filters.status&&statusForCamera(c)!==filters.status)return false;
     if(exclude!=='caHealth'&&!matchesCaliforniaHealth(c,filters.caHealth))return false;
     return true;
   });
