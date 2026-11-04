@@ -55,11 +55,13 @@ function manager(options){const m=createMediaManager(options);managers.push(m);r
 
 try {
   canvasPixels=new Uint8ClampedArray(320*220*4);for(let i=0;i<canvasPixels.length;i+=4)canvasPixels.set([255,255,255,255],i);
-  const blueProbes=[[240,95,0,0,124],[130,100,2,4,113],[120,105,5,4,124],[170,135,1,2,108],[60,140,0,3,118],[100,140,1,0,117],[150,140,10,12,115],[230,145,0,0,127],[250,150,0,0,117]];
-  for(const [x,y,r,g,b]of blueProbes)canvasPixels.set([r,g,b,255],(y*320+x)*4);
+  const unavailableProbes=[[63,97,4,1,118],[97,106,0,0,113],[133,96,0,2,110],[169,100,0,2,110],[203,101,4,1,119],[239,92,0,3,118],[59,146,0,0,109],[86,144,0,0,120],[132,146,0,4,112],[183,149,0,1,116],[204,150,0,1,112],[237,148,0,0,118]];
+  const constructionProbes=[[82,108,5,2,119],[87,109,0,3,110],[147,106,1,3,115],[161,103,3,2,118],[197,93,0,1,118],[231,96,1,1,121],[62,149,0,0,108],[87,146,0,0,112],[141,137,1,2,114],[181,137,0,2,117],[213,137,1,3,116],[226,139,1,0,115]];
+  const paint=probes=>{for(let i=0;i<canvasPixels.length;i+=4)canvasPixels.set([255,255,255,255],i);for(const [x,y,r,g,b]of probes)canvasPixels.set([r,g,b,255],(y*320+x)*4);};paint(unavailableProbes);
   const template={naturalWidth:320,naturalHeight:260};assert.equal(classifyCaltransPlaceholder(template),true);
-  canvasPixels.set([200,20,30,255],(95*320+240)*4);assert.equal(classifyCaltransPlaceholder(template),false,'different current pixels can prove recovery');
-  canvasPixels.set([0,0,124,255],(95*320+240)*4);canvasBlocked=true;assert.equal(classifyCaltransPlaceholder(template),null,'blocked canvas keeps dated audit classification');canvasBlocked=false;
+  paint(constructionProbes);assert.equal(classifyCaltransPlaceholder(template),true,'construction notices must not appear as working snapshots');
+  paint(unavailableProbes);canvasPixels.set([200,20,30,255],(10*320+10)*4);assert.equal(classifyCaltransPlaceholder(template),false,'different current pixels can prove recovery');
+  canvasPixels.set([255,255,255,255],(10*320+10)*4);canvasBlocked=true;assert.equal(classifyCaltransPlaceholder(template),null,'blocked canvas keeps dated audit classification');canvasBlocked=false;
   assert.equal(classifyCaltransPlaceholder({naturalWidth:640,naturalHeight:480}),false);
   // Visible WV entries start automatically, configure native inline/muted
   // attributes before playback, and remain under the same global video cap.
@@ -179,11 +181,12 @@ try {
   assert(!placeholderEvents.some(event=>event.kind==='snapshot'&&event.status==='available'),'canvas uncertainty keeps known audit placeholder failure');
   placeholderManager.refresh();await flush();const currentPlaceholder=images.at(-1);currentPlaceholder.naturalWidth=320;currentPlaceholder.naturalHeight=260;assert.equal(currentPlaceholder.crossOrigin,'anonymous');currentPlaceholder.onload();
   assert(placeholderEvents.some(event=>event.failureCategory==='placeholder'&&event.verificationMethod==='browser-placeholder-probes'));
-  placeholderManager.refresh();await flush();const recoveredImage=images.at(-1);recoveredImage.naturalWidth=320;recoveredImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(95*320+240)*4);recoveredImage.onload();
+  placeholderManager.refresh();await flush();const recoveredImage=images.at(-1);recoveredImage.naturalWidth=320;recoveredImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(10*320+10)*4);recoveredImage.onload();
   assert(placeholderEvents.some(event=>event.status==='available'&&event.verifiedNonPlaceholder===true),'different current pixels may recover a dated placeholder failure');
   placeholderManager.dispose(placeholderView);
+  paint(unavailableProbes);
   const placeholderAuto=manager({autoplayCA:false}),placeholderAutoView=new Element(),placeholderAutoCamera={...ca('PLACEHOLDER-AUTO'),providerKey:'caltrans',imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/maintenance.jpg',mediaHealth:{video:ca('PLACEHOLDER-AUTO').mediaHealth.video,snapshot:{status:'unavailable',failureCategory:'placeholder',checkedAt:new Date().toISOString()}}};
-  placeholderAuto.snapshot(placeholderAutoView,placeholderAutoCamera);visible(placeholderAutoView,true);await flush();const maintenanceImage=images.at(-1);maintenanceImage.naturalWidth=320;maintenanceImage.naturalHeight=260;canvasPixels.set([0,0,124,255],(95*320+240)*4);maintenanceImage.onload();
+  placeholderAuto.snapshot(placeholderAutoView,placeholderAutoCamera);visible(placeholderAutoView,true);await flush();const maintenanceImage=images.at(-1);maintenanceImage.naturalWidth=320;maintenanceImage.naturalHeight=260;maintenanceImage.onload();
   placeholderAuto.setCAAutoplay(true);await flush();const maintenanceVideo=videoIn(placeholderAutoView);assert.ok(maintenanceVideo);maintenanceVideo.error={code:4,message:'Invalid source'};maintenanceVideo.emit('error');await flush();await runTimer(3500);maintenanceVideo.emit('error');await flush();
   assert(placeholderAutoView.children.some(node=>node.className==='media-time'&&node.textContent.includes('Provider maintenance image')),'video fallback must not relabel an old maintenance image as a working snapshot');placeholderAuto.dispose(placeholderAutoView);
   const corsEvents=[],corsManager=manager({onHealth:event=>corsEvents.push(event)}),corsView=new Element();corsManager.snapshot(corsView,{...ca('CORS'),providerKey:'caltrans',videoUrl:null,imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/cors.jpg'});visible(corsView,true);await flush();const withCors=images.at(-1),beforeRetry=images.length;withCors.onerror();await flush();assert.equal(images.length,beforeRetry+1,'one no-CORS image retry remains possible');assert.equal(images.at(-1).crossOrigin,undefined);images.at(-1).onload();assert(corsEvents.some(event=>event.kind==='snapshot'&&event.status==='available'));corsManager.dispose(corsView);

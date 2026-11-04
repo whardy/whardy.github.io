@@ -56,11 +56,13 @@ function manager(options){const m=createMediaManager(options);managers.push(m);r
 
 try {
   canvasPixels=new Uint8ClampedArray(320*220*4);for(let i=0;i<canvasPixels.length;i+=4)canvasPixels.set([255,255,255,255],i);
-  const blueProbes=[[240,95,0,0,124],[130,100,2,4,113],[120,105,5,4,124],[170,135,1,2,108],[60,140,0,3,118],[100,140,1,0,117],[150,140,10,12,115],[230,145,0,0,127],[250,150,0,0,117]];
-  for(const [x,y,r,g,b]of blueProbes)canvasPixels.set([r,g,b,255],(y*320+x)*4);
+  const unavailableProbes=[[63,97,4,1,118],[97,106,0,0,113],[133,96,0,2,110],[169,100,0,2,110],[203,101,4,1,119],[239,92,0,3,118],[59,146,0,0,109],[86,144,0,0,120],[132,146,0,4,112],[183,149,0,1,116],[204,150,0,1,112],[237,148,0,0,118]];
+  const constructionProbes=[[82,108,5,2,119],[87,109,0,3,110],[147,106,1,3,115],[161,103,3,2,118],[197,93,0,1,118],[231,96,1,1,121],[62,149,0,0,108],[87,146,0,0,112],[141,137,1,2,114],[181,137,0,2,117],[213,137,1,3,116],[226,139,1,0,115]];
+  const paint=probes=>{for(let i=0;i<canvasPixels.length;i+=4)canvasPixels.set([255,255,255,255],i);for(const [x,y,r,g,b]of probes)canvasPixels.set([r,g,b,255],(y*320+x)*4);};paint(unavailableProbes);
   const template={naturalWidth:320,naturalHeight:260};assert.equal(classifyCaltransPlaceholder(template),true);
-  canvasPixels.set([200,20,30,255],(95*320+240)*4);assert.equal(classifyCaltransPlaceholder(template),false,'different current pixels can prove recovery');
-  canvasPixels.set([0,0,124,255],(95*320+240)*4);canvasBlocked=true;assert.equal(classifyCaltransPlaceholder(template),null,'blocked canvas cannot override a dated placeholder check');canvasBlocked=false;
+  paint(constructionProbes);assert.equal(classifyCaltransPlaceholder(template),true,'construction notice is unavailable');
+  paint(unavailableProbes);canvasPixels.set([200,20,30,255],(10*320+10)*4);assert.equal(classifyCaltransPlaceholder(template),false,'different current pixels can prove recovery');
+  canvasPixels.set([255,255,255,255],(10*320+10)*4);canvasBlocked=true;assert.equal(classifyCaltransPlaceholder(template),null,'blocked canvas cannot override a dated placeholder check');canvasBlocked=false;
   // Visible WV entries start automatically, configure native inline/muted
   // attributes before playback, and remain under the same global video cap.
   const m=manager();const scope=new Element();const a=new Element(),b=new Element(),c=new Element(),manual=new Element();scope.append(a,b,c,manual);
@@ -180,7 +182,7 @@ try {
   const beforePlaceholderRefresh=images.length;placeholderManager.refresh();await flush();assert.equal(images.length,beforePlaceholderRefresh+1,'Explicit Refresh bypasses automatic maintenance-image backoff');let nextImage=images.at(-1);nextImage.naturalWidth=320;nextImage.naturalHeight=260;nextImage.onload();
   assert.equal(californiaHealth(placeholderCamera).snapshot.verificationMethod,'browser-placeholder-probes');
   assert.equal(californiaHealth(placeholderCamera).workingSnapshot,false);
-  placeholderManager.refresh();await flush();nextImage=images.at(-1);nextImage.naturalWidth=320;nextImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(95*320+240)*4);nextImage.onload();
+  placeholderManager.refresh();await flush();nextImage=images.at(-1);nextImage.naturalWidth=320;nextImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(10*320+10)*4);nextImage.onload();
   assert.equal(californiaHealth(placeholderCamera).workingSnapshot,true,'New non-placeholder pixels recover a dated placeholder failure');
   assert.deepEqual(placeholderEvents,['snapshot:unavailable','snapshot:available']);placeholderManager.dispose(placeholderView);
 

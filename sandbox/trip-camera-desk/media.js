@@ -2,19 +2,19 @@ import {californiaHealth,recordMediaResult} from './health.js?v=20261104cahealth
 const safeURL=value=>{try{const url=new URL(value);return url.protocol==='https:'?url:null;}catch{return null;}};
 const captureLabel=camera=>{if(!['OR','WA','FL'].includes(camera.state))return '';const value=camera.state==='FL'?camera.sourceCaptureTime:camera.sourceTimestamp;if(!value||!Number.isFinite(Date.parse(value)))return ' · capture time unknown';try{return ` · captured ${new Date(value).toLocaleString('en-US',camera.timezone?{timeZone:camera.timezone,timeZoneName:'short'}:undefined)}`;}catch{return ' · capture time unknown';}};
 const clock=value=>new Date(value).toLocaleTimeString([],{hour:'numeric',minute:'2-digit',second:'2-digit'});
-// Visually verified Caltrans 320×260 "Temporarily Unavailable" template.
-// The lower timestamp bar changes, so probe only the stable upper 220 pixels.
-const CA_UNAVAILABLE_PROBES=[
-  [10,10,255,255,255],[160,40,255,255,255],[300,200,255,255,255],
-  [240,95,0,0,124],[130,100,2,4,113],[120,105,5,4,124],
-  [170,135,1,2,108],[60,140,0,3,118],[100,140,1,0,117],
-  [150,140,10,12,115],[230,145,0,0,127],[250,150,0,0,117]
+// Six visually verified Caltrans 320×260 notices share two upper-image
+// patterns. Their lower timestamp strips change; allow JPEG decoder rounding.
+const CA_PLACEHOLDER_PROFILES=[
+  // Temporarily Unavailable.
+  [[10,10,255,255,255],[160,40,255,255,255],[300,200,255,255,255],[20,120,255,255,255],[300,120,255,255,255],[160,180,255,255,255],[63,97,4,1,118],[97,106,0,0,113],[133,96,0,2,110],[169,100,0,2,110],[203,101,4,1,119],[239,92,0,3,118],[59,146,0,0,109],[86,144,0,0,120],[132,146,0,4,112],[183,149,0,1,116],[204,150,0,1,112],[237,148,0,0,118]],
+  // Down for Construction.
+  [[10,10,255,255,255],[160,40,255,255,255],[300,200,255,255,255],[20,120,255,255,255],[300,120,255,255,255],[160,180,255,255,255],[82,108,5,2,119],[87,109,0,3,110],[147,106,1,3,115],[161,103,3,2,118],[197,93,0,1,118],[231,96,1,1,121],[62,149,0,0,108],[87,146,0,0,112],[141,137,1,2,114],[181,137,0,2,117],[213,137,1,3,116],[226,139,1,0,115]]
 ];
 export function classifyCaltransPlaceholder(image){
   if(!Number.isFinite(image.naturalWidth)||!Number.isFinite(image.naturalHeight))return null;
   if(image.naturalWidth!==320||image.naturalHeight!==260)return false;
   try{const canvas=document.createElement('canvas');canvas.width=320;canvas.height=220;const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)return null;context.drawImage(image,0,0);const rgba=context.getImageData(0,0,320,220).data;
-    return CA_UNAVAILABLE_PROBES.every(([x,y,r,g,b])=>{const offset=(y*320+x)*4;return Math.abs(rgba[offset]-r)<=15&&Math.abs(rgba[offset+1]-g)<=15&&Math.abs(rgba[offset+2]-b)<=15;});
+    return CA_PLACEHOLDER_PROFILES.some(probes=>probes.every(([x,y,r,g,b])=>{const offset=(y*320+x)*4;return Math.abs(rgba[offset]-r)<=15&&Math.abs(rgba[offset+1]-g)<=15&&Math.abs(rgba[offset+2]-b)<=15;}));
   }catch{return null;}
 }
 export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()=>{},autoplayWV=true,autoplayCA=true,autoplayNV=true,autoplayFL=true}={}){
