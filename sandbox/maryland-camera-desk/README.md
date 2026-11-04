@@ -4,11 +4,21 @@ Public website: https://whardy.github.io/sandbox/maryland-camera-desk/
 
 A static Maryland traffic-camera explorer with 25 cameras per page, six CHART regions, county/city and road filters, search, saved cameras, dated feed-availability filters, and a clustered map. Camera and filter selections can be shared through the page URL. Favorites stay in the visitor's browser.
 
+## Map and camera preview
+
+Selecting a marker or camera opens a persistent preview beside the map. Selecting from the wall enters Split view and preserves the current filters and page. The selected card and map marker (or its cluster) are highlighted. Visible wall snapshots continue refreshing while a preview is open.
+
+In desktop Split view the camera list scrolls independently beneath the preview, so cards remain selectable while the map and selected feed stay visible.
+
+On desktop, drag the divider to resize the map and camera panel. Focus the divider and use Left/Right (Shift for larger steps), Home/End for the width limits, or Enter to reset. Double-click the divider or choose **Reset layout** for the default 46% map width. The preferred width stays in local browser storage. Resizing keeps the geographic map center and does not reset pagination.
+
+At phone and tablet widths the preview becomes a bottom sheet. Collapse or expand it with its handle button, or drag the handle down/up; map gestures remain available outside the sheet. Collapse stops live video. Escape closes the preview when focus is inside it; the map remains available to keyboard navigation without a modal focus trap.
+
 ## Media delivery
 
 Snapshots load directly from `chart.maryland.gov`. They refresh every 60 seconds while visible; hidden tabs pause automatic refresh and the image queue permits four concurrent requests. Thumbnails can be delayed. “Fetched” describes browser retrieval, not image capture time.
 
-Open a camera and choose **Watch live** for its public HLS video. One stream plays at a time using native HLS or vendored hls.js. Closing the camera, choosing Snapshot, or hiding the tab stops video. Stream failures return to a snapshot and an explanation. Native player controls remain available; mobile layout has been tested in a browser viewport, not on physical iOS hardware.
+Open a camera and choose **Watch live** for its public HLS video. One stream plays at a time using native HLS or vendored hls.js. Switching cameras, closing or collapsing the preview, choosing Snapshot, or hiding the tab stops video. Stream failures return to a snapshot and an explanation. Native player controls remain available; mobile layout has been tested in a browser viewport, not on physical iOS hardware.
 
 The page runs entirely on GitHub Pages. It needs no relay, API key, account, database, scheduled collector, or paid hosting service. Images and video are fetched from Maryland's servers and are never committed to this repository. No recording or history archive is provided.
 

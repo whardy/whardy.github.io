@@ -1,5 +1,6 @@
 import {prepareCameras, filterCameras, getFacet} from './filters.js?v=20261103md1';
-import {createCameraMap} from './map.js?v=20261103md1';
+import {createCameraMap} from './map.js?v=20261104preview1';
+import {createPreviewLayout} from './preview-layout.js?v=20261104preview1';
 
 const $ = id => document.getElementById(id);
 const PAGE_SIZE = 25;
@@ -17,8 +18,13 @@ let queued = [];
 let running = 0;
 let searchTimer;
 let mapTimer;
+let displayedCardIds = '';
 const media = new Set();
 const dialog = $('camera-dialog');
+const preview = $('camera-preview');
+const previewLayout = createPreviewLayout({onResize:() => cameraMap?.resize(), onCollapse:collapsed => {
+  if (collapsed && videoElement && state.selected) showSnapshot('Live playback stopped while the preview is collapsed. Expand it and select Watch live to resume.');
+}});
 let returnFocus = null;
 let returnCameraId = null;
 let videoElement = null;
@@ -172,7 +178,7 @@ const observer = new IntersectionObserver(entries => {
 }, {rootMargin:'100px'});
 
 function enqueueImage(item, force = false) {
-  if (item.disposed || item.pending || (!force && (document.hidden || !item.visible || (state.selected && !item.modal)))) return;
+  if (item.disposed || item.pending || (!force && (document.hidden || !item.visible))) return;
   if (item.camera.disabled) {
     item.container.classList.remove('is-loading');
     item.container.classList.add('has-error');
@@ -195,7 +201,7 @@ function enqueueImage(item, force = false) {
 function drainImages() {
   while (running < 4 && queued.length) {
     const item = queued.shift();
-    if (item.disposed || document.hidden || (!item.visible && !item.modal) || (state.selected && !item.modal)) {item.pending=false;continue;}
+    if (item.disposed || document.hidden || (!item.visible && !item.modal)) {item.pending=false;continue;}
     running++;
     const image = new Image();
     image.alt = item.camera.name;
@@ -264,8 +270,9 @@ function renderCards(cameras) {
     const saved = state.favorites.has(camera.id);
     const card = document.createElement('article');
     card.className = 'camera-card';
+    card.classList.toggle('is-selected',camera.id===state.selected?.id);
     card.dataset.cameraId = camera.id;
-    card.innerHTML = `<header class="card-top"><span class="road-badge">${escape(camera.road)}</span><button class="favorite-button ${saved?'is-saved':''}" type="button" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} ${escape(camera.name)}"><span aria-hidden="true">${saved?'★':'☆'}</span></button></header><button class="card-image" type="button" aria-label="Enlarge ${escape(camera.name)}"></button><div class="card-content"><button class="camera-name" type="button">${escape(camera.name)}<span aria-hidden="true">↗</span></button><p class="camera-place">${escape(camera.county || camera.region)} · ${escape(camera.metro)}</p><div class="card-bottom"><span class="camera-id">${camera.videoUrl?'Live video + snapshot':'Snapshot'}</span><button class="open-camera" type="button">View camera <span aria-hidden="true">↗</span></button></div></div>`;
+    card.innerHTML = `<header class="card-top"><span class="road-badge">${escape(camera.road)}</span><button class="favorite-button ${saved?'is-saved':''}" type="button" aria-pressed="${saved}" aria-label="${saved?'Unsave':'Save'} ${escape(camera.name)}"><span aria-hidden="true">${saved?'★':'☆'}</span></button></header><button class="card-image" type="button" aria-label="Preview ${escape(camera.name)}"></button><div class="card-content"><button class="camera-name" type="button">${escape(camera.name)}<span aria-hidden="true">↗</span></button><p class="camera-place">${escape(camera.county || camera.region)} · ${escape(camera.metro)}</p><div class="card-bottom"><span class="camera-id">${camera.videoUrl?'Live video + snapshot':'Snapshot'}</span><button class="open-camera" type="button">View camera <span aria-hidden="true">↗</span></button></div></div>`;
     if (camera.disabled || camera.imageStatus === 'unavailable' || camera.imageStatus === 'stale' || camera.videoStatus === 'unavailable') {
       const warning = document.createElement('p');
       warning.className = 'source-warning';
@@ -274,11 +281,19 @@ function renderCards(cameras) {
       card.querySelector('.camera-place').after(warning);
     }
     card.querySelector('.favorite-button').addEventListener('click',() => toggleFavorite(camera.id));
-    for (const button of card.querySelectorAll('.card-image,.camera-name,.open-camera')) button.addEventListener('click',() => openCamera(camera.id));
+    for (const button of card.querySelectorAll('.card-image,.camera-name,.open-camera')) button.addEventListener('click',event => openCamera(camera.id,{focusPreview:event.detail===0}));
     attachMedia(card.querySelector('.card-image'),camera);
+    for (const button of card.querySelectorAll('.card-image,.camera-name,.open-camera')) {
+      button.setAttribute('aria-controls','camera-dialog');
+      button.setAttribute('aria-expanded',String(camera.id===state.selected?.id));
+    }
+    if (camera.id===state.selected?.id) card.setAttribute('aria-current','true');
     fragment.append(card);
   }
   grid.append(fragment);
+  const nextCardIds = cameras.map(camera => camera.id).join(',');
+  if (nextCardIds!==displayedCardIds) grid.parentElement.scrollTop=0;
+  displayedCardIds=nextCardIds;
 }
 
 function activeFilters() {
@@ -348,8 +363,9 @@ function render(refit = false) {
       const fresh = !cameraMap;
       if (!cameraMap) cameraMap = createCameraMap($('map'), {
         onSelect:openCamera,
-        onBoundsChange:bounds => {
+        onBoundsChange:(bounds,change) => {
           state.bounds = bounds;
+          if (change?.reason==='resize') return;
           if (!state.filters.withinMap) return;
           clearTimeout(mapTimer);
           mapTimer = setTimeout(() => {state.page=1;render(false);},180);
@@ -364,6 +380,7 @@ function render(refit = false) {
       $('map').textContent = 'The map could not load. Camera cards and filters are still available.';
     }
   }
+  previewLayout.refresh();
   updateURL();
 }
 
@@ -373,14 +390,39 @@ function updateDialogFavorite() {
   $('dialog-save').setAttribute('aria-pressed',String(saved));
 }
 
-function openCamera(id) {
+function updateSelection() {
+  for (const card of document.querySelectorAll('.camera-card')) {
+    const selected = card.dataset.cameraId===state.selected?.id;
+    card.classList.toggle('is-selected',selected);
+    if (selected) card.setAttribute('aria-current','true');
+    else card.removeAttribute('aria-current');
+    for (const button of card.querySelectorAll('.card-image,.camera-name,.open-camera')) button.setAttribute('aria-expanded',String(selected));
+  }
+  cameraMap?.select(state.selected?.id || null);
+}
+
+function revealCameraWorkspace() {
+  if (!state.selected) return;
+  if (!matchMedia('(max-width: 850px)').matches) {
+    const previewRect = preview.getBoundingClientRect();
+    if (previewRect.top < 0 || previewRect.bottom > innerHeight) document.querySelector('.results-layout').scrollIntoView({block:'start',behavior:'instant'});
+    return;
+  }
+  const rect = $('map-section').getBoundingClientRect();
+  if (rect.top < 0 || rect.top > innerHeight * .3) $('map-section').scrollIntoView({block:'start',behavior:'instant'});
+}
+
+function openCamera(id,{focusPreview=false} = {}) {
   const camera = state.cameras.find(camera => camera.id===id);
   if (!camera) return;
-  if (!dialog.open) {returnFocus = document.activeElement;returnCameraId=id;}
+  const trigger = document.activeElement;
+  if (!preview.contains(trigger)) {returnFocus=trigger;returnCameraId=id;}
   stopVideo();
   disposeMedia($('dialog-media'));
   $('dialog-media').replaceChildren();
   state.selected = camera;
+  // Opening from the wall reveals the map without changing the current slice.
+  if (state.view==='wall') {state.view='split';render(false);}
   $('dialog-title').textContent = camera.name;
   $('dialog-subtitle').textContent = `${camera.road} · ${camera.county || camera.region} · ${camera.metro}`;
   const url = safeURL(camera.officialUrl,['chart.maryland.gov']) || 'https://chart.maryland.gov/TrafficCameras/GetTrafficCameras';
@@ -388,21 +430,39 @@ function openCamera(id) {
   $('dialog-source').textContent = 'Open official camera ↗';
   $('dialog-status').textContent = (camera.description?camera.description+'. ':'') + (camera.disabled?'Marked unavailable in the dated source catalog. ':camera.imageStatus==='unavailable'?'Unavailable at the dated image check; the source may have recovered. ':'') + (camera.videoStatus==='unavailable'?'Video was unavailable at the last check; you can retry. ':'') + (camera.imageStatus==='stale'?'The thumbnail was older than one hour at the last check. ':'') + 'Fetched time is not capture time. Select Watch live to open the public video stream.';
   updateDialogFavorite();
-  if (!dialog.open) dialog.showModal();
-  document.body.classList.add('dialog-open');
+  preview.hidden = false;
+  document.body.classList.add('has-camera-preview');
+  previewLayout.expand();
+  updateSelection();
   showSnapshot();
   updateURL();
+  revealCameraWorkspace();
+  // The wall-to-split transition rebuilds its cards; keep keyboard focus usable.
+  if (trigger && !trigger.isConnected) {
+    const card = [...document.querySelectorAll('.camera-card')].find(card => card.dataset.cameraId===id);
+    const replacement = card?.querySelector('.card-image');
+    if (!focusPreview) (replacement || $('dialog-close')).focus({preventScroll:true});
+    returnFocus = replacement || null;
+  }
+  if (focusPreview) $('dialog-title').focus({preventScroll:true});
 }
 
-function closeCamera() {
+function closeCamera({restoreFocus=true} = {}) {
+  if (!state.selected) return;
+  const focusInPreview = preview.contains(document.activeElement);
+  const selectedMarker = document.querySelector('.md-selected');
   stopVideo();
   disposeMedia($('dialog-media'));
   $('dialog-media').replaceChildren();
   state.selected = null;
-  document.body.classList.remove('dialog-open');
-  if (dialog.open) dialog.close();
-  if (returnFocus?.isConnected) returnFocus.focus();
-  else ([...document.querySelectorAll('.camera-card')].find(card=>card.dataset.cameraId===returnCameraId)?.querySelector('.card-image') || $('favorites-toggle')).focus();
+  preview.hidden = true;
+  document.body.classList.remove('has-camera-preview','preview-collapsed');
+  updateSelection();
+  previewLayout.refresh();
+  if (restoreFocus && focusInPreview) {
+    if (returnFocus?.isConnected && returnFocus!==document.body) returnFocus.focus({preventScroll:true});
+    else ([...document.querySelectorAll('.camera-card')].find(card=>card.dataset.cameraId===returnCameraId)?.querySelector('.card-image') || selectedMarker || $('view-'+state.view)).focus({preventScroll:true});
+  }
   returnFocus = null;
   returnCameraId = null;
   updateURL();
@@ -410,7 +470,7 @@ function closeCamera() {
 }
 
 function refreshImages() {
-  for (const item of media) if (item.visible && (!state.selected||item.modal)) enqueueImage(item);
+  for (const item of media) if (item.visible) enqueueImage(item);
 }
 
 function changePage(delta) {
@@ -452,8 +512,8 @@ $('auto-refresh').addEventListener('change',() => {
 });
 for (const mode of ['wall','split','map']) $('view-'+mode).addEventListener('click',() => {
   state.view=mode;
-  if (mode==='wall') state.filters.withinMap=false;
-  render(true);
+  if (mode==='wall') {state.filters.withinMap=false;closeCamera({restoreFocus:false});}
+  render(false);
 });
 $('map-scope').addEventListener('change',() => {state.filters.withinMap=$('map-scope').checked;state.page=1;render(false);});
 $('fit-map').addEventListener('click',() => {
@@ -468,11 +528,15 @@ $('dialog-play').addEventListener('click',playVideo);
 $('dialog-snapshot').addEventListener('click',() => showSnapshot());
 $('dialog-close').addEventListener('click',closeCamera);
 $('dialog-save').addEventListener('click',() => {if(state.selected)toggleFavorite(state.selected.id);});
-dialog.addEventListener('cancel',event => {event.preventDefault();closeCamera();});
-dialog.addEventListener('close',() => {if(state.selected)closeCamera();});
-let backdropDown = false;
-dialog.addEventListener('pointerdown',event => {backdropDown=event.target===dialog;});
-dialog.addEventListener('click',event => {if(backdropDown && event.target===dialog)closeCamera();backdropDown=false;});
+document.addEventListener('keydown',event => {
+  if (event.key==='Escape' && state.selected && (preview.contains(document.activeElement) || document.activeElement===$('map-divider'))) {
+    event.preventDefault();
+    closeCamera();
+  }
+});
+matchMedia('(max-width: 850px)').addEventListener('change',event => {
+  if (event.matches) requestAnimationFrame(revealCameraWorkspace);
+});
 document.addEventListener('visibilitychange',() => {
   if (document.hidden && videoElement && state.selected) showSnapshot('Live playback stopped while this tab was hidden. Select Watch live to resume.');
   if (!document.hidden) for (const item of media) if (!item.lastLoaded || $('auto-refresh').checked) enqueueImage(item);

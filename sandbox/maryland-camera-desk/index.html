@@ -8,10 +8,10 @@
   <title>Maryland / Camera Desk — Maryland Traffic Cameras</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2712%27 fill=%27%23172b32%27/%3E%3Cpath d=%27M12 12h20v20H12zM32 32h20v20H32z%27 fill=%27%23e6bc52%27/%3E%3Cpath d=%27M32 12h20v20H32zM12 32h20v20H12z%27 fill=%27%23f8f5ec%27/%3E%3Cpath d=%27M39 12h6v20h-6zM32 19h20v6H32zM19 32h6v20h-6zM12 39h20v6H12z%27 fill=%27%23af3b3d%27/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=20261104ornavfinal1">
+  <link rel="stylesheet" href="styles.css?v=20261104preview1">
   <script src="vendor/leaflet.js" defer></script>
   <script src="vendor/hls.min.js" defer></script>
-  <script src="app.js?v=20261103md1" type="module"></script>
+  <script src="app.js?v=20261104preview1" type="module"></script>
 </head>
 <body class="view-wall">
   <noscript><p>This camera explorer needs JavaScript. <a href="https://chart.maryland.gov/TrafficCameras/GetTrafficCameras">Visit the official Maryland CHART camera directory.</a></p></noscript>
@@ -89,13 +89,31 @@
 
       <div class="results-layout">
         <section id="map-section" class="map-section" hidden aria-label="Camera map">
-          <div class="map-toolbar"><span><span class="map-dot" aria-hidden="true"></span>Camera locations</span><button id="fit-map" class="text-button" type="button">Fit cameras <span aria-hidden="true">⌖</span></button></div>
+          <div class="map-toolbar"><span><span class="map-dot" aria-hidden="true"></span>Camera locations</span><div class="map-toolbar-actions"><button id="reset-layout" class="text-button" type="button">Reset layout <span aria-hidden="true">↺</span></button><button id="fit-map" class="text-button" type="button">Fit cameras <span aria-hidden="true">⌖</span></button></div></div>
           <div id="map" aria-label="Map of Maryland traffic cameras"></div>
           <div class="map-footer"><label for="map-scope"><input id="map-scope" type="checkbox"> Only cameras in this map area</label><span>Select a marker to open a camera.</span></div>
         </section>
+        <div id="map-divider" class="map-divider" role="separator" tabindex="0" aria-label="Resize map and camera panel" aria-controls="map-section camera-panel" aria-describedby="divider-help" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="46" aria-valuetext="Map width 46 percent"><span aria-hidden="true"></span></div>
+        <p id="divider-help" class="visually-hidden">Use the left and right arrow keys to resize the map. Home and End use the minimum and maximum widths. Double-click to reset.</p>
+        <div id="camera-panel" class="camera-panel">
+          <aside id="camera-preview" class="camera-preview" hidden aria-label="Selected camera preview">
+            <section id="camera-dialog" class="camera-dialog" aria-labelledby="dialog-title">
+              <div class="dialog-header">
+                <div><p class="eyebrow">SELECTED MARYLAND CAMERA</p><h2 id="dialog-title" tabindex="-1">Camera</h2><p id="dialog-subtitle"></p></div>
+                <div class="preview-header-actions"><button id="preview-toggle" class="preview-toggle" type="button" aria-expanded="true" aria-controls="preview-content" aria-label="Collapse camera preview"><span aria-hidden="true">⌄</span><span class="preview-toggle-label">Collapse</span></button><button id="dialog-close" class="icon-button" type="button" aria-label="Close camera preview">✕</button></div>
+              </div>
+              <div id="preview-content" class="preview-content">
+                <div class="media-switch" role="group" aria-label="Camera media"><button id="dialog-snapshot" type="button" aria-pressed="true">Snapshot</button><button id="dialog-play" type="button" aria-pressed="false">Watch live</button></div>
+                <div id="dialog-media" class="dialog-media"></div>
+                <p id="dialog-video-status" class="video-status" role="status" aria-live="polite"></p>
+                <div class="dialog-footer"><p id="dialog-status" role="status">Camera feed supplied by Maryland CHART.</p><div><button id="dialog-save" class="button secondary-button" type="button" aria-pressed="false">Save camera</button><a id="dialog-source" class="button primary-button" href="https://chart.maryland.gov/TrafficCameras/GetTrafficCameras" target="_blank" rel="noopener noreferrer">Open Maryland CHART <span aria-hidden="true">↗</span></a></div></div>
+              </div>
+            </section>
+          </aside>
         <div class="wall-section">
           <div id="camera-grid" class="camera-grid" aria-label="Traffic cameras"></div>
           <section id="empty-state" class="empty-state" hidden aria-live="polite"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="14" width="34" height="24" rx="4"/><path d="m15 14 4-6h10l4 6"/><circle cx="24" cy="26" r="7"/><path d="m8 7 32 34"/></svg><h3>No cameras in this view</h3><p>Try another area, a wider search, or reset your filters.</p></section>
+        </div>
         </div>
       </div>
 
@@ -107,12 +125,6 @@
     <footer class="site-footer"><span>MARYLAND <span class="footer-slash">/</span> CAMERA DESK</span><p>Independent viewer · Camera feeds/data: Maryland CHART</p><a href="#page-title">Back to top ↑</a></footer>
   </div>
 
-  <dialog id="camera-dialog" class="camera-dialog" aria-labelledby="dialog-title">
-    <div class="dialog-header"><div><p class="eyebrow">MARYLAND CAMERA</p><h2 id="dialog-title">Camera</h2><p id="dialog-subtitle"></p></div><button id="dialog-close" class="icon-button" type="button" aria-label="Close camera">✕</button></div>
-    <div class="media-switch" role="group" aria-label="Camera media"><button id="dialog-snapshot" type="button" aria-pressed="true">Snapshot</button><button id="dialog-play" type="button" aria-pressed="false">Watch live</button></div>
-    <div id="dialog-media" class="dialog-media"></div>
-    <p id="dialog-video-status" class="video-status" role="status" aria-live="polite"></p>
-    <div class="dialog-footer"><p id="dialog-status" role="status">Camera feed supplied by Maryland CHART.</p><div><button id="dialog-save" class="button secondary-button" type="button" aria-pressed="false">Save camera</button><a id="dialog-source" class="button primary-button" href="https://chart.maryland.gov/TrafficCameras/GetTrafficCameras" target="_blank" rel="noopener noreferrer">Open Maryland CHART <span aria-hidden="true">↗</span></a></div></div>
-  </dialog>
+
 </body>
 </html>

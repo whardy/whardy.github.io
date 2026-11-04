@@ -93,9 +93,45 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
   let selectedId = null;
   let frame = null;
   let destroyed = false;
+  let resizing = false;
+  let renderedMarkers = [];
 
-  const select = (id) => {
-    if (!destroyed && typeof onSelect === 'function') onSelect(id);
+  function markerLabel(group) {
+    const chosen = group.find(camera => selectedId != null && String(camera.id) === String(selectedId));
+    const selection = chosen ? ` Selected camera: ${chosen.name || 'Traffic camera'}.` : '';
+    return group.length > 1
+      ? `${group.length} traffic cameras.${selection} Activate to zoom in or choose a camera.`
+      : `${group[0].name || 'Traffic camera'}.${chosen ? ' Selected.' : ''} Activate to view feed.`;
+  }
+
+  function updateMarkerSelection({marker, group, tooltip}) {
+    const chosen = group.find(camera => selectedId != null && String(camera.id) === String(selectedId));
+    const selected = Boolean(chosen);
+    const label = markerLabel(group);
+    const icon = marker.getElement();
+    if (icon) {
+      icon.classList.toggle('md-selected', selected);
+      icon.setAttribute('role', 'button');
+      icon.setAttribute('aria-label', label);
+      icon.setAttribute('aria-pressed', String(selected));
+      icon.title = label;
+      if (selected) icon.setAttribute('aria-current', 'true');
+      else icon.removeAttribute('aria-current');
+    }
+    marker.setZIndexOffset(selected ? 1000 : 0);
+    if (group.length > 1) tooltip.textContent = `${group.length} cameras · ${chosen ? `selected: ${chosen.name || 'Traffic camera'}` : 'select to explore'}`;
+  }
+
+  function setSelected(id) {
+    if (destroyed) return;
+    selectedId = id;
+    for (const record of renderedMarkers) updateMarkerSelection(record);
+  }
+
+  const chooseCamera = (id, options) => {
+    if (destroyed) return;
+    setSelected(id);
+    if (typeof onSelect === 'function') onSelect(id, options);
   };
 
   function showChoices(group, latlng) {
@@ -108,9 +144,10 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = camera.name || 'Traffic camera';
-      button.addEventListener('click', () => {
+      button.setAttribute('aria-pressed', String(selectedId != null && String(camera.id) === String(selectedId)));
+      button.addEventListener('click', event => {
         map.closePopup();
-        select(camera.id);
+        chooseCamera(camera.id,{focusPreview:event.detail===0});
       });
       content.append(button);
     }
@@ -120,7 +157,11 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
   function render() {
     frame = null;
     if (destroyed) return;
+    // Rebuilding after map movement or layout changes must not strand keyboard users.
+    const focusedGroup = renderedMarkers.find(record => record.marker.getElement() === document.activeElement)?.group;
+    const focusedIds = focusedGroup?.map(camera => String(camera.id));
     markers.clearLayers();
+    renderedMarkers = [];
     const bounds = map.getBounds().pad(0.18);
     const zoom = map.getZoom();
     const gridSize = zoom < 10 ? 64 : zoom < 14 ? 48 : 36;
@@ -142,9 +183,7 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
         group.reduce((sum, camera) => sum + Number(camera.lon), 0) / group.length,
       );
       const size = cluster ? (group.length > 99 ? 44 : 38) : 24;
-      const label = cluster
-        ? `${group.length} traffic cameras. Activate to zoom in or choose a camera.`
-        : `${group[0].name || 'Traffic camera'}. Activate to view feed.`;
+      const label = markerLabel(group);
       const marker = L.marker(center, {
         title: label,
         keyboard: true,
@@ -158,9 +197,11 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
         }),
       });
 
-      const activate = () => {
+      const activate = event => {
+        const input = event?.originalEvent || event;
+        const focusPreview = Boolean(input?.type?.startsWith('key') || input?.detail===0);
         if (!cluster) {
-          select(group[0].id);
+          chooseCamera(group[0].id,{focusPreview});
           return;
         }
         const clusterBounds = L.latLngBounds(group.map(camera => [Number(camera.lat), Number(camera.lon)]));
@@ -175,22 +216,27 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
       marker.on('add', () => {
         const icon = marker.getElement();
         if (!icon) return;
-        icon.setAttribute('role', 'button');
-        icon.setAttribute('aria-label', label);
-        if (selected) icon.setAttribute('aria-current', 'true');
-        // Leaflet already activates focused markers with Enter; add Space support.
+        updateMarkerSelection(record);
+        // Custom marker actions need both Enter and Space activation.
         icon.addEventListener('keydown', event => {
-          if (event.key === ' ') {
+          if (event.key === ' ' || event.key === 'Enter') {
             event.preventDefault();
             event.stopPropagation();
-            activate();
+            activate(event);
           }
         });
       });
       const tooltip = cluster ? document.createElement('span') : tooltipFor(group[0]);
       if (cluster) tooltip.textContent = `${group.length} cameras · select to explore`;
       marker.bindTooltip(tooltip, { direction: 'top', className: 'md-camera-map-tooltip' });
+      const record = {marker, group, tooltip};
+      renderedMarkers.push(record);
       marker.addTo(markers);
+    }
+
+    if (focusedIds) {
+      const replacement = renderedMarkers.find(record => record.group.some(camera => focusedIds.includes(String(camera.id))));
+      (replacement?.marker.getElement() || element).focus({preventScroll: true});
     }
 
     const count = cameras.length;
@@ -206,17 +252,17 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
     if (!destroyed && frame === null) frame = requestAnimationFrame(render);
   }
 
-  function reportBounds() {
+  function reportBounds(metadata) {
     if (destroyed) return;
     scheduleRender();
-    if (typeof onBoundsChange === 'function') {
+    if (!resizing && typeof onBoundsChange === 'function') {
       const bounds = map.getBounds();
       onBoundsChange({
         south: bounds.getSouth(),
         west: bounds.getWest(),
         north: bounds.getNorth(),
         east: bounds.getEast(),
-      });
+      }, metadata?.reason ? metadata : undefined);
     }
   }
   map.on('moveend', reportBounds);
@@ -231,6 +277,7 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
       selectedId = nextSelectedId;
       scheduleRender();
     },
+    select: setSelected,
     fit() {
       if (destroyed) return;
       map.stop();
@@ -243,8 +290,17 @@ export function createCameraMap(element, { onSelect, onBoundsChange } = {}) {
     },
     resize() {
       if (destroyed) return;
-      map.invalidateSize({ pan: false });
-      scheduleRender();
+      // Keep the same geographic center when the panel width changes. Leaflet's
+      // pan:false invalidation can shift it as the container's midpoint moves.
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      resizing = true;
+      try {
+        map.invalidateSize({ pan: false, debounceMoveend: false });
+        if (!map.getCenter().equals(center, 1e-9)) map.setView(center, zoom, {animate: false});
+      } finally { resizing = false; }
+      // Refresh stored bounds without treating layout changes as a user pan.
+      reportBounds({reason: 'resize'});
     },
     destroy() {
       if (destroyed) return;

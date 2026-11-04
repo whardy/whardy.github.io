@@ -440,3 +440,144 @@ h1 span { font-weight: 500; }
 
 /* Oregon and California navigation: thirteen destinations fit in two mobile rows. */
 @media(max-width:700px){.state-nav{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;width:100%;max-width:100%;gap:2px!important;justify-content:stretch!important}.state-nav a{min-width:0!important;min-height:44px!important;padding-inline:0!important;justify-content:center;font-size:11px!important}.state-nav .state-full{display:none!important}.state-nav .state-abbr{display:inline!important}.state-nav .trip-nav{margin-left:0!important;padding-left:0!important;min-width:0!important;border-left:0!important}.header-inner{min-width:0}.state-nav a.current::after{display:none}}
+
+/* Keep the map and the selected camera available in the same workspace. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.camera-panel { min-width: 0; }
+.results-layout { scroll-margin-top: 18px; }
+.map-divider { display: none; }
+.map-toolbar { flex-wrap: wrap; }
+.map-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-left: auto; }
+.map-toolbar-actions .text-button { font-size: 11px; }
+#reset-layout { display: none; }
+.camera-preview { min-width: 0; margin: 0 0 18px; position: sticky; top: 18px; z-index: 6; }
+.camera-preview .camera-dialog { display: block; width: 100%; max-width: none; max-height: none; margin: 0; overflow: hidden; border: 1px solid #b4a273; border-radius: 6px; box-shadow: 0 5px 22px #172b3219; }
+.camera-preview .dialog-header { gap: 12px; padding: 16px; border-top: 3px solid var(--accent); }
+.camera-preview .dialog-header h2 { font-size: 19px; }
+.camera-preview .dialog-header h2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.camera-preview .dialog-header p:last-child { font-size: 11px; }
+.preview-header-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.camera-preview .icon-button { min-width: 44px; height: 44px; }
+.preview-toggle { display: none; }
+.camera-preview .media-switch { padding: 0 16px 12px; }
+.camera-preview .media-switch button { min-height: 44px; }
+.camera-preview .dialog-media { min-height: 160px; aspect-ratio: 16 / 9; }
+.camera-preview .dialog-media img, .camera-preview .dialog-media video { width: 100%; height: 100%; max-height: 45vh; min-height: 0; object-fit: contain; }
+.camera-preview .video-status { padding: 10px 16px; font-size: 11px; }
+.camera-preview .dialog-footer { display: block; padding: 12px 16px 16px; }
+.camera-preview .dialog-footer p { font-size: 11px; line-height: 1.5; }
+.camera-preview .dialog-footer > div { display: flex; gap: 8px; margin-top: 12px; }
+.camera-preview .dialog-footer .button { flex: 1 1 150px; }
+.camera-preview .camera-dialog { max-height: calc(100dvh - 36px); display: flex; flex-direction: column; }
+.camera-preview .dialog-header { flex-shrink: 0; }
+.camera-preview [tabindex='-1']:focus-visible { outline: 3px solid #a4741e; outline-offset: 3px; }
+.preview-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.camera-card.is-selected { border-color: #aa7b17; outline: 2px solid var(--accent); outline-offset: 2px; }
+.camera-card.is-selected .camera-name { color: #805a0b; }
+.camera-card.is-selected .road-badge { background: var(--accent-soft); border-color: #d8b45c; }
+body.is-resizing-map, body.is-resizing-map * { cursor: col-resize !important; user-select: none !important; }
+
+@media (min-width: 851px) {
+  body.view-split .results-layout, #results[data-view='split'] .results-layout,
+  body.view-map.has-camera-preview .results-layout { display: grid; grid-template-columns: minmax(300px, var(--map-width, 46%)) 12px minmax(320px, 1fr); align-items: start; gap: 0; }
+  body.view-split .map-section, body.view-map.has-camera-preview .map-section { position: sticky; top: 18px; margin: 0; }
+  body.view-split .map-divider, body.view-map.has-camera-preview .map-divider { display: grid; place-items: center; position: sticky; top: 18px; align-self: start; height: min(76vh, 780px); min-height: 440px; cursor: col-resize; touch-action: none; }
+  .map-divider::before { content: ''; position: absolute; top: 0; bottom: 0; width: 1px; background: #d2cbbb; }
+  .map-divider > span { position: relative; width: 6px; height: 44px; border-radius: 4px; background: #b3a47f; box-shadow: 0 0 0 3px var(--paper); }
+  .map-divider:hover > span, .map-divider:focus-visible > span { background: #a4741e; }
+  .map-divider:focus-visible { outline: 3px solid #a4741e; outline-offset: -2px; border-radius: 5px; }
+  body.view-split #reset-layout, body.view-map.has-camera-preview #reset-layout { display: inline-flex; }
+  body.view-split .camera-grid, #results[data-view='split'] .camera-grid { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px; }
+  body.view-map:not(.has-camera-preview) #camera-panel { display: none; }
+  body.view-map.has-camera-preview #camera-panel { display: block; }
+  body.view-map.has-camera-preview .camera-preview { margin-bottom: 0; }
+  body.view-split #map, #results[data-view='split'] #map,
+  body.view-map.has-camera-preview #map { height: min(68vh, 700px); min-height: 400px; }
+}
+
+@media (max-width: 850px) {
+  body.view-split .results-layout, #results[data-view='split'] .results-layout,
+  body.view-map.has-camera-preview .results-layout { display: block; }
+  .camera-panel { min-width: 0; }
+  body.view-map #camera-panel { display: block; }
+  body.has-camera-preview { padding-bottom: 110px; }
+  body.has-camera-preview .camera-preview { position: fixed; top: auto; bottom: 0; left: 10px; right: 10px; z-index: 1100; max-height: 55dvh; margin: 0; }
+  .camera-preview .camera-dialog { display: flex; flex-direction: column; width: 100%; max-width: none; max-height: 55dvh; border-radius: 12px 12px 0 0; border-color: #b4a273; box-shadow: 0 -8px 36px #172b3238; }
+  .camera-preview .dialog-header { padding: 12px 14px; gap: 8px; flex-shrink: 0; align-items: center; }
+  .camera-preview .dialog-header .eyebrow { font-size: 8px; margin-bottom: 4px; }
+  .camera-preview .dialog-header h2 { font-size: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .camera-preview .dialog-header p:last-child { margin-top: 3px; font-size: 10px; }
+  .preview-header-actions { gap: 3px; }
+  .preview-toggle { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 48px; min-height: 44px; border-radius: 6px; padding: 3px; background: #f0ebdc; font-size: 20px; line-height: 1; touch-action: none; }
+  .preview-toggle-label { font-size: 9px; line-height: 1.4; margin-top: 2px; }
+  .preview-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .camera-preview .media-switch { padding: 0 14px 10px; }
+  .camera-preview .dialog-media { min-height: 0; height: min(26dvh, 230px); aspect-ratio: auto; }
+  .camera-preview .dialog-media img, .camera-preview .dialog-media video { min-height: 0; max-height: none; width: 100%; height: 100%; }
+  .camera-preview .dialog-footer { padding: 10px 14px 16px; }
+  .camera-preview .dialog-footer > div { display: flex; flex-wrap: wrap; }
+  .camera-preview .dialog-footer .button { flex-basis: 130px; min-height: 44px; }
+  .camera-preview .video-status { padding: 10px 14px; }
+  body.preview-collapsed .preview-content { display: none; }
+  body.preview-collapsed .camera-preview .dialog-header p:last-child { display: none; }
+  body.preview-collapsed .preview-toggle > span:first-child { transform: rotate(180deg); }
+  body.view-split #map, #results[data-view='split'] #map, body.view-map #map { height: min(70dvh, 520px); min-height: 360px; }
+  .map-section { scroll-margin-top: 12px; }
+}
+
+@media (max-width: 380px) {
+  .camera-preview .dialog-header { padding-inline: 10px; }
+  .camera-preview .dialog-header h2 { font-size: 14px; }
+  .camera-preview .dialog-header .eyebrow { letter-spacing: .4px; }
+  .preview-toggle { min-width: 44px; }
+  .camera-preview .icon-button { min-width: 40px; }
+}
+
+/* Oregon and California navigation: thirteen destinations fit in two mobile rows. */
+@media(max-width:700px){.state-nav{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;width:100%;max-width:100%;gap:2px!important;justify-content:stretch!important}.state-nav a{min-width:0!important;min-height:44px!important;padding-inline:0!important;justify-content:center;font-size:11px!important}.state-nav .state-full{display:none!important}.state-nav .state-abbr{display:inline!important}.state-nav .trip-nav{margin-left:0!important;padding-left:0!important;min-width:0!important;border-left:0!important}.header-inner{min-width:0}.state-nav a.current::after{display:none}}
+
+/* In split view, give the preview and camera list their own visible space. */
+@media (min-width: 851px) {
+  body.view-split.has-camera-preview .camera-panel {
+    position: sticky;
+    top: 18px;
+    height: calc(100dvh - 36px);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  body.view-split.has-camera-preview .camera-preview {
+    position: static;
+    flex: 0 0 60%;
+    height: 60%;
+    max-height: 60%;
+    min-height: 0;
+    margin: 0;
+    display: flex;
+  }
+  body.view-split.has-camera-preview .camera-preview .camera-dialog {
+    height: 100%;
+    max-height: 100%;
+    width: 100%;
+  }
+  body.view-split.has-camera-preview .preview-content {
+    flex: 1 1 auto;
+  }
+  body.view-split.has-camera-preview .dialog-media {
+    height: clamp(160px, 27dvh, 270px);
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  body.view-split.has-camera-preview .wall-section {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    padding: 4px;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  body.view-split.has-camera-preview .camera-grid { align-items: start; }
+}
