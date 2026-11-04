@@ -31,6 +31,7 @@ STATES = [
     ('CA', 'California', 'california-camera-desk', 'caltrans'),
     ('WA', 'Washington', 'washington-camera-desk', 'wsdot'),
     ('OR', 'Oregon', 'oregon-camera-desk', 'tripcheck'),
+    ('NV', 'Nevada', 'nevada-camera-desk', 'nv511'),
 ]
 PUBLIC_ROOT = 'https://whardy.github.io/sandbox/'
 RELAY_ROOT = 'https://texas-camera-relay.wintrytiger33.chatgpt.site'
@@ -96,7 +97,7 @@ def normalize_road(value):
     def format_ref(match):
         number = re.match(r'(\d+)([A-Z]?)$', match[3], re.I)
         return f'{match[1]}{match[2].upper()}-{int(number[1])}{number[2].upper()}'
-    road = re.sub(r'(^|[\s/&(])(US|VA|MD|OH|TX|AZ|WV|PA|NY|CA|WA|OR|RT|SR|SH|FM|RM|LP|SP|BW|I)\s*\.?\s*-?\s*(\d+[A-Z]?)\b',
+    road = re.sub(r'(^|[\s/&(])(US|VA|MD|OH|TX|AZ|WV|PA|NY|CA|WA|OR|NV|CC|RT|SR|SH|FM|RM|LP|SP|BW|I)\s*\.?\s*-?\s*(\d+[A-Z]?)\b',
                   format_ref, road, flags=re.I)
     return road
 
@@ -104,7 +105,7 @@ def normalize_road(value):
 def route_refs(camera, road, primary_only=False):
     source = road if primary_only else ' '.join([road, clean_text(camera.get('name'))] + list(camera.get('routes') or []))
     source = normalize_road(source)
-    refs = re.findall(r'\b(I|US|SR|RT|VA|MD|OH|TX|AZ|WV|PA|NY|CA|WA|OR|SH|FM|RM|LP|SP|BW)-(\d+[A-Z]?)\b', source, flags=re.I)
+    refs = re.findall(r'\b(I|US|SR|RT|VA|MD|OH|TX|AZ|WV|PA|NY|CA|WA|OR|NV|CC|SH|FM|RM|LP|SP|BW)-(\d+[A-Z]?)\b', source, flags=re.I)
     return sorted(set(f'{prefix.upper()}-{number.upper()}' for prefix, number in refs))
 
 
@@ -205,12 +206,12 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
             provider_key = 'austin' if state == 'TX' and source_id.startswith('austin-') else ('nycdot' if camera.get('provider') == 'NYC DOT' else 'nysdot') if state == 'NY' else base_provider
             if state == 'CA':
                 provider_key = source_id.split(':', 1)[0] if ':' in source_id else base_provider
-            ident = f'{state}:{source_id}' if state == 'CA' and ':' in source_id else f'{state}:{provider_key}:{source_id}'
+            ident = f'{state}:{source_id}' if state in {'CA', 'NV'} and ':' in source_id else f'{state}:{provider_key}:{source_id}'
             raw_site_id = str(camera.get('siteId', camera['id']))
-            site_id = f'{state}:{raw_site_id}' if state == 'CA' and ':' in raw_site_id else f'{state}:{provider_key}:{raw_site_id}'
+            site_id = f'{state}:{raw_site_id}' if state in {'CA', 'NV'} and ':' in raw_site_id else f'{state}:{provider_key}:{raw_site_id}'
             county, kind, metro = geography(state, camera, overrides, groups)
             raw_road = clean_text(camera.get('sourceRoad') or camera.get('road') or camera.get('primaryRoad') or camera.get('route')) or 'Other roads'
-            road = normalize_road(camera.get('road') or raw_road) if state == 'CA' else normalize_road(raw_road)
+            road = normalize_road(camera.get('road') or raw_road) if state in {'CA', 'NV'} else normalize_road(raw_road)
             lat, lon = coordinates(camera)
             checked = audit_by_id.get(source_id, {})
             if state == 'OH':
@@ -257,6 +258,10 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
                 merged_direction['name'] = ''
                 if clean_text(merged_direction.get('direction')).lower() in {'not reported', 'unknown', 'n/a'}:
                     merged_direction['direction'] = ''
+            if state == 'NV':
+                # Nevada 511 Direction describes camera facing, not traffic travel side.
+                merged_direction['direction'] = ''
+                merged_direction['name'] = ''
             direction, bearing, direction_source = direction_info(merged_direction)
             item = {
                 'id': ident, 'siteId': site_id, 'sourceId': source_id, 'sourceSiteId': raw_site_id,
@@ -314,6 +319,21 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
                 item['auditCheckedAt'] = camera.get('checkedAt') or checked.get('checkedAt')
                 item['imageCheckedAt'] = camera.get('imageCheckedAt') or (checked.get('image') or {}).get('checkedAt')
                 item['videoCheckedAt'] = camera.get('videoCheckedAt') or (checked.get('video') or {}).get('checkedAt')
+            if state == 'NV':
+                for field in ('parentId', 'viewId', 'city', 'citySource', 'countyFips', 'providerSource', 'sourceDistrict', 'directionType', 'snapshotUpdateSeconds', 'aliases'):
+                    item[field] = camera.get(field)
+                if re.fullmatch(r'NV-\d+[A-Z]?', item['road']):
+                    # Routers often use generic SR for a Nevada state route.
+                    alias = 'SR-' + item['road'][3:]
+                    item['routeRefs'] = sorted(set(item['routeRefs'] + [alias]))
+                    item['primaryRouteRefs'] = sorted(set(item['primaryRouteRefs'] + [alias]))
+                item['viewingDirection'] = camera.get('direction')
+                item['direction'] = ''
+                item['directionBearing'] = None
+                item['directionSource'] = 'camera-facing-only'
+                item['sourceTimestamp'] = None
+                item['sourceUpdatedAt'] = camera.get('sourceUpdatedAt') or fetched_at
+                item['auditCheckedAt'] = camera.get('checkedAt')
             cameras.append(item)
     cameras.sort(key=lambda c: c['id'])
     assert len({c['id'] for c in cameras}) == len(cameras), f'Duplicate normalized ID in {state}'
@@ -438,13 +458,14 @@ def main():
         'states': states, 'crossCatalogReconciliation': reconciliation, 'configuredCatalogsNotBuilt': skipped,
         'notes': [
             'Listed views are dated catalog entries, not a live count of working feeds or deduplicated physical devices across providers.',
-            'Locations count distinct state/provider/source site identifiers; OH, AZ and CA may contain several views at one source location; this is not an independently verified count of physical devices.',
+            'Locations count distinct state/provider/source site identifiers; OH, AZ, CA and NV may contain several views at one source location; this is not an independently verified count of physical devices.',
             'State labels identify source catalogs; some catalogs include adjacent-state border connections.',
             'Availability is the best available dated media check. Available does not prove image capture time or current playback.',
             'Image/video capability and dated availability are independent. Video entries can have a working snapshot when their video was unavailable.',
             'County, independent-city, and DC ward classifications remain distinct. Metro groupings are browsing conveniences.',
             'Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.',
             'California Caltrans recordTimestamp is catalog metadata, not image capture time. Direction describes travel side separately from facingDirection. County postmiles are not a statewide route odometer.',
+            'Nevada 511 Direction describes camera facing, not verified traffic direction. Source update times are catalog metadata, not image capture times.',
             'Oregon and Washington snapshots respect their source refresh cadence (normally five minutes). Oregon camera viewing orientation is not treated as verified travel direction.',
             'Exact shared Oregon/Washington image URLs are counted once in the hub, with original catalog IDs retained as aliases. Different images at nearby positions remain separate views.',
             'No camera media was requested or recorded while building these shards.',

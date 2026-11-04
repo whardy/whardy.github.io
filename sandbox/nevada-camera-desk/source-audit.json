@@ -1,0 +1,222 @@
+{
+  "startedAt": "2026-11-04T03:50:19.618725Z",
+  "completedAt": "2026-11-04T03:50:55.203472Z",
+  "sampleSize": 20,
+  "totalViews": 651,
+  "counts": {
+    "image": {
+      "jpeg-decoded": 17,
+      "provider-offline-card": 3
+    },
+    "videoManifest": {
+      "manifest-returned": 16,
+      "request-failed": 3,
+      "not checked": 1
+    }
+  },
+  "method": "JPEG decoded by sips; HLS manifest syntax only. Browser decoding tested separately. No video recording.",
+  "results": [
+    {
+      "id": "nv511:7516",
+      "county": "Clark",
+      "checkedAt": "2026-11-04T03:50:19.618725Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 10179,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7820",
+      "county": "Washoe",
+      "checkedAt": "2026-11-04T03:50:20.948476Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 8337,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 126
+    },
+    {
+      "id": "nv511:7718",
+      "county": "Elko",
+      "checkedAt": "2026-11-04T03:50:22.208039Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 8434,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7746",
+      "county": "White Pine",
+      "checkedAt": "2026-11-04T03:50:23.456275Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 2504,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7888",
+      "county": "Carson City",
+      "checkedAt": "2026-11-04T03:50:24.569110Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 30086,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7848",
+      "county": "Douglas",
+      "checkedAt": "2026-11-04T03:50:25.914781Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 16691,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 126
+    },
+    {
+      "id": "nv511:7904",
+      "county": "Lyon",
+      "checkedAt": "2026-11-04T03:50:27.166434Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 59409,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7732",
+      "county": "Eureka",
+      "checkedAt": "2026-11-04T03:50:28.463811Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 37725,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7722",
+      "county": "Humboldt",
+      "checkedAt": "2026-11-04T03:50:29.742007Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 8684,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7875",
+      "county": "Churchill",
+      "checkedAt": "2026-11-04T03:50:30.998521Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 4543,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7750",
+      "county": "Nye",
+      "checkedAt": "2026-11-04T03:50:32.272586Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 2180,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7742",
+      "county": "Lander",
+      "checkedAt": "2026-11-04T03:50:33.610543Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 2553,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7877",
+      "county": "Mineral",
+      "checkedAt": "2026-11-04T03:50:34.894386Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 13583,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7873",
+      "county": "Pershing",
+      "checkedAt": "2026-11-04T03:50:36.327701Z",
+      "image": "provider-offline-card",
+      "videoManifest": "request-failed",
+      "imageNotice": "Nevada DOT technical difficulties card",
+      "imageBytes": 27186,
+      "imageContentType": "image/png",
+      "videoError": "HTTP Error 404: Not Found"
+    },
+    {
+      "id": "nv511:7841",
+      "county": "Storey",
+      "checkedAt": "2026-11-04T03:50:37.609263Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 11017,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7332",
+      "county": "Esmeralda",
+      "checkedAt": "2026-11-04T03:50:38.858499Z",
+      "image": "provider-offline-card",
+      "videoManifest": "request-failed",
+      "imageNotice": "Nevada DOT technical difficulties card",
+      "imageBytes": 27186,
+      "imageContentType": "image/png",
+      "videoError": "HTTP Error 404: Not Found"
+    },
+    {
+      "id": "nv511:7315",
+      "county": "Lincoln",
+      "checkedAt": "2026-11-04T03:50:40.330159Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "request-failed",
+      "imageBytes": 47294,
+      "imageContentType": "image/jpeg",
+      "videoError": "<urlopen error [Errno 54] Connection reset by peer>"
+    },
+    {
+      "id": "nv511:7843",
+      "county": "Carson City",
+      "checkedAt": "2026-11-04T03:50:51.887449Z",
+      "image": "provider-offline-card",
+      "videoManifest": "not checked",
+      "imageNotice": "Nevada 511 no live camera feed card",
+      "imageBytes": 15136,
+      "imageContentType": "image/png"
+    },
+    {
+      "id": "nv511:7556",
+      "county": "Clark",
+      "checkedAt": "2026-11-04T03:50:52.574880Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 5812,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    },
+    {
+      "id": "nv511:7735",
+      "county": "Elko",
+      "checkedAt": "2026-11-04T03:50:53.785169Z",
+      "image": "jpeg-decoded",
+      "videoManifest": "manifest-returned",
+      "imageBytes": 16497,
+      "imageContentType": "image/jpeg",
+      "manifestBytes": 127
+    }
+  ]
+}

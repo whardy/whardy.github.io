@@ -1,15 +1,15 @@
 const safeURL=value=>{try{const url=new URL(value);return url.protocol==='https:'?url:null;}catch{return null;}};
 const captureLabel=camera=>{if(!['OR','WA'].includes(camera.state))return '';const value=camera.sourceTimestamp;return value&&Number.isFinite(Date.parse(value))?` · captured ${new Date(value).toLocaleString()}`:' · capture time unknown';};
 const clock=value=>new Date(value).toLocaleTimeString([],{hour:'numeric',minute:'2-digit',second:'2-digit'});
-export function createMediaManager({onChange=()=>{},onMessage=()=>{},autoplayWV=true,autoplayCA=true}={}){
+export function createMediaManager({onChange=()=>{},onMessage=()=>{},autoplayWV=true,autoplayCA=true,autoplayNV=true}={}){
   const items=new Set(),players=new Set();let queue=[],running=0,auto=true,limit=matchMedia('(max-width:700px)').matches?1:2,autoplayScope=null,autoScheduled=false;
-  const stateAutoplay=state=>state==='WV'?autoplayWV:state==='CA'?autoplayCA:false;
-  const inlineVideo=camera=>camera.state==='WV'||camera.state==='CA';
+  const stateAutoplay=state=>state==='WV'?autoplayWV:state==='CA'?autoplayCA:state==='NV'?autoplayNV:false;
+  const inlineVideo=camera=>['WV','CA','NV'].includes(camera.state);
   const snapshotInterval=camera=>Math.max(60,Number(camera.snapshotUpdateSeconds)||60)*1000;
-  function eligible(item){return stateAutoplay(item.camera.state)&&item.autoplay&&!(item.camera.state==='CA'&&item.camera.videoStatus==='unavailable')&&item.camera.videoUrl&&!item.camera.disabled&&item.visible&&!item.disposed&&!item.blocked&&!item.suspended&&(!autoplayScope||autoplayScope.contains(item.container));}
+  function eligible(item){return stateAutoplay(item.camera.state)&&item.autoplay&&!(['CA','NV'].includes(item.camera.state)&&item.camera.videoStatus==='unavailable')&&item.camera.videoUrl&&!item.camera.disabled&&item.visible&&!item.disposed&&!item.blocked&&!item.suspended&&(!autoplayScope||autoplayScope.contains(item.container));}
   function scheduleAutoplay(){
     if(autoScheduled)return;autoScheduled=true;
-    queueMicrotask(()=>{autoScheduled=false;if(document.hidden||(!autoplayWV&&!autoplayCA))return;
+    queueMicrotask(()=>{autoScheduled=false;if(document.hidden||(!autoplayWV&&!autoplayCA&&!autoplayNV))return;
       for(const item of items){
         if(players.size>=limit)break;
         if(!eligible(item)||item.player||[...players].some(player=>player.camera.id===item.camera.id))continue;
@@ -88,7 +88,7 @@ export function createMediaManager({onChange=()=>{},onMessage=()=>{},autoplayWV=
     if(autoItem)autoItem.cancel?.();else dispose(container);
     container.replaceChildren();delete container.dataset.mediaError;container.classList.add('camera-media');
     const video=document.createElement('video');video.controls=!inlineVideo(camera);video.playsInline=true;video.muted=true;video.defaultMuted=true;video.autoplay=true;video.crossOrigin='anonymous';video.preload='none';video.setAttribute('muted','');video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');video.setAttribute('autoplay','');video.setAttribute('aria-label',`Live traffic video: ${camera.name}`);
-    if(inlineVideo(camera)){video.disablePictureInPicture=true;video.disableRemotePlayback=true;video.classList.add(camera.state==='WV'?'wv-inline-video':'ca-inline-video');}
+    if(inlineVideo(camera)){video.disablePictureInPicture=true;video.disableRemotePlayback=true;video.classList.add(camera.state==='WV'?'wv-inline-video':camera.state==='CA'?'ca-inline-video':'nv-inline-video');}
     const label=document.createElement('span');label.className='media-time';label.textContent='Connecting…';container.append(video,label);
     let hls=null,timer,stopped=false;
     const player={container,camera,video,autoItem,seen:false,stop(message='Video stopped'){
@@ -116,10 +116,10 @@ export function createMediaManager({onChange=()=>{},onMessage=()=>{},autoplayWV=
   });
   setInterval(()=>{if(auto&&!document.hidden)for(const item of items)if(item.visible)enqueue(item);},60000);
   function setStateAutoplay(state,value){
-    if(state==='WV')autoplayWV=!!value;else if(state==='CA')autoplayCA=!!value;else return;
+    if(state==='WV')autoplayWV=!!value;else if(state==='CA')autoplayCA=!!value;else if(state==='NV')autoplayNV=!!value;else return;
     for(const item of items)if(item.camera.state===state){item.suspended=false;if(value)item.blocked=false;}
     if(!value)for(const player of [...players])if(player.autoItem&&player.camera.state===state)player.stop(`${state} autoplay paused`);
     scheduleAutoplay();
   }
-  return {snapshot,play,dispose,stopAll,setAuto(value){auto=!!value;},setWVAutoplay(value){setStateAutoplay('WV',value);},setCAAutoplay(value){setStateAutoplay('CA',value);},setStateAutoplay,setAutoplayScope(scope=null){autoplayScope=scope;for(const player of [...players])if(player.autoItem&&scope&&!scope.contains(player.container))player.stop('Preview paused while a camera is open');scheduleAutoplay();},refresh(){for(const item of items)if(item.visible){item.blocked=false;item.suspended=false;enqueue(item,true);}scheduleAutoplay();},setLimit(value){limit=[1,2,4].includes(Number(value))?Number(value):2;while(players.size>limit)[...players].at(-1).stop('Stopped after changing live limit');scheduleAutoplay();},get count(){return players.size;},get limit(){return limit;},debug(){return {snapshots:items.size,queued:queue.length,running,videos:players.size,visible:[...items].filter(i=>i.visible).length};}};
+  return {snapshot,play,dispose,stopAll,setAuto(value){auto=!!value;},setWVAutoplay(value){setStateAutoplay('WV',value);},setCAAutoplay(value){setStateAutoplay('CA',value);},setNVAutoplay(value){setStateAutoplay('NV',value);},setStateAutoplay,setAutoplayScope(scope=null){autoplayScope=scope;for(const player of [...players])if(scope&&!scope.contains(player.container))player.stop('Preview paused while a camera is open');scheduleAutoplay();},refresh(){for(const item of items)if(item.visible){item.blocked=false;item.suspended=false;enqueue(item,true);}scheduleAutoplay();},setLimit(value){limit=[1,2,4].includes(Number(value))?Number(value):2;while(players.size>limit)[...players].at(-1).stop('Stopped after changing live limit');scheduleAutoplay();},get count(){return players.size;},get limit(){return limit;},debug(){return {snapshots:items.size,queued:queue.length,running,videos:players.size,visible:[...items].filter(i=>i.visible).length};}};
 }

@@ -1,9 +1,9 @@
 import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet} from './catalog.js?v=20261104or2';
 import {searchPlaces,calculateRoutes,PROVIDERS} from './routing.js';
-import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104or2';
+import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104nv1';
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
 import {createCameraMap} from './map.js?v=20261104ordraft1';
-import {createMediaManager} from './media.js?v=20261104or2';
+import {createMediaManager} from './media.js?v=20261104nv1';
 import {FLORIDA_REGIONS,floridaRouteRegions} from './florida.js';
 
 const $=id=>document.getElementById(id), nf=new Intl.NumberFormat('en-US');
@@ -16,9 +16,10 @@ const model={index:null,mode:'plan',library:loadLibrary(),points:[{key:'from',na
 let cameraMap=null, routeAbort=null, searchAbort=new Map(), modalReturn=null, modalPlayer=null, filtersTimer;
 const readAutoplay=state=>{try{return localStorage.getItem(`trip-camera-desk-${state.toLowerCase()}-autoplay`)!=='off';}catch{return true;}};
 const readWVAutoplay=()=>readAutoplay('WV');
-const media=createMediaManager({autoplayWV:readWVAutoplay(),autoplayCA:readAutoplay('CA'),onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
+const media=createMediaManager({autoplayWV:readWVAutoplay(),autoplayCA:readAutoplay('CA'),autoplayNV:readAutoplay('NV'),onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
 function setWVAutoplay(value){$('wv-autoplay').checked=!!value;media.setWVAutoplay(value);try{localStorage.setItem('trip-camera-desk-wv-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function setCAAutoplay(value){$('ca-autoplay').checked=!!value;media.setCAAutoplay(value);try{localStorage.setItem('trip-camera-desk-ca-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
+function setNVAutoplay(value){$('nv-autoplay').checked=!!value;media.setNVAutoplay(value);try{localStorage.setItem('trip-camera-desk-nv-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function announce(message){$('app-status').textContent=message;}
 function persist(){if(!saveLibrary(model.library))announce('Changes are available for this visit. Browser storage is full or unavailable; use Export to keep a copy.');}
 const board=()=>model.library.boards.find(b=>b.id===model.library.activeBoardId)||model.library.boards[0];
@@ -320,7 +321,7 @@ function bindEvents(){
   $('reset-filters').addEventListener('click',()=>{model.filters=emptyFilters();model.highway='';model.direction='';$('highway-select').value='';$('travel-direction').value='';model.page=1;renderResults();updateURL();});
   $('apply-corridor').addEventListener('click',()=>{if(!model.route){announce('Find a route between your start and destination, then apply the highway filter to that stretch.');return;}model.highway=$('highway-select').value;model.direction=$('travel-direction').value;model.page=1;renderResults();announce('Highway filter applied to your selected route. Unknown camera direction is retained and labeled.');});
   $('previous-page').addEventListener('click',()=>{model.page--;renderResults();$('camera-results').scrollIntoView({block:'start'});});$('next-page').addEventListener('click',()=>{model.page++;renderResults();$('camera-results').scrollIntoView({block:'start'});});
-  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());$('wv-autoplay').checked=readWVAutoplay();$('wv-autoplay').addEventListener('change',()=>setWVAutoplay($('wv-autoplay').checked));$('ca-autoplay').checked=readAutoplay('CA');$('ca-autoplay').addEventListener('change',()=>setCAAutoplay($('ca-autoplay').checked));
+  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());$('wv-autoplay').checked=readWVAutoplay();$('wv-autoplay').addEventListener('change',()=>setWVAutoplay($('wv-autoplay').checked));$('ca-autoplay').checked=readAutoplay('CA');$('ca-autoplay').addEventListener('change',()=>setCAAutoplay($('ca-autoplay').checked));$('nv-autoplay').checked=readAutoplay('NV');$('nv-autoplay').addEventListener('change',()=>setNVAutoplay($('nv-autoplay').checked));
   $('board-select').addEventListener('change',async()=>{model.library.activeBoardId=$('board-select').value;await ensureBoardCameras();persist();renderLibrary();renderResults();});
   $('new-board').addEventListener('click',()=>{if(model.library.boards.length>=30){announce('You can keep 30 boards. Export or remove a board first.');return;}const name=$('board-name').value.trim()||'My watchboard';const b={id:newId(),name,cameraIds:[]};model.library.boards.push(b);model.library.activeBoardId=b.id;persist();renderLibrary();renderResults();});
   $('rename-board').addEventListener('click',()=>{const name=$('board-name').value.trim();if(name){board().name=name;persist();renderLibrary();renderResults();}});
@@ -334,7 +335,7 @@ function bindEvents(){
   $('export-data').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({format:'trip-camera-desk',version:1,exportedAt:new Date().toISOString(),...model.library},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trip-camera-desk-saved.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   $('import-data').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',async()=>{const file=$('import-file').files[0];if(!file)return;try{if(file.size>2_000_000)throw new Error('Import is larger than 2 MB.');const value=JSON.parse(await file.text());if(value.format!=='trip-camera-desk'||value.version!==1||!Array.isArray(value.boards)||!Array.isArray(value.trips))throw new Error('Choose a Trip Camera Desk export.');mergeLibrary(model.library,value);persist();await ensureBoardCameras();renderLibrary();renderResults();announce('Import complete. Existing items were kept; new items were added up to the 30-board and 50-trip limits.');}catch(error){announce(error.message);}$('import-file').value='';});
   $('live-limit').value=String(media.limit);$('live-limit').addEventListener('change',()=>{media.setLimit($('live-limit').value);while(model.liveSlots.length>media.limit)model.liveSlots.pop().player?.stop();renderLiveSlots();});
-  $('stop-all-video').addEventListener('click',()=>{setWVAutoplay(false);setCAAutoplay(false);media.stopAll();for(const slot of model.liveSlots){slot.player=null;slot.wanted=false;}renderLiveSlots();});
+  $('stop-all-video').addEventListener('click',()=>{setWVAutoplay(false);setCAAutoplay(false);setNVAutoplay(false);media.stopAll();for(const slot of model.liveSlots){slot.player=null;slot.wanted=false;}renderLiveSlots();});
   $('dialog-close').addEventListener('click',closeCamera);$('camera-dialog').addEventListener('cancel',event=>{event.preventDefault();closeCamera();});
   $('dialog-pin').addEventListener('click',()=>model.selected&&togglePin(model.selected.id));$('dialog-play').addEventListener('click',()=>{
     if(modalPlayer){modalPlayer.stop();modalPlayer=null;media.snapshot($('dialog-media'),model.selected,{autoplay:false});$('dialog-play').textContent='Watch live';return;}
