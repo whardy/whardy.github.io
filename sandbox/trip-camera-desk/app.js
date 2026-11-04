@@ -1,9 +1,9 @@
-import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,filterCameras,facet} from './catalog.js';
+import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet} from './catalog.js?v=20261104or2';
 import {searchPlaces,calculateRoutes,PROVIDERS} from './routing.js';
-import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js';
+import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104or2';
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
-import {createCameraMap} from './map.js';
-import {createMediaManager} from './media.js?v=20261104ca1';
+import {createCameraMap} from './map.js?v=20261104ordraft1';
+import {createMediaManager} from './media.js?v=20261104or2';
 
 const $=id=>document.getElementById(id), nf=new Intl.NumberFormat('en-US');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,7 +21,8 @@ function setCAAutoplay(value){$('ca-autoplay').checked=!!value;media.setCAAutopl
 function announce(message){$('app-status').textContent=message;}
 function persist(){if(!saveLibrary(model.library))announce('Changes are available for this visit. Browser storage is full or unavailable; use Export to keep a copy.');}
 const board=()=>model.library.boards.find(b=>b.id===model.library.activeBoardId)||model.library.boards[0];
-const cameraById=id=>allCameras().find(c=>c.id===id);
+const cameraById=id=>allCameras().find(c=>c.id===id||(c.catalogAliases||[]).includes(id));
+const boardIndex=id=>{const camera=cameraById(id);return board().cameraIds.findIndex(value=>value===id||camera&&(value===camera.id||(camera.catalogAliases||[]).includes(value)));};
 function safeLink(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:'#';}catch{return '#';}}
 function currentTrip(){return cleanTrip({name:$('saved-trip-name')?.value||`${model.points[0].name} → ${model.points.at(-1).name}`,points:model.points,avoidTolls:$('avoid-tolls').checked,avoidHighways:$('avoid-highways').checked,corridorMeters:model.corridorMeters});}
 
@@ -29,7 +30,7 @@ function inputFor(key){return key==='from'?$('from-input'):key==='to'?$('to-inpu
 function resultsFor(key){return key==='from'?$('from-results'):key==='to'?$('to-results'):$(`results-${key}`);}
 function dirtyRoute(){model.dirty=!!model.route;if(model.route)$('routing-status').textContent='Trip inputs changed. Find my route to update the map and cameras.';}
 function bindPoint(key){
-  const input=inputFor(key);input.addEventListener('input',()=>{const point=model.points.find(p=>p.key===key);point.name=input.value;point.lat=point.lon=null;dirtyRoute();});
+  const input=inputFor(key);input.addEventListener('input',()=>{const point=model.points.find(p=>p.key===key);point.name=input.value;point.lat=point.lon=null;cameraMap?.setPoints(model.points);dirtyRoute();});
   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();findPlace(key);}if(event.key==='Escape')resultsFor(key).replaceChildren();});
   const search=key==='from'?$('from-search'):key==='to'?$('to-search'):$(`search-${key}`);search.addEventListener('click',()=>findPlace(key));
   const pick=key==='from'?$('from-map'):key==='to'?$('to-map'):$(`map-${key}`);pick.addEventListener('click',()=>pickPoint(key));
@@ -64,8 +65,10 @@ async function findPlace(key){
   }catch(error){if(error.name!=='AbortError'){container.textContent='Place search is temporarily unavailable. Use latitude, longitude or Pick on map.';announce(error.message);}}
 }
 function pickPoint(key){setMode('plan');cameraMap?.pick(key);$('map-select-hint').hidden=false;$('map-select-hint').textContent=`Select the ${key==='from'?'start':key==='to'?'destination':'stop'} on the map. Escape cancels.`;$('map').focus();}
+function resolveTypedCoordinates(){for(const point of model.points)if(!cleanPoint(point)){const coords=parseCoordinates(inputFor(point.key).value);if(coords)Object.assign(point,coords);}cameraMap?.setPoints(model.points);}
 async function planTrip(event){
   event?.preventDefault();if(model.busy)return;
+  resolveTypedCoordinates();
   const missing=model.points.find(p=>!cleanPoint(p));if(missing){announce('Choose a search result or map location for each stop before finding a route.');await findPlace(missing.key);inputFor(missing.key).focus();return;}
   routeAbort?.abort();routeAbort=new AbortController();model.busy=true;$('calculate-route').disabled=true;$('routing-status').textContent='Calculating a real driving route…';
   announce('Finding routes and cameras along your journey…');
@@ -155,14 +158,14 @@ function renderFilters(base){
   if(model.highway){const button=document.createElement('button');button.type='button';button.className='filter-chip';button.textContent=`Highway: ${model.highway} ${model.direction||''} ×`;button.addEventListener('click',()=>{model.highway='';model.direction='';$('highway-select').value='';$('travel-direction').value='';renderResults();});chips.append(button);}
 }
 function cardMarkup(camera,index){
-  if(model.mode==='board')index=board().cameraIds.indexOf(camera.id);
-  const pinned=board().cameraIds.includes(camera.id),hasVideo=!!camera.videoUrl&&!camera.disabled;
+  if(model.mode==='board')index=boardIndex(camera.id);
+  const pinned=boardIndex(camera.id)>=0,hasVideo=!!camera.videoUrl&&!camera.disabled;
   const label=camera.disabled?'Unavailable':camera.mediaType==='video'?'Live video':camera.mediaType==='official'?'Official viewer':'Refreshing snapshot';
   const caMetadata=camera.state==='CA'?[camera.district?`Caltrans ${camera.district}`:'',Number.isFinite(camera.elevationFeet)?`${nf.format(camera.elevationFeet)} ft`:'',camera.direction?`${camera.direction} travel side`:'Travel direction unreported',camera.facingDirection?`Looking ${camera.facingDirection}`:''].filter(Boolean).join(' · '):'';
   const routeLabel=Number.isFinite(camera.routeDistanceMeters)?`${miles(camera.routeDistanceMeters)} from start · ~${duration(camera.routeTimeSeconds||0)} · ${camera.routeMatchLabel||'Nearby, road uncertain'}`:'';
   const describe=value=>value==='available'?'checked available':value==='unavailable'?'unavailable at check':value==='stale'?'older image at check':'not checked';
   const check=camera.disabled?'Disabled in source catalog':camera.videoUrl?`Video ${describe(camera.videoStatus)}${camera.imageUrl?' · Snapshot '+describe(camera.imageStatus):''}`:camera.imageUrl?`Snapshot ${describe(camera.imageStatus)}`:'Official viewer only';
-  return `<div class="card-top"><span class="state-tag">${esc(camera.state)}</span><span class="media-badge ${camera.mediaType}">${label}</span><button class="pin-camera" type="button" data-action="pin" aria-pressed="${pinned}" aria-label="${pinned?'Unpin':'Pin'} ${esc(camera.name)}">${pinned?'★':'☆'}</button></div><button class="card-media" type="button" data-action="open" aria-label="Open ${esc(camera.name)}"></button><div class="card-content"><button class="card-title" type="button" data-action="open">${esc(camera.name)}</button><p class="card-meta">${esc([camera.jurisdiction,camera.metro].filter(Boolean).join(' · ')||camera.stateName)}</p>${caMetadata?`<p class="card-meta">${esc(caMetadata)}</p>`:''}${routeLabel?`<p class="route-label">${esc(routeLabel)}</p>`:''}<p class="availability-badge" title="Checked ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}">${esc(check)} · ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}</p><div class="card-actions">${hasVideo?'<button class="small-button" type="button" data-action="play">Watch live</button>':''}<a class="text-button" href="${esc(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official ↗</a><button class="text-button" type="button" data-action="locate" ${camera.lat==null?'disabled':''}>Map</button></div>${model.mode==='board'?`<div class="board-order"><button class="text-button" type="button" data-action="up" aria-label="Move ${esc(camera.name)} earlier" ${index===0?'disabled':''}>↑ Earlier</button><button class="text-button" type="button" data-action="down" aria-label="Move ${esc(camera.name)} later" ${index===board().cameraIds.length-1?'disabled':''}>↓ Later</button><button class="text-button danger-link" type="button" data-action="remove">Remove</button></div>`:''}</div>`;
+  return `<div class="card-top"><span class="state-tag">${esc(camera.state)}</span><span class="media-badge ${camera.mediaType}">${label}</span><button class="pin-camera" type="button" data-action="pin" aria-pressed="${pinned}" aria-label="${pinned?'Unpin':'Pin'} ${esc(camera.name)}">${pinned?'★':'☆'}</button></div><button class="card-media" type="button" data-action="open" aria-label="Open ${esc(camera.name)}"></button><div class="card-content"><button class="card-title" type="button" data-action="open">${esc(camera.name)}</button><p class="card-meta">${esc([camera.jurisdiction,camera.metro,camera.physicalState&&camera.physicalState!==camera.state?`Located in ${camera.physicalState}`:''].filter(Boolean).join(' · ')||camera.stateName)}</p>${caMetadata?`<p class="card-meta">${esc(caMetadata)}</p>`:''}${routeLabel?`<p class="route-label">${esc(routeLabel)}</p>`:''}<p class="availability-badge" title="Checked ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}">${esc(check)} · ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}</p><div class="card-actions">${hasVideo?'<button class="small-button" type="button" data-action="play">Watch live</button>':''}<a class="text-button" href="${esc(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official ↗</a><button class="text-button" type="button" data-action="locate" ${camera.lat==null?'disabled':''}>Map</button></div>${model.mode==='board'?`<div class="board-order"><button class="text-button" type="button" data-action="up" aria-label="Move ${esc(camera.name)} earlier" ${index===0?'disabled':''}>↑ Earlier</button><button class="text-button" type="button" data-action="down" aria-label="Move ${esc(camera.name)} later" ${index===board().cameraIds.length-1?'disabled':''}>↓ Later</button><button class="text-button danger-link" type="button" data-action="remove">Remove</button></div>`:''}</div>`;
 }
 function renderResults(){
   if(!model.index)return;
@@ -208,19 +211,19 @@ function renderLibrary(){
   $('board-select').innerHTML=model.library.boards.map(b=>`<option value="${esc(b.id)}">${esc(b.name)} (${b.cameraIds.length})</option>`).join('');$('board-select').value=board().id;
   $('board-name').value=board().name;$('board-note').textContent=`${board().cameraIds.length} pinned views. Saved in this browser; export a copy to move between devices.`;
 }
-async function ensureBoardCameras(){const codes=[...new Set(board().cameraIds.map(id=>id.split(':')[0]))];await loadStates(model.index,codes);}
+async function ensureBoardCameras(){const codes=statesForCameraIds(model.index,board().cameraIds);await loadStates(model.index,codes);const seen=new Set(),ids=board().cameraIds;board().cameraIds=ids.filter(id=>{const canonical=cameraById(id)?.id||id;if(seen.has(canonical))return false;seen.add(canonical);return true;});if(ids.length!==board().cameraIds.length)persist();}
 function togglePin(id){
-  const b=board(),index=b.cameraIds.indexOf(id);if(index>=0)b.cameraIds.splice(index,1);else {if(b.cameraIds.length>=500){announce('This board is full. Create another watchboard.');return;}b.cameraIds.push(id);}
+  const b=board(),index=boardIndex(id);if(index>=0)b.cameraIds.splice(index,1);else {if(b.cameraIds.length>=500){announce('This board is full. Create another watchboard.');return;}b.cameraIds.push(id);}
   persist();renderLibrary();renderResults();updateDialogPin();announce(index>=0?'Camera removed from watchboard.':`Camera pinned to ${b.name}.`);
 }
-function moveCamera(id,offset){const ids=board().cameraIds,index=ids.indexOf(id),target=index+offset;if(index<0||target<0||target>=ids.length)return;[ids[index],ids[target]]=[ids[target],ids[index]];persist();renderResults();[...document.querySelectorAll('.camera-card')].find(c=>c.dataset.cameraId===id)?.querySelector(`[data-action="${offset<0?'up':'down'}"]`)?.focus();}
-function updateDialogPin(){if(!model.selected)return;const pinned=board().cameraIds.includes(model.selected.id);$('dialog-pin').textContent=pinned?'★ Pinned to watchboard':'☆ Pin to watchboard';$('dialog-pin').setAttribute('aria-pressed',String(pinned));}
+function moveCamera(id,offset){const ids=board().cameraIds,index=boardIndex(id),target=index+offset;if(index<0||target<0||target>=ids.length)return;[ids[index],ids[target]]=[ids[target],ids[index]];persist();renderResults();[...document.querySelectorAll('.camera-card')].find(c=>c.dataset.cameraId===id)?.querySelector(`[data-action="${offset<0?'up':'down'}"]`)?.focus();}
+function updateDialogPin(){if(!model.selected)return;const pinned=boardIndex(model.selected.id)>=0;$('dialog-pin').textContent=pinned?'★ Pinned to watchboard':'☆ Pin to watchboard';$('dialog-pin').setAttribute('aria-pressed',String(pinned));}
 function openCamera(id){
   const camera=cameraById(id);if(!camera)return;
   if(!$('camera-dialog').open)modalReturn=document.activeElement;
   modalPlayer?.stop();modalPlayer=null;model.selected=camera;
   $('dialog-title').textContent=camera.name;$('dialog-subtitle').textContent=[camera.stateName,camera.road,camera.jurisdiction].filter(Boolean).join(' · ');
-  $('dialog-status').textContent=`${camera.provider}. ${camera.description||''} Availability checked ${date(camera.auditCheckedAt||camera.videoCheckedAt)}. Fetched time is retrieval time.${camera.state==='CA'?` Image capture time ${camera.sourceCaptureTime?date(camera.sourceCaptureTime):'unknown'}. Caltrans record timestamps describe catalog metadata.`:''}`;
+  $('dialog-status').textContent=`${camera.provider}. ${camera.description||''} Availability checked ${date(camera.auditCheckedAt||camera.videoCheckedAt)}. Fetched time is retrieval time.${camera.state==='CA'?` Image capture time ${camera.sourceCaptureTime?date(camera.sourceCaptureTime):'unknown'}. Caltrans record timestamps describe catalog metadata.`:''}${camera.state==='OR'?' Camera courtesy of ODOT and TripCheck partner agencies. Viewing direction does not establish traffic direction.':''}`;
   $('dialog-source').href=safeLink(camera.officialUrl);$('dialog-play').hidden=!camera.videoUrl;$('dialog-play').disabled=!!camera.disabled;$('dialog-play').textContent='Watch live';
   media.setAutoplayScope($('dialog-media'));
   media.snapshot($('dialog-media'),camera,{onPlay:player=>{modalPlayer=player;$('dialog-play').textContent='Stop video';},onEnd:message=>{modalPlayer=null;$('dialog-play').textContent='Watch live';$('dialog-status').textContent=message;}});updateDialogPin();if(!$('camera-dialog').open)$('camera-dialog').showModal();cameraMap?.update(baseCameras(),camera.id);updateURL();
@@ -273,6 +276,7 @@ async function consumeShare(){
   history.replaceState(null,'',location.pathname+location.search);
 }
 function loadTrip(trip){
+  const valid=cleanTrip(trip);if(!valid){announce('This saved trip has invalid locations. Choose a start and destination to continue.');return false;}trip=valid;
   model.points=trip.points.map((p,index)=>({...p,key:index===0?'from':index===trip.points.length-1?'to':`stop-${newId()}`}));
   $('avoid-tolls').checked=trip.avoidTolls;$('avoid-highways').checked=trip.avoidHighways;model.corridorMeters=trip.corridorMeters||1609.344;
   const width=String(model.corridorMeters/1609.344);if(![...$('corridor-width').options].some(option=>option.value===width))$('corridor-width').add(new Option(`${Number(width).toFixed(2)} miles`,width));$('corridor-width').value=width;
@@ -328,9 +332,10 @@ async function init(){
     if(model.mode==='board')await ensureBoardCameras();
     $('catalog-date').textContent=`Camera metadata compiled ${date(model.index.builtAt)}. Provider checks range from ${date(model.index.auditDateRange?.oldest||model.index.states.map(s=>s.auditCheckedAt).filter(Boolean).sort()[0])} to ${date(model.index.auditDateRange?.newest||model.index.states.map(s=>s.auditCheckedAt).filter(Boolean).sort().at(-1))}.`;
     $('provider-information').insertAdjacentHTML('beforeend','<p>Routing: <a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noopener">FOSSGIS Valhalla and OSRM</a>, public best-effort services, at most one request per second. Valhalla supports trips up to 1,500 km; longer ordinary trips use OSRM. The long-distance fallback does not support toll/highway avoidance. Alternatives depend on the provider; Valhalla alternatives require a trip without intermediate stops. Place search: <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>, manual searches only, no bulk requests. Map: <a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" rel="noopener">OpenStreetMap standard tiles</a>, normal interactive viewing. These free public services have no uptime guarantee and may limit requests. High-traffic use needs a dedicated provider.</p><p>Route estimates do not include live traffic. Avoid tolls/highways are routing preferences and may not exclude every such road. Red dashed route stretches have no listed camera within a one-mile interval; markers do not describe the camera’s field of view. Shared links include the selected trip locations or camera IDs. Saved data stays in this browser until exported or deliberately shared.</p><p>California: <a href="https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html" target="_blank" rel="noopener">Caltrans CWWP2</a>, subject to fair-use limits. Nominal snapshot update intervals are respected; record timestamps describe catalog metadata, not image capture. Travel-side direction is separate from camera-facing description. California county postmiles are not statewide journey distances.</p><p><a href="data/index.json" target="_blank" rel="noopener">Catalog counts and source dates ↗</a> · <a href="https://github.com/whardy/whardy.github.io/blob/master/sandbox/trip-camera-desk/README.md" target="_blank" rel="noopener">Site operation and service limits ↗</a></p>');
+    $('provider-information').insertAdjacentHTML('beforeend','<p>Oregon: <a href="https://www.tripcheck.com/" target="_blank" rel="noopener">Camera courtesy of ODOT and TripCheck partner agencies</a>. Most snapshots update about every five minutes; the camera inventory is a separate dated catalog. Capture time may be unknown. PTZ/viewing direction does not establish traffic direction. Washington: public WSDOT and partner cameras. Exact shared border image URLs are counted once with catalog aliases retained; different views remain separate. <a href="https://www.tripcheck.com/" target="_blank" rel="noopener">Official Oregon road and weather conditions ↗</a>.</p>');
     $('source-note').textContent=`Public transportation cameras from ${model.index.totals.statesAndDistricts-1} states and the District of Columbia. Feed access, image quality and availability vary by provider.`;
     render();if(model.mode==='explore')cameraMap.fit();announce(`${nf.format(model.index.totals.views)} listed views across ${model.index.totals.statesAndDistricts-1} states and DC. Start with the example locations or plan your own trip.`);
-    await consumeShare();if(params.get('camera')){await loadStates(model.index,[params.get('camera').split(':')[0]]);openCamera(params.get('camera'));}
+    await consumeShare();if(params.get('camera')){await loadStates(model.index,statesForCameraIds(model.index,[params.get('camera')]));openCamera(params.get('camera'));}
     window.addEventListener('hashchange',consumeShare);
   }catch(error){announce(error.message||'Trip Camera Desk could not load. Reload to try again.');console.error(error);}
 }

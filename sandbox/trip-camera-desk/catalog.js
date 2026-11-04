@@ -8,11 +8,16 @@ export async function loadStates(index,codes){
       const response=await fetch('./'+entry.file);if(!response.ok)throw new Error(`${entry.stateName} catalog could not load.`);
       const data=await response.json();
       if(!Array.isArray(data.cameras))throw new Error('Invalid camera catalog.');
-      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,camera.district,camera.nearbyPlace,camera.description,camera.facingDirection,...(camera.routeRefs||[])].join(' ').toLowerCase()})));
+      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,camera.district,camera.nearbyPlace,camera.description,camera.facingDirection,camera.city,camera.region,camera.physicalState,...(camera.aliases||[]),...(camera.routeRefs||[])].join(' ').toLowerCase()})));
     })().finally(()=>pending.delete(entry.state)));
     await pending.get(entry.state);
   }));
   return allCameras();
+}
+export function statesForCameraIds(index,ids){
+  const codes=new Set(ids.map(id=>id.split(':')[0]));
+  for(const row of index.crossCatalogReconciliation||[])if(ids.includes(row.aliasId))codes.add(row.canonicalId.split(':')[0]);
+  return [...codes];
 }
 export function allCameras(){return [...loaded.values()].flat();}
 export function loadedStates(){return [...loaded.keys()];}

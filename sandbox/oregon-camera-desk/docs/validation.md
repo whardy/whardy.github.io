@@ -1,0 +1,15 @@
+# Oregon release verification — November 4, 2026 UTC
+
+The release contains 1,179 TripCheck views at 1,177 source-reported locations. The complete dated image audit decoded every endpoint response and distinguished 58 visually verified offline notices from 1,121 usable images. One invalid source position remains in lists and is excluded from geographic matching. No Oregon embedded live video was verified; 87 official rapid-image options remain with TripCheck.
+
+Automated checks passed on the exact publication bundle: catalog identity/counts, filters, road normalization, border aliases, corridor ordering, safe JSON import and Unicode sharing, last-good preservation during a simulated DNS outage, source-specific 300-second cadence and failure backoff, four-image concurrency, hidden/offscreen cleanup, and the existing WV autoplay suite. Texas relay configuration remained unchanged.
+
+Live routing checks used four serialized, deliberate queries: Portland–Seattle (180.9 miles, 433 nearby views across OR/WA), a short Portland urban trip (1.8 miles, 56 views), Bend–Klamath Falls (138.0 miles, 31 views, six gaps over ten miles), and Lakeview–Jordan Valley (276.4 miles, ten views, seven gaps over ten miles). These were ordinary driving estimates, not traffic-aware forecasts. A browser route also calculated Portland–Seattle with a main route and an alternative. Small count differences can result from route geometry and the selected corridor width.
+
+Browser checks covered actual urban and Willamette Pass images, map-to-camera selection, a cluster retaining both Santiam Pass views, Escape/focus restoration, page 48 holding the final four views, and the unmapped view 4998 remaining searchable. Named boards were created, populated, reordered, exported, and imported. Malformed import was rejected while existing boards were preserved; shared boards required an explicit Save action.
+
+At a 320-pixel viewport the page and expanded filters had no horizontal page overflow. Pass shortcuts scroll within their own row. This was responsive viewport testing, not physical iOS testing. A complete, non-truncated Chrome network trace measured a maximum of four simultaneous snapshot requests while scrolling; only visible images loaded. Earlier truncated traces were discarded rather than used as evidence.
+
+The shared hub is rebuilt from the current published catalogs, including the concurrently completed California release, plus Oregon and Washington. It contains 20,927 unique views at 20,547 source locations across twelve catalogs, including four unmapped entries. Two exact shared-image Washington entries remain resolvable as aliases to Oregon canonical views. California was published during this task; the final Oregon release preserves its catalog, playback features, and navigation.
+
+No new credential, Worker, relay, database, R2 storage or paid service is required. Static hosting and source/map/community-routing access remain subject to provider policies and limits. Official road/weather/chain reports are linked; credentialed operational layers, recording, archives and AI analysis are outside this release.

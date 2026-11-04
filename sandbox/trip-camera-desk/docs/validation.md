@@ -1,4 +1,17 @@
-# Release validation — November 3, 2026
+# Oregon integration validation — November 4, 2026 UTC
+
+- Twelve source catalogs:20,927 unique namespaced views,20,547 source locations,20,923 valid positions and four unlocated views retained in lists. Source hashes/counts, relay preservation and legacy WV IDs passed.
+- Oregon1179views/1177sourcelocations;1121imagery and58verifiedoffline cards in the source's complete bounded audit. All1179returnedHTTP200 and decoded; availability uses content evidence rather than status alone. One invalid source longitude remains unmapped.
+- Washington1647standalone views becomes1645unique hubviews after exact TripCheck image identity reconciliation for4674and4676. Alias IDs and their canonical-shard loading passed. Nearby different images remain separate.
+- OR/ORE/Oregon and WA/Washington road-reference normalization, primary versus crossing-road refs, projection ordering, time interpolation, missing positions, uncertainty and coverage-gap checks passed. Oregon viewing orientation is not treated as traffic direction.
+- The actual shared media manager passed muted-inline/no-controls WV autoplay, global capacity/manual priority, blocked/source failure guards, Stop all, modal scope and disposal regression tests. Oregon snapshots passed300second success/failure cadence, capture-time-unknown labeling, maximumfourimage requests, offscreen cancellation and hidden-tab cleanup.
+- Live route-provider checks by the release owner include Portland–Seattle (approximately181mi,433nearbyOR/WAviews), shortPortland (approximately1.8mi,56views), Bend–KlamathFalls (approximately138mi,31views) and sparseLakeview–JordanValley (approximately276mi,10views). Coverage gaps remain visible. These are ordinary driving estimates, without live traffic.
+- All ten existing state navigation releases include Oregon and preserve prior state/Trip links. WV/OH were rebuilt from isolated maintained-source copies; the concurrently published California site and hub integration were preserved in this release.
+- Browser verification and published screenshots are recorded by the release owner. A viewport test does not establish physical iOS behavior. Oregon contributes snapshots and official viewers; no new Oregon continuous-video integration is claimed.
+
+The following records describe the earlier base release, not new availability guarantees.
+
+# Historical base-release validation — November 3, 2026
 
 - Unified catalog checks: 13,993 views, 13,955 namespaced source locations, 13,990 usable coordinates, three unmapped views retained. Source hashes, geography overrides, media URLs, WV joins, and Texas relay preservation passed.
 - Geometry checks: cross-state identity, ordered route projection, timed interpolation, primary versus crossing-road metadata, opposite/unknown directions, loops, gaps, representative selection and missing coordinates passed.
@@ -15,15 +28,4 @@
 
 Feed checks are observations, not guarantees. This release reuses the dated source audits instead of running a new mass media audit. Public-service requests remain bounded, user-triggered, and subject to the published provider policies.
 
-
-## California release validation
-
-The maintained California release lives in `california-camera-desk/.integration/trip-camera-desk/`. It preserves all nine previous catalog shards and adds California only. It does not publish unrelated in-progress catalogs.
-
-The source compiler checks district/provider namespacing, separate source locations and directional views, missing coordinates, geography overrides, CA road normalization, and independent video/snapshot availability. Caltrans record metadata is not reported as image capture time; published travel-side direction does not fall back to a camera’s viewing description or name.
-
-Automated media coordination checks preserve WV behavior and verify an independent CA autoplay preference, shared global stream capacity, manual priority, muted inline attributes before source assignment, hidden native controls, offscreen/tab cleanup, modal scope, source/policy rejection retry guards, Stop all hold, provider nominal snapshot intervals, and snapshot fallback. Browser media playback is a separate verification.
-
-Five real routes are checked with actual camera catalogs: Los Angeles–San Diego; San Francisco–Sacramento; Sacramento–South Lake Tahoe–Reno; a long I-5 trip through Santa Clarita, Santa Nella and Williams to Yreka; and Los Angeles–Phoenix. See `california-route-validation.json` for the dated report. For every returned route, checks verify advancing journey order, bounded route distance/time, midpoint interpolation, camera matching uncertainty and explicit gap reporting. Multi-stop routes correctly report the provider’s lack of alternatives. Ordinary ETAs do not include live traffic.
-
-All nine pre-existing state shard SHA-256 hashes match the previously published `edaf611` release byte for byte; California is the only new catalog shard. This confirms preservation of existing IDs, source URLs, dated audits, and geographic overrides.
+Route-draft regression: actual map controller rejects null/blank/NaN/infinite coordinates before Leaflet, retains destination marker labels, safely accepts partially edited start/destination fields, and validates saved trips. Actual application helper resolves both typed coordinate pairs in a single submission. CA media regression checks preserve independent autoplay preferences, snapshot fallback, and nominal source intervals.

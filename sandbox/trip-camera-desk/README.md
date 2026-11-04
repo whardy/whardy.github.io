@@ -2,7 +2,7 @@
 
 Public site: https://whardy.github.io/sandbox/trip-camera-desk/
 
-A responsive trip planner and public traffic-camera desk combining West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, California, and the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
+A responsive trip planner and public traffic-camera desk combining West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, California, Washington, Oregon, and the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
 
 ## Use the desk
 
@@ -17,7 +17,7 @@ The map clusters markers, highlights the selected route, shows a moving look-ahe
 
 ## Dated catalog and availability
 
-The California integration contains **18,103 views at 17,725 source-catalog locations** across 10 catalogs (nine states and DC). These are source/site identifiers, not independently deduplicated physical devices. 3 views have no usable coordinates and remain searchable while excluded from geographic matching.
+The Oregon and Washington integration contains **20,927 views at 20,547 source-catalog locations** across 12 catalogs (11 states and DC). These are source/site identifiers, not independently deduplicated physical devices. Four views have no usable coordinates and remain searchable while excluded from geographic matching.
 
 | Catalog | Source locations | Listed views | Latest dated availability check |
 | --- | ---: | ---: | --- |
@@ -31,8 +31,10 @@ The California integration contains **18,103 views at 17,725 source-catalog loca
 | District of Columbia | 137 | 137 | 2026-11-03T23:14:02.604603+00:00 |
 | New York | 2,863 | 2,863 | 2026-11-03T23:35:31Z |
 | California | 3,770 | 4,110 | 2026-11-04T03:30:33Z |
+| Washington | 1,645 | 1,645 | 2026-11-04T00:03:18.580670Z |
+| Oregon | 1,177 | 1,179 | 2026-11-04T03:28:04.193798Z |
 
-Media categories are configured capabilities: **6,474 video**, **10,007 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 13,180 available, 1,066 unavailable, 36 stale, 1,557 official, 2,264 unchecked.
+Media categories are configured capabilities: **6,474 video**, **12,831 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 15,860 available, 1,195 unavailable, 51 stale, 1,557 official, 2,264 unchecked.
 
 California contributes **4,110 views at 3,770 source location groups**: 3,645 Caltrans snapshot-capable views, including 2,326 configured HLS capabilities, and 465 Santa Clara County official-viewer views grouped at 126 intersections. The GIS comparison supplied 33 additional currently reachable views absent from the district files; their older GIS provenance remains explicit.
 
@@ -44,7 +46,7 @@ The source dates, per-media checks, overrides, counts and shard hashes are in `d
 
 ## Media delivery
 
-West Virginia, Virginia, Maryland, New York and California support public HLS connections where available. Other states mainly provide refreshing snapshots and official-viewer links. Snapshots load only when visible, with at most four requests in progress and a minimum 60-second refresh interval. California nominal image update intervals are respected when longer. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
+West Virginia, Virginia, Maryland, New York and California support public HLS connections where available. Other states mainly provide refreshing snapshots and official-viewer links. Snapshots load only when visible, with at most four requests in progress and a minimum 60-second refresh interval. California nominal image update intervals are respected when longer. Oregon and Washington use five-minute source cadence, including failed-request retry spacing; offscreen active snapshots are canceled. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
 
 Texas keeps its existing owned relay at `https://texas-camera-relay.wintrytiger33.chatgpt.site` for media already dependent on it. This site does not change that relay's deployment or allowlist. Austin sources retain direct delivery; external-only TranStar views remain official-viewer links. Publishing this directory cannot fix a separate relay or provider outage.
 
@@ -125,3 +127,35 @@ python3 _tools/build-catalog.py --repository ../.. --output data
 ```
 
 Review all changed source dates and shard counts before committing. In a clone of `whardy.github.io`, `../..` from `sandbox/trip-camera-desk` is the repository root.
+
+## Oregon and Washington integration
+
+Oregon contributes 1,179 TripCheck views at 1,177 source-reported camera locations. These are not an independently verified physical-device count. The November 4 UTC audit decoded every listed image: 1,121 served camera imagery and 58 served verified provider offline cards, all with HTTP 200 responses. Availability remains dated; browser retrieval does not establish capture time. The one invalid source coordinate (view 4998, longitude 226) remains in lists and is excluded from maps and route matching.
+
+TripCheck also lists neighboring-state cameras. Census county point-in-polygon enrichment identifies 1,131 Oregon views, 21 California, 18 Washington and eight Idaho; one view remains unlocated. Provider jurisdiction and physical state are separate fields. County-derived browsing areas are conveniences rather than official metro boundaries. Source viewing direction is retained separately; it is not treated as reliable traffic direction for route matching.
+
+The standalone Washington catalog has 1,647 views. The hub counts 1,645 after reconciling two exact shared TripCheck image identities (Oregon views 4674 and 4676). The canonical Oregon views retain the old Washington IDs as aliases, including on shared-board and camera links. Different nearby pictures remain separate views. Neither source's standalone catalog is modified by hub reconciliation.
+
+Oregon is snapshot-first. The public source lists 87 official rapid-image options, not verified embeddable continuous video. This release uses five-minute refreshing pictures and official TripCheck map links, preserves session restrictions, and does not add unofficial streams. Capture times are generally unknown. Last-daylight source links, when listed, are historical rather than current pictures. Camera courtesy of ODOT and TripCheck partner agencies: https://www.tripcheck.com/ . Source research and the bounded full-image audit are maintained by Oregon Camera Desk.
+
+No Oregon API subscription, Worker, R2 bucket, database, or paid service is required for this release's public inventory and image delivery. Credentialed road/weather API layers remain separate; official TripCheck links provide those reports. The site's existing community routing, search and map reasonable-use limits continue to apply. Higher traffic may require a dedicated provider; free use is not unlimited.
+
+From this published directory, run the included checks:
+
+```sh
+python3 _tools/check-catalog.py
+node _tools/check-routing.mjs
+node _tools/check-media.mjs
+node _tools/check-media-california.mjs
+node _tools/check-waypoints.mjs
+```
+
+Rebuild from a complete repository clone, with Oregon Camera Desk already present:
+
+```sh
+python3 _tools/build-catalog.py --repository ../.. --output data
+```
+
+For previewing a maintained catalog before publication, repeat `--state-source STATE=/absolute/catalog/directory` as needed. Publish the rebuilt index and changed shards together. The compiler requests no camera media.
+
+Unconfirmed or partially edited route points remain off the map until validated. Find my route resolves typed coordinate pairs together; malformed saved trips are rejected before changing the active draft.

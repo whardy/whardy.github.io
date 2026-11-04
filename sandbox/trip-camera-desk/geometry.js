@@ -30,15 +30,15 @@ export function normalizeRouteRef(value) {
   if (m) return `I-${m[1]}`;
   const us = text.match(/^(?:US|U\.S\.|US ROUTE|U\.S\. ROUTE)[ -]*(\d+[A-Z]?)$/);
   if (us) return `US-${us[1]}`;
-  return text.replace(/\b(?:STATE ROUTE|STATE ROAD|SR|SH)[ -]*(\d+[A-Z]?)/g, 'SR-$1').replace(/\s+/g, ' ');
+  return text.replace(/\b(?:OREGON|ORE)[ -]*(\d+[A-Z]?)/g, 'OR-$1').replace(/\b(?:WASHINGTON)[ -]*(\d+[A-Z]?)/g, 'WA-$1').replace(/\b(?:STATE ROUTE|STATE ROAD|SR|SH)[ -]*(\d+[A-Z]?)/g, 'SR-$1').replace(/\s+/g, ' ');
 }
 
 export function extractRouteRefs(values) {
   const result = new Set();
   for (const raw of Array.isArray(values) ? values : [values]) {
     const text = String(raw || '').toUpperCase().replace(/[‐‑–—]/g, '-').replace(/FARM[ -]+TO[ -]+MARKET(?: ROAD)?/g,'FM').replace(/RANCH[ -]+TO[ -]+MARKET(?: ROAD)?/g,'RM').replace(/BELTWAY/g,'BW').replace(/\bLOOP\b/g,'LP').replace(/\bSPUR\b/g,'SP');
-    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|SR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY|CA)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
-    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK|CALIFORNIA)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY',CALIFORNIA:'CA'}[m[1]]}-${m[2]}`);
+    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|SR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY|CA|WA|ORE|OR)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
+    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK|CALIFORNIA|WASHINGTON|OREGON)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY',CALIFORNIA:'CA',WASHINGTON:'WA',OREGON:'OR'}[m[1]]}-${m[2]}`);
   }
   return [...result];
 }

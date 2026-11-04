@@ -1,4 +1,4 @@
-import {pointAtDistance} from './geometry.js';
+import {pointAtDistance} from './geometry.js?v=20261104or2';
 const START_BOUNDS = [[36.5, -84.7], [41.8, -75.0]];
 const STYLE_ID = 'trip-camera-map-styles';
 
@@ -36,6 +36,13 @@ function validCamera(camera) {
     camera.lat !== '' && camera.lon !== '' &&
     Number.isFinite(Number(camera.lat)) && Number.isFinite(Number(camera.lon)) &&
     Math.abs(Number(camera.lat)) <= 90 && Math.abs(Number(camera.lon)) <= 180;
+}
+
+export function validWaypoint(point) {
+  return point && ['number','string'].includes(typeof point.lat) && ['number','string'].includes(typeof point.lon) &&
+    String(point.lat).trim() !== '' && String(point.lon).trim() !== '' &&
+    Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lon)) &&
+    Math.abs(Number(point.lat)) <= 85 && Math.abs(Number(point.lon)) <= 180;
 }
 
 function tooltipFor(camera) {
@@ -100,8 +107,8 @@ export function createCameraMap(element, { onSelect, onBoundsChange, onPick, onR
       const p=pointAtDistance(activeRoute,end);samples.push([p.lat,p.lon]);
       L.polyline(samples,{color:'#a64d3e',weight:4,opacity:.9,dashArray:'6 7',interactive:false}).addTo(routeLayers);
     }
-    routePoints.forEach((point,index)=>{if(!point)return;
-      const marker=L.marker([point.lat,point.lon],{icon:L.divIcon({className:'trip-waypoint',html:`<span>${index===0?'A':index===routePoints.length-1?'B':index}</span>`,iconSize:[28,28],iconAnchor:[14,14]}),title:point.name,keyboard:true}).addTo(waypointLayers);
+    routePoints.forEach((point,index)=>{if(!validWaypoint(point))return;
+      const marker=L.marker([Number(point.lat),Number(point.lon)],{icon:L.divIcon({className:'trip-waypoint',html:`<span>${index===0?'A':index===routePoints.length-1?'B':index}</span>`,iconSize:[28,28],iconAnchor:[14,14]}),title:point.name,keyboard:true}).addTo(waypointLayers);
       const label=document.createElement('span');label.textContent=point.name;marker.bindTooltip(label);
     });
   }
@@ -276,9 +283,9 @@ export function createCameraMap(element, { onSelect, onBoundsChange, onPick, onR
       scheduleRender();
     },
     setRoutes(routes, selectedRoute, points=[], gaps=[]) {
-      routeList=routes||[];activeRoute=selectedRoute;routePoints=points;drawRoutes(gaps);
+      routeList=routes||[];activeRoute=selectedRoute;routePoints=Array.isArray(points)?points:[];drawRoutes(gaps);
     },
-    setPoints(points=[]) {routePoints=points;drawRoutes();},
+    setPoints(points=[]) {routePoints=Array.isArray(points)?points:[];drawRoutes();},
     fitRoute() {
       map.invalidateSize({pan:false});
       if(activeRoute?.coordinates?.length)map.fitBounds(L.latLngBounds(activeRoute.coordinates.map(p=>[p[1],p[0]])),{padding:[30,30],maxZoom:14,animate:false});else this.fit();

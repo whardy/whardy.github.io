@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "builtAt": "2026-11-04T03:31:18.473554Z",
+  "builtAt": "2026-11-04T03:40:16.630630Z",
   "totals": {
-    "statesAndDistricts": 10,
-    "views": 18103,
-    "locations": 17725,
-    "withCoordinates": 18100,
-    "withoutCoordinates": 3,
+    "statesAndDistricts": 12,
+    "views": 20927,
+    "locations": 20547,
+    "withCoordinates": 20923,
+    "withoutCoordinates": 4,
     "mediaCounts": {
       "video": 6474,
-      "snapshot": 10007,
+      "snapshot": 12831,
       "official": 1622
     },
     "availabilityCounts": {
-      "available": 13180,
-      "unavailable": 1066,
-      "stale": 36,
+      "available": 15860,
+      "unavailable": 1195,
+      "stale": 51,
       "official": 1557,
       "unchecked": 2264
     }
@@ -421,8 +421,97 @@
       "sourceAuditUrl": "https://whardy.github.io/sandbox/california-camera-desk/source-audit.json",
       "sha256": "14927298eded0c1b5346c7e8484fec6d4eb54c7a106f3c9604a23a3af6424cee",
       "bytes": 7567450
+    },
+    {
+      "state": "WA",
+      "stateName": "Washington",
+      "file": "data/WA.json",
+      "siteUrl": "https://whardy.github.io/sandbox/washington-camera-desk/",
+      "views": 1645,
+      "locations": 1645,
+      "bounds": [
+        -124.333121,
+        45.568631,
+        -117.050374,
+        49.002251
+      ],
+      "withCoordinates": 1645,
+      "withoutCoordinates": 0,
+      "mediaCounts": {
+        "snapshot": 1645
+      },
+      "availabilityCounts": {
+        "available": 1559,
+        "unavailable": 71,
+        "stale": 15
+      },
+      "imageStatusCounts": {
+        "available": 1559,
+        "unavailable": 71,
+        "stale": 15
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-11-03T23:57:48.069284Z",
+      "auditCheckedAt": "2026-11-04T00:03:18.580670Z",
+      "source": "WSDOT public Travel Center list and map",
+      "sourceUrl": "https://wsdot.com/travel/real-time/",
+      "catalogUrl": "https://whardy.github.io/sandbox/washington-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "62c5b994955c48fea72f833dd5a2665d977d6312086c64379df7e21a056b51a8",
+      "bytes": 2965412
+    },
+    {
+      "state": "OR",
+      "stateName": "Oregon",
+      "file": "data/OR.json",
+      "siteUrl": "https://whardy.github.io/sandbox/oregon-camera-desk/",
+      "views": 1179,
+      "locations": 1177,
+      "bounds": [
+        -124.49011,
+        41.38202,
+        -116.77713,
+        46.90436
+      ],
+      "withCoordinates": 1178,
+      "withoutCoordinates": 1,
+      "mediaCounts": {
+        "snapshot": 1179
+      },
+      "availabilityCounts": {
+        "available": 1121,
+        "unavailable": 58
+      },
+      "imageStatusCounts": {
+        "available": 1121,
+        "unavailable": 58
+      },
+      "videoStatusCounts": {},
+      "sourceUpdatedAt": "2026-11-04T03:23:45.293833Z",
+      "auditCheckedAt": "2026-11-04T03:28:04.193798Z",
+      "source": "ODOT TripCheck public camera inventory and camera report",
+      "sourceUrl": "https://www.tripcheck.com/",
+      "catalogUrl": "https://whardy.github.io/sandbox/oregon-camera-desk/camera-catalog.json",
+      "geographyOverridesApplied": 0,
+      "sha256": "2bb45cb77daf366f33f1bcfbee8cf0a76657247f46de80a572a8f7fda2dc298e",
+      "bytes": 2398343
     }
   ],
+  "crossCatalogReconciliation": [
+    {
+      "canonicalId": "OR:tripcheck:4676",
+      "aliasId": "WA:wsdot:wsdot-1001",
+      "evidence": "exact-public-image-url",
+      "imageUrl": "https://www.tripcheck.com/roadcams/cams/I-5%20Bridge%20SB%20North_pid4676.jpg"
+    },
+    {
+      "canonicalId": "OR:tripcheck:4674",
+      "aliasId": "WA:wsdot:wsdot-3034",
+      "evidence": "exact-public-image-url",
+      "imageUrl": "https://www.tripcheck.com/roadcams/cams/I-5%20Bridge%20NB%20Mid_pid4674.jpg"
+    }
+  ],
+  "configuredCatalogsNotBuilt": [],
   "notes": [
     "Listed views are dated catalog entries, not a live count of working feeds or deduplicated physical devices across providers.",
     "Locations count distinct state/provider/source site identifiers; OH, AZ and CA may contain several views at one source location; this is not an independently verified count of physical devices.",
@@ -432,6 +521,8 @@
     "County, independent-city, and DC ward classifications remain distinct. Metro groupings are browsing conveniences.",
     "Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.",
     "California Caltrans recordTimestamp is catalog metadata, not image capture time. Direction describes travel side separately from facingDirection. County postmiles are not a statewide route odometer.",
+    "Oregon and Washington snapshots respect their source refresh cadence (normally five minutes). Oregon camera viewing orientation is not treated as verified travel direction.",
+    "Exact shared Oregon/Washington image URLs are counted once in the hub, with original catalog IDs retained as aliases. Different images at nearby positions remain separate views.",
     "No camera media was requested or recorded while building these shards."
   ]
 }
