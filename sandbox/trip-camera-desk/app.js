@@ -1,25 +1,26 @@
-import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet} from './catalog.js?v=20261104or2';
+import {getIndex,loadStates,allCameras,loadedStates,statesAlongRoute,statesForCameraIds,filterCameras,facet} from './catalog.js?v=20261104fl3';
 import {searchPlaces,calculateRoutes,PROVIDERS} from './routing.js';
-import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104nv1';
+import {prepareRoute,matchRouteCameras,coverageGaps,representativeCameras,pointAtDistance} from './geometry.js?v=20261104fl3';
 import {loadLibrary,saveLibrary,cleanTrip,cleanBoard,cleanPoint,mergeLibrary,encodeShare,decodeShare,newId} from './store.js';
 import {createCameraMap} from './map.js?v=20261104ordraft1';
-import {createMediaManager} from './media.js?v=20261104nv1';
-import {FLORIDA_REGIONS,floridaRouteRegions} from './florida.js';
+import {createMediaManager} from './media.js?v=20261104fl3';
+import {FLORIDA_REGIONS,floridaRouteRegions} from './florida.js?v=20261104fl3';
 
 const $=id=>document.getElementById(id), nf=new Intl.NumberFormat('en-US');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const miles=meters=>`${nf.format(Math.round(meters/1609.344))} mi`;
 const duration=seconds=>{const min=Math.round(seconds/60);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min} min`;};
 const date=value=>value?new Date(value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'not checked';
-const emptyFilters=()=>({query:'',state:'',metro:'',jurisdiction:'',road:'',media:'',status:''});
+const emptyFilters=()=>({query:'',state:'',metro:'',jurisdiction:'',provider:'',district:'',road:'',media:'',status:''});
 const model={index:null,mode:'plan',library:loadLibrary(),points:[{key:'from',name:'Columbus, Ohio',lat:39.9623,lon:-82.9991},{key:'to',name:'Washington, DC',lat:38.9072,lon:-77.0369}],routes:[],route:null,routeWarnings:[],matches:[],gaps:[],filters:emptyFilters(),page:1,corridorMeters:1609.344,lookahead:0,highway:'',direction:'',selected:null,liveSlots:[],busy:false,dirty:false};
 let cameraMap=null, routeAbort=null, searchAbort=new Map(), modalReturn=null, modalPlayer=null, filtersTimer;
 const readAutoplay=state=>{try{return localStorage.getItem(`trip-camera-desk-${state.toLowerCase()}-autoplay`)!=='off';}catch{return true;}};
 const readWVAutoplay=()=>readAutoplay('WV');
-const media=createMediaManager({autoplayWV:readWVAutoplay(),autoplayCA:readAutoplay('CA'),autoplayNV:readAutoplay('NV'),onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
+const media=createMediaManager({autoplayWV:readWVAutoplay(),autoplayCA:readAutoplay('CA'),autoplayNV:readAutoplay('NV'),autoplayFL:readAutoplay('FL'),onMessage:announce,onChange:count=>{$('live-count').textContent=`${count} active`;}});
 function setWVAutoplay(value){$('wv-autoplay').checked=!!value;media.setWVAutoplay(value);try{localStorage.setItem('trip-camera-desk-wv-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function setCAAutoplay(value){$('ca-autoplay').checked=!!value;media.setCAAutoplay(value);try{localStorage.setItem('trip-camera-desk-ca-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function setNVAutoplay(value){$('nv-autoplay').checked=!!value;media.setNVAutoplay(value);try{localStorage.setItem('trip-camera-desk-nv-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
+function setFLAutoplay(value){$('fl-autoplay').checked=!!value;media.setFLAutoplay(value);try{localStorage.setItem('trip-camera-desk-fl-autoplay',value?'on':'off');}catch{/* Playback works without browser storage. */}}
 function announce(message){$('app-status').textContent=message;}
 function persist(){if(!saveLibrary(model.library))announce('Changes are available for this visit. Browser storage is full or unavailable; use Export to keep a copy.');}
 const board=()=>model.library.boards.find(b=>b.id===model.library.activeBoardId)||model.library.boards[0];
@@ -141,20 +142,25 @@ function baseCameras(){
   if(!model.route)return [];
   let cameras=model.matches;
   if(model.highway)cameras=cameras.filter(c=>(c.routeRefs||[]).includes(model.highway));
-  if(model.direction)cameras=cameras.filter(c=>!c.direction||c.direction===model.direction||c.direction.startsWith(model.direction));
+  if(model.direction)cameras=cameras.filter(c=>c.state==='FL'&&c.directionConfidence!=='verified'||!c.direction||c.direction===model.direction||c.direction.startsWith(model.direction));
   if($('sample-cameras').checked)cameras=representativeCameras(cameras,{intervalMeters:Number($('sample-spacing').value)*1609.344,route:model.route});
   return cameras;
 }
 function renderFilters(base){
-  for(const [key,label]of [['state','All states + DC'],['metro','All cities / areas'],['jurisdiction','All jurisdictions'],['road','All roads']]){
+  for(const [key,label]of [['state','All states + DC'],['metro','All cities / areas'],['jurisdiction','All jurisdictions'],['provider','All providers'],['district','All districts'],['road','All roads']]){
     const select=$(key);let choices;
     if(key==='state')choices=model.mode==='explore'?model.index.states.map(s=>[s.state,s.views,s.stateName]):facet(base,model.filters,key).map(([code,count])=>[code,count,model.index.states.find(s=>s.state===code)?.stateName||code]);
     else choices=facet(base,model.filters,key);
     select.innerHTML=`<option value="">${label}</option>`+choices.map(([value,count,name])=>`<option value="${esc(value)}">${esc(name||value)} (${nf.format(count)})</option>`).join('');
-    if(model.filters[key]&&!choices.some(([value])=>value===model.filters[key]))select.add(new Option(`${model.filters[key]} (0)`,model.filters[key]));
+    if(model.filters[key]&&!choices.some(([value])=>value===model.filters[key]))model.filters[key]='';
     select.value=model.filters[key];
   }
-  $('query').value=model.filters.query;$('media').value=model.filters.media;$('status').value=model.filters.status;
+  for(const [key,field,label,names] of [['media','mediaType','All media',{video:'Live video',snapshot:'Refreshing snapshot',official:'Official viewer'}],['status','availability','All availability',{available:'Checked available',unavailable:'Unavailable / disabled',stale:'Older image at last check',official:'Official viewer only',unchecked:'Not checked'}]]){
+    const choices=new Map();for(const camera of filterCameras(base,model.filters,key)){const value=camera[field];if(value)choices.set(value,(choices.get(value)||0)+1);}
+    const select=$(key);select.innerHTML=`<option value="">${label}</option>`+[...choices].sort(([a],[b])=>a.localeCompare(b)).map(([value,count])=>`<option value="${esc(value)}">${esc(names[value]||value)} (${nf.format(count)})</option>`).join('');
+    if(model.filters[key]&&!choices.has(model.filters[key]))model.filters[key]='';select.value=model.filters[key];
+  }
+  $('query').value=model.filters.query;
   const chips=$('active-filters');chips.replaceChildren();
   for(const [key,value]of Object.entries(model.filters))if(value){const button=document.createElement('button');button.type='button';button.className='filter-chip';button.textContent=`${key}: ${value} ×`;button.setAttribute('aria-label',`Remove ${key} filter`);button.addEventListener('click',()=>{model.filters[key]='';model.page=1;renderResults();updateURL();});chips.append(button);}
   if(model.highway){const button=document.createElement('button');button.type='button';button.className='filter-chip';button.textContent=`Highway: ${model.highway} ${model.direction||''} ×`;button.addEventListener('click',()=>{model.highway='';model.direction='';$('highway-select').value='';$('travel-direction').value='';renderResults();});chips.append(button);}
@@ -162,12 +168,13 @@ function renderFilters(base){
 function cardMarkup(camera,index){
   if(model.mode==='board')index=boardIndex(camera.id);
   const pinned=boardIndex(camera.id)>=0,hasVideo=!!camera.videoUrl&&!camera.disabled;
-  const label=camera.disabled?'Unavailable':camera.mediaType==='video'?'Live video':camera.mediaType==='official'?'Official viewer':'Refreshing snapshot';
+  const label=camera.disabled?'Unavailable':camera.state==='FL'&&camera.videoUrl&&camera.videoStatus!=='available'?(camera.imageUrl?'Refreshing snapshot':'Video unverified'):camera.mediaType==='video'?'Live video':camera.mediaType==='official'?'Official viewer':'Refreshing snapshot';
   const caMetadata=camera.state==='CA'?[camera.district?`Caltrans ${camera.district}`:'',Number.isFinite(camera.elevationFeet)?`${nf.format(camera.elevationFeet)} ft`:'',camera.direction?`${camera.direction} travel side`:'Travel direction unreported',camera.facingDirection?`Looking ${camera.facingDirection}`:''].filter(Boolean).join(' · '):'';
+  const flMetadata=camera.state==='FL'?[camera.provider,camera.district,camera.direction?camera.directionConfidence==='verified'?`${camera.direction} travel`:`Listed ${camera.direction} · travel direction unverified`:'Travel direction unknown',camera.facingDirection?`Looking ${camera.facingDirection}`:'Facing direction unknown'].filter(Boolean).join(' · '):'';
   const routeLabel=Number.isFinite(camera.routeDistanceMeters)?`${miles(camera.routeDistanceMeters)} from start · ~${duration(camera.routeTimeSeconds||0)} · ${camera.routeMatchLabel||'Nearby, road uncertain'}`:'';
   const describe=value=>value==='available'?'checked available':value==='unavailable'?'unavailable at check':value==='stale'?'older image at check':'not checked';
   const check=camera.disabled?'Disabled in source catalog':camera.videoUrl?`Video ${describe(camera.videoStatus)}${camera.imageUrl?' · Snapshot '+describe(camera.imageStatus):''}`:camera.imageUrl?`Snapshot ${describe(camera.imageStatus)}`:'Official viewer only';
-  return `<div class="card-top"><span class="state-tag">${esc(camera.state)}</span><span class="media-badge ${camera.mediaType}">${label}</span><button class="pin-camera" type="button" data-action="pin" aria-pressed="${pinned}" aria-label="${pinned?'Unpin':'Pin'} ${esc(camera.name)}">${pinned?'★':'☆'}</button></div><button class="card-media" type="button" data-action="open" aria-label="Open ${esc(camera.name)}"></button><div class="card-content"><button class="card-title" type="button" data-action="open">${esc(camera.name)}</button><p class="card-meta">${esc([camera.jurisdiction,camera.metro,camera.physicalState&&camera.physicalState!==camera.state?`Located in ${camera.physicalState}`:''].filter(Boolean).join(' · ')||camera.stateName)}</p>${caMetadata?`<p class="card-meta">${esc(caMetadata)}</p>`:''}${routeLabel?`<p class="route-label">${esc(routeLabel)}</p>`:''}<p class="availability-badge" title="Checked ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}">${esc(check)} · ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}</p><div class="card-actions">${hasVideo?'<button class="small-button" type="button" data-action="play">Watch live</button>':''}<a class="text-button" href="${esc(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official ↗</a><button class="text-button" type="button" data-action="locate" ${camera.lat==null?'disabled':''}>Map</button></div>${model.mode==='board'?`<div class="board-order"><button class="text-button" type="button" data-action="up" aria-label="Move ${esc(camera.name)} earlier" ${index===0?'disabled':''}>↑ Earlier</button><button class="text-button" type="button" data-action="down" aria-label="Move ${esc(camera.name)} later" ${index===board().cameraIds.length-1?'disabled':''}>↓ Later</button><button class="text-button danger-link" type="button" data-action="remove">Remove</button></div>`:''}</div>`;
+  return `<div class="card-top"><span class="state-tag">${esc(camera.state)}</span><span class="media-badge ${camera.mediaType}">${label}</span><button class="pin-camera" type="button" data-action="pin" aria-pressed="${pinned}" aria-label="${pinned?'Unpin':'Pin'} ${esc(camera.name)}">${pinned?'★':'☆'}</button></div><button class="card-media" type="button" data-action="open" aria-label="Open ${esc(camera.name)}"></button><div class="card-content"><button class="card-title" type="button" data-action="open">${esc(camera.name)}</button><p class="card-meta">${esc([camera.road,camera.jurisdiction,camera.metro,camera.physicalState&&camera.physicalState!==camera.state?`Located in ${camera.physicalState}`:''].filter(Boolean).join(' · ')||camera.stateName)}</p>${caMetadata?`<p class="card-meta">${esc(caMetadata)}</p>`:''}${flMetadata?`<p class="card-meta">${esc(flMetadata)}</p>`:''}${routeLabel?`<p class="route-label">${esc(routeLabel)}</p>`:''}<p class="availability-badge" title="Checked ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}">${esc(check)} · ${esc(date(camera.auditCheckedAt||camera.videoCheckedAt))}</p><div class="card-actions">${hasVideo?'<button class="small-button" type="button" data-action="play">Watch live</button>':''}<a class="text-button" href="${esc(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official ↗</a><button class="text-button" type="button" data-action="locate" ${camera.lat==null?'disabled':''}>Map</button></div>${model.mode==='board'?`<div class="board-order"><button class="text-button" type="button" data-action="up" aria-label="Move ${esc(camera.name)} earlier" ${index===0?'disabled':''}>↑ Earlier</button><button class="text-button" type="button" data-action="down" aria-label="Move ${esc(camera.name)} later" ${index===board().cameraIds.length-1?'disabled':''}>↓ Later</button><button class="text-button danger-link" type="button" data-action="remove">Remove</button></div>`:''}</div>`;
 }
 function renderResults(){
   if(!model.index)return;
@@ -199,14 +206,14 @@ function render(){
 }
 function renderFloridaContext(){
   const regions=model.route?floridaRouteRegions(model.route):[];
-  const showingRoute=(model.mode==='plan'||model.mode==='wall')&&regions.length>0;
+  const showingRoute=(model.mode==='plan'||model.mode==='wall')&&(regions.length>0||model.matches.some(camera=>camera.state==='FL'));
   const section=$('florida-context');
   section.hidden=!(showingRoute||model.mode==='explore');
   if(section.hidden)return;
-  const indexed=model.index?.states?.some(state=>state.state==='FL');
-  $('florida-context-title').textContent=showingRoute?'Check the Florida stretch.':'Explore Florida’s official camera map.';
+  const indexed=model.index?.states?.some(state=>state.state==='FL'&&state.views>0);
+  $('florida-context-title').textContent=indexed?(showingRoute?'Florida views along your route.':'Explore Florida cameras.'):showingRoute?'Check the Florida stretch.':'Explore Florida’s official camera map.';
   $('florida-context-note').textContent=indexed
-    ?'Open FL511 for official Florida conditions and camera views alongside this route.'
+    ?'Florida camera views are included in Trip Desk’s route wall, coverage calculation, filters, and watchboards. Open Florida Camera Desk to browse directly, or use FL511 for official conditions and the provider map.'
     :showingRoute
       ?"Your route enters Florida. Open FL511 for official camera views. Those views are absent from Trip Desk's camera count and coverage calculation, so Florida stretches may appear as gaps."
       :'FL511 camera views are available through its official map. They are not included in this independent camera catalog or its filters.';
@@ -214,7 +221,7 @@ function renderFloridaContext(){
   if(!showingRoute)return;
   for(const slug of regions){
     const link=document.createElement('a');link.href=`https://whardy.github.io/sandbox/florida-camera-desk/?region=${slug}`;
-    link.textContent=`${FLORIDA_REGIONS[slug]} ↗`;link.setAttribute('aria-label',`Open official Florida cameras for ${FLORIDA_REGIONS[slug]}`);links.append(link);
+    link.textContent=`${FLORIDA_REGIONS[slug]} ↗`;link.setAttribute('aria-label',`Browse Florida cameras in ${FLORIDA_REGIONS[slug]}`);links.append(link);
   }
 }
 async function setMode(mode){
@@ -245,7 +252,7 @@ function openCamera(id){
   if(!$('camera-dialog').open)modalReturn=document.activeElement;
   modalPlayer?.stop();modalPlayer=null;model.selected=camera;
   $('dialog-title').textContent=camera.name;$('dialog-subtitle').textContent=[camera.stateName,camera.road,camera.jurisdiction].filter(Boolean).join(' · ');
-  $('dialog-status').textContent=`${camera.provider}. ${camera.description||''} Availability checked ${date(camera.auditCheckedAt||camera.videoCheckedAt)}. Fetched time is retrieval time.${camera.state==='CA'?` Image capture time ${camera.sourceCaptureTime?date(camera.sourceCaptureTime):'unknown'}. Caltrans record timestamps describe catalog metadata.`:''}${camera.state==='OR'?' Camera courtesy of ODOT and TripCheck partner agencies. Viewing direction does not establish traffic direction.':''}`;
+  $('dialog-status').textContent=`${camera.provider}. ${camera.description||''} Availability checked ${date(camera.auditCheckedAt||camera.videoCheckedAt)}. Fetched time is browser retrieval time.${camera.state==='CA'?` Image capture time ${camera.sourceCaptureTime?date(camera.sourceCaptureTime):'unknown'}. Caltrans record timestamps describe catalog metadata.`:''}${camera.state==='FL'?` Image capture time ${camera.sourceCaptureTime?new Date(camera.sourceCaptureTime).toLocaleString('en-US',{timeZone:camera.timezone||'America/New_York',timeZoneName:'short'}):'unknown'}. Travel direction and camera-facing direction are separate; neither is inferred from proximity.`:''}${camera.state==='OR'?' Camera courtesy of ODOT and TripCheck partner agencies. Viewing direction does not establish traffic direction.':''}`;
   $('dialog-source').href=safeLink(camera.officialUrl);$('dialog-play').hidden=!camera.videoUrl;$('dialog-play').disabled=!!camera.disabled;$('dialog-play').textContent='Watch live';
   media.setAutoplayScope($('dialog-media'));
   media.snapshot($('dialog-media'),camera,{onPlay:player=>{modalPlayer=player;$('dialog-play').textContent='Stop video';},onEnd:message=>{modalPlayer=null;$('dialog-play').textContent='Watch live';$('dialog-status').textContent=message;}});updateDialogPin();if(!$('camera-dialog').open)$('camera-dialog').showModal();cameraMap?.update(baseCameras(),camera.id);updateURL();
@@ -314,14 +321,14 @@ function bindEvents(){
   for(const id of ['sample-cameras','sample-spacing'])$(id).addEventListener('change',()=>{model.page=1;renderResults();});
   $('corridor-width').addEventListener('change',async()=>{model.corridorMeters=Number($('corridor-width').value)*1609.344;if(model.route){await loadStates(model.index,statesAlongRoute(model.index,model.route,model.corridorMeters));recomputeRoute();}model.page=1;render();});
   $('query').addEventListener('input',()=>{clearTimeout(filtersTimer);filtersTimer=setTimeout(()=>{model.filters.query=$('query').value;model.page=1;renderResults();updateURL();},180);});
-  for(const key of ['state','metro','jurisdiction','road','media','status'])$(key).addEventListener('change',async()=>{
-    model.filters[key]=$(key).value;if(key==='state'){model.filters.metro='';model.filters.jurisdiction='';model.filters.road='';if(model.mode==='explore')try{await loadStates(model.index,model.filters.state?[model.filters.state]:model.index.states.map(s=>s.state));}catch(error){announce(error.message);}}
+  for(const key of ['state','metro','jurisdiction','provider','district','road','media','status'])$(key).addEventListener('change',async()=>{
+    model.filters[key]=$(key).value;if(key==='state'){model.filters.metro='';model.filters.jurisdiction='';model.filters.provider='';model.filters.district='';model.filters.road='';if(model.mode==='explore')try{await loadStates(model.index,model.filters.state?[model.filters.state]:model.index.states.map(s=>s.state));}catch(error){announce(error.message);}}
     model.page=1;updateHighways();renderResults();if(key==='state'&&model.mode==='explore')cameraMap.fit();updateURL();
   });
   $('reset-filters').addEventListener('click',()=>{model.filters=emptyFilters();model.highway='';model.direction='';$('highway-select').value='';$('travel-direction').value='';model.page=1;renderResults();updateURL();});
   $('apply-corridor').addEventListener('click',()=>{if(!model.route){announce('Find a route between your start and destination, then apply the highway filter to that stretch.');return;}model.highway=$('highway-select').value;model.direction=$('travel-direction').value;model.page=1;renderResults();announce('Highway filter applied to your selected route. Unknown camera direction is retained and labeled.');});
   $('previous-page').addEventListener('click',()=>{model.page--;renderResults();$('camera-results').scrollIntoView({block:'start'});});$('next-page').addEventListener('click',()=>{model.page++;renderResults();$('camera-results').scrollIntoView({block:'start'});});
-  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());$('wv-autoplay').checked=readWVAutoplay();$('wv-autoplay').addEventListener('change',()=>setWVAutoplay($('wv-autoplay').checked));$('ca-autoplay').checked=readAutoplay('CA');$('ca-autoplay').addEventListener('change',()=>setCAAutoplay($('ca-autoplay').checked));$('nv-autoplay').checked=readAutoplay('NV');$('nv-autoplay').addEventListener('change',()=>setNVAutoplay($('nv-autoplay').checked));
+  $('snapshot-refresh').addEventListener('change',()=>media.setAuto($('snapshot-refresh').checked));$('refresh-visible').addEventListener('click',()=>media.refresh());$('wv-autoplay').checked=readWVAutoplay();$('wv-autoplay').addEventListener('change',()=>setWVAutoplay($('wv-autoplay').checked));$('ca-autoplay').checked=readAutoplay('CA');$('ca-autoplay').addEventListener('change',()=>setCAAutoplay($('ca-autoplay').checked));$('nv-autoplay').checked=readAutoplay('NV');$('nv-autoplay').addEventListener('change',()=>setNVAutoplay($('nv-autoplay').checked));$('fl-autoplay').checked=readAutoplay('FL');$('fl-autoplay').addEventListener('change',()=>setFLAutoplay($('fl-autoplay').checked));
   $('board-select').addEventListener('change',async()=>{model.library.activeBoardId=$('board-select').value;await ensureBoardCameras();persist();renderLibrary();renderResults();});
   $('new-board').addEventListener('click',()=>{if(model.library.boards.length>=30){announce('You can keep 30 boards. Export or remove a board first.');return;}const name=$('board-name').value.trim()||'My watchboard';const b={id:newId(),name,cameraIds:[]};model.library.boards.push(b);model.library.activeBoardId=b.id;persist();renderLibrary();renderResults();});
   $('rename-board').addEventListener('click',()=>{const name=$('board-name').value.trim();if(name){board().name=name;persist();renderLibrary();renderResults();}});
@@ -335,7 +342,7 @@ function bindEvents(){
   $('export-data').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({format:'trip-camera-desk',version:1,exportedAt:new Date().toISOString(),...model.library},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trip-camera-desk-saved.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   $('import-data').addEventListener('click',()=>$('import-file').click());$('import-file').addEventListener('change',async()=>{const file=$('import-file').files[0];if(!file)return;try{if(file.size>2_000_000)throw new Error('Import is larger than 2 MB.');const value=JSON.parse(await file.text());if(value.format!=='trip-camera-desk'||value.version!==1||!Array.isArray(value.boards)||!Array.isArray(value.trips))throw new Error('Choose a Trip Camera Desk export.');mergeLibrary(model.library,value);persist();await ensureBoardCameras();renderLibrary();renderResults();announce('Import complete. Existing items were kept; new items were added up to the 30-board and 50-trip limits.');}catch(error){announce(error.message);}$('import-file').value='';});
   $('live-limit').value=String(media.limit);$('live-limit').addEventListener('change',()=>{media.setLimit($('live-limit').value);while(model.liveSlots.length>media.limit)model.liveSlots.pop().player?.stop();renderLiveSlots();});
-  $('stop-all-video').addEventListener('click',()=>{setWVAutoplay(false);setCAAutoplay(false);setNVAutoplay(false);media.stopAll();for(const slot of model.liveSlots){slot.player=null;slot.wanted=false;}renderLiveSlots();});
+  $('stop-all-video').addEventListener('click',()=>{setWVAutoplay(false);setCAAutoplay(false);setNVAutoplay(false);setFLAutoplay(false);media.stopAll();for(const slot of model.liveSlots){slot.player=null;slot.wanted=false;}renderLiveSlots();});
   $('dialog-close').addEventListener('click',closeCamera);$('camera-dialog').addEventListener('cancel',event=>{event.preventDefault();closeCamera();});
   $('dialog-pin').addEventListener('click',()=>model.selected&&togglePin(model.selected.id));$('dialog-play').addEventListener('click',()=>{
     if(modalPlayer){modalPlayer.stop();modalPlayer=null;media.snapshot($('dialog-media'),model.selected,{autoplay:false});$('dialog-play').textContent='Watch live';return;}
@@ -355,8 +362,13 @@ async function init(){
     $('catalog-date').textContent=`Camera metadata compiled ${date(model.index.builtAt)}. Provider checks range from ${date(model.index.auditDateRange?.oldest||model.index.states.map(s=>s.auditCheckedAt).filter(Boolean).sort()[0])} to ${date(model.index.auditDateRange?.newest||model.index.states.map(s=>s.auditCheckedAt).filter(Boolean).sort().at(-1))}.`;
     $('provider-information').insertAdjacentHTML('beforeend','<p>Routing: <a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noopener">FOSSGIS Valhalla and OSRM</a>, public best-effort services, at most one request per second. Valhalla supports trips up to 1,500 km; longer ordinary trips use OSRM. The long-distance fallback does not support toll/highway avoidance. Alternatives depend on the provider; Valhalla alternatives require a trip without intermediate stops. Place search: <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>, manual searches only, no bulk requests. Map: <a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" rel="noopener">OpenStreetMap standard tiles</a>, normal interactive viewing. These free public services have no uptime guarantee and may limit requests. High-traffic use needs a dedicated provider.</p><p>Route estimates do not include live traffic. Avoid tolls/highways are routing preferences and may not exclude every such road. Red dashed route stretches have no listed camera within a one-mile interval; markers do not describe the camera’s field of view. Shared links include the selected trip locations or camera IDs. Saved data stays in this browser until exported or deliberately shared.</p><p>California: <a href="https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html" target="_blank" rel="noopener">Caltrans CWWP2</a>, subject to fair-use limits. Nominal snapshot update intervals are respected; record timestamps describe catalog metadata, not image capture. Travel-side direction is separate from camera-facing description. California county postmiles are not statewide journey distances.</p><p><a href="data/index.json" target="_blank" rel="noopener">Catalog counts and source dates ↗</a> · <a href="https://github.com/whardy/whardy.github.io/blob/master/sandbox/trip-camera-desk/README.md" target="_blank" rel="noopener">Site operation and service limits ↗</a></p>');
     $('provider-information').insertAdjacentHTML('beforeend','<p>Oregon: <a href="https://www.tripcheck.com/" target="_blank" rel="noopener">Camera courtesy of ODOT and TripCheck partner agencies</a>. Most snapshots update about every five minutes; the camera inventory is a separate dated catalog. Capture time may be unknown. PTZ/viewing direction does not establish traffic direction. Washington: public WSDOT and partner cameras. Exact shared border image URLs are counted once with catalog aliases retained; different views remain separate. <a href="https://www.tripcheck.com/" target="_blank" rel="noopener">Official Oregon road and weather conditions ↗</a>.</p>');
-    $('source-note').textContent=`Public transportation cameras from ${model.index.totals.statesAndDistricts-1} states and the District of Columbia. Feed access, image quality and availability vary by provider.`;
-    render();if(model.mode==='explore')cameraMap.fit();announce(`${nf.format(model.index.totals.views)} listed views across ${model.index.totals.statesAndDistricts-1} states and DC. Start with the example locations or plan your own trip.`);
+    const floridaIndex=model.index.states.find(state=>state.state==='FL');
+    const floridaAutoplayReady=Number(floridaIndex?.videoStatusCounts?.available)>0;
+    $('fl-autoplay-control').hidden=!floridaAutoplayReady;$('fl-video-note').hidden=floridaAutoplayReady;
+    if(floridaIndex)$('provider-information').insertAdjacentHTML('beforeend',`<p>Florida: ${esc(floridaIndex.source||'FL511 and participating operators')}. Each card identifies its operator and dated media check. Direct views reflect current provider imagery, not predicted conditions or proof that a route is open. Capture time is shown only when verified; Florida panhandle feeds use their assigned Eastern or Central time zone. <a href="${esc(safeLink(floridaIndex.sourceAuditUrl||'https://whardy.github.io/sandbox/florida-camera-desk/docs/source-audit.json'))}" target="_blank" rel="noopener">Florida source audit ↗</a> · <a href="https://www.fl511.com/" target="_blank" rel="noopener">Official FL511 conditions ↗</a>.</p>`);
+    const stateCount=model.index.states.filter(state=>state.state!=='DC').length;
+    $('source-note').textContent=`Public transportation cameras from ${stateCount} states and the District of Columbia. Feed access, image quality and availability vary by provider.`;
+    render();if(model.mode==='explore')cameraMap.fit();announce(`${nf.format(model.index.totals.views)} listed views across ${stateCount} states and DC. Start with the example locations or plan your own trip.`);
     await consumeShare();if(params.get('camera')){await loadStates(model.index,statesForCameraIds(model.index,[params.get('camera')]));openCamera(params.get('camera'));}
     window.addEventListener('hashchange',consumeShare);
   }catch(error){announce(error.message||'Trip Camera Desk could not load. Reload to try again.');console.error(error);}

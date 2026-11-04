@@ -8,7 +8,7 @@ export async function loadStates(index,codes){
       const response=await fetch('./'+entry.file);if(!response.ok)throw new Error(`${entry.stateName} catalog could not load.`);
       const data=await response.json();
       if(!Array.isArray(data.cameras))throw new Error('Invalid camera catalog.');
-      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,camera.district,camera.nearbyPlace,camera.description,camera.facingDirection,camera.city,camera.region,camera.physicalState,...(camera.aliases||[]),...(camera.routeRefs||[])].join(' ').toLowerCase()})));
+      loaded.set(entry.state,data.cameras.map(camera=>({...camera,searchText:[camera.id,camera.sourceId,camera.name,camera.road,camera.sourceRoad,camera.state,camera.stateName,camera.metro,camera.jurisdiction,camera.district,camera.provider,camera.providerKey,camera.nearbyPlace,camera.description,camera.facingDirection,camera.city,camera.region,camera.physicalState,...(camera.aliases||[]),...(camera.roadAliases||[]),...(camera.routeRefs||[])].join(' ').toLowerCase()})));
     })().finally(()=>pending.delete(entry.state)));
     await pending.get(entry.state);
   }));
@@ -32,7 +32,7 @@ export function filterCameras(cameras,filters,exclude=''){
   const words=String(filters.query||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
   return cameras.filter(c=>{
     if(exclude!=='query'&&words.some(w=>!c.searchText.includes(w)))return false;
-    for(const key of ['state','metro','jurisdiction','road'])if(exclude!==key&&filters[key]&&c[key]!==filters[key])return false;
+    for(const key of ['state','metro','jurisdiction','provider','district','road'])if(exclude!==key&&filters[key]&&c[key]!==filters[key])return false;
     if(exclude!=='media'&&filters.media&&c.mediaType!==filters.media)return false;
     if(exclude!=='status'&&filters.status&&c.availability!==filters.status)return false;
     return true;

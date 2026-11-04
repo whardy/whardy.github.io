@@ -1,65 +1,132 @@
-const REGIONS = Object.freeze({
-  statewide: { label: 'Statewide', code: 'ALL' },
-  panhandle: { label: 'Panhandle', code: 'NW' },
-  northeast: { label: 'Northeast', code: 'NE' },
-  central: { label: 'Central', code: 'CEN' },
-  'tampa-bay': { label: 'Tampa Bay', code: 'TB' },
-  southwest: { label: 'Southwest', code: 'SW' },
-  southeast: { label: 'Southeast', code: 'SE' },
-  keys: { label: 'Florida Keys', lat: '24.72', lng: '-81.10', zoom: '9' }
-});
+import {createMediaManager} from '../trip-camera-desk/media.js';
+import {loadLibrary,saveLibrary,mergeLibrary,cleanBoard,encodeShare,decodeShare,newId,MAX_BOARD_CAMERAS} from '../trip-camera-desk/store.js';
 
-const regionSelect = document.querySelector('#region-select');
-const frame = document.querySelector('#fl511-map');
-const status = document.querySelector('#map-status');
-const regionCards = [...document.querySelectorAll('[data-region]')];
-const layerInputs = [...document.querySelectorAll('.layer-controls input')];
-
-function selectedRegion() {
-  const slug = new URLSearchParams(window.location.search).get('region');
-  return Object.hasOwn(REGIONS, slug) ? slug : 'statewide';
+const $=id=>document.getElementById(id);
+const html=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const safeLink=value=>{try{const url=new URL(value);return url.protocol==='https:'?url.href:'https://www.fl511.com/cctv';}catch{return 'https://www.fl511.com/cctv';}};
+const fmt=new Intl.NumberFormat('en-US');
+const REGIONS=['Panhandle','Northeast Florida','Central Florida','Tampa Bay','Southwest Florida','Southeast Florida','Florida Keys'];
+const FILTERS=['region','metro','jurisdiction','provider','road','direction','toll','media','availability'];
+const KEYS={region:'region',metro:'metro',jurisdiction:'jurisdiction',provider:'provider',road:'road',direction:'direction',toll:'tollFacility',media:'mediaType',availability:'availability'};
+const PARAMS={query:'q',...Object.fromEntries(FILTERS.map(key=>[key,key]))};
+const PAGE_SIZE=25;
+const model={cameras:[],byId:new Map(),filtered:[],filters:{query:'',...Object.fromEntries(FILTERS.map(key=>[key,'']))},page:1,selectedId:null,map:null,markerLayer:null,mapCameras:[],library:loadLibrary(),live:new Map(),view:'split'};
+const readAutoplay=()=>{try{return localStorage.getItem('trip-camera-desk-fl-autoplay')!=='off';}catch{return true;}};
+const media=createMediaManager({autoplayFL:readAutoplay(),onMessage:toast});
+let toastTimer;
+function toast(message){const node=$('toast');node.textContent=message;node.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove('show'),5000);}
+function date(value,zone){if(!value||!Number.isFinite(Date.parse(value)))return 'unknown';try{return new Intl.DateTimeFormat('en-US',{timeZone:zone||'America/New_York',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(value));}catch{return new Date(value).toLocaleString();}}
+function field(camera,key){return String(camera[KEYS[key]]??'').trim();}
+function label(camera){if(camera.videoUrl&&camera.videoStatus==='available')return 'Live video';if(camera.imageStatus==='unavailable')return 'Unavailable';if(camera.imageUrl)return 'Refreshing snapshot';if(camera.officialUrl)return 'Official viewer';return 'Unavailable';}
+function searchable(camera){const refs=[...(camera.routeRefs||[]),...(camera.primaryRouteRefs||[])];const aliases=refs.flatMap(ref=>{let m;if((m=/^FL-CR-(\d+[A-Z]?)$/i.exec(ref)))return [`county road ${m[1]}`,`cr ${m[1]}`];if((m=/^FL-(\d+[A-Z]?)$/i.exec(ref)))return [`state road ${m[1]}`,`sr ${m[1]}`,`florida ${m[1]}`];if((m=/^I-(\d+[A-Z]?)$/i.exec(ref)))return [`interstate ${m[1]}`];if((m=/^US-(\d+[A-Z]?)$/i.exec(ref)))return [`us highway ${m[1]}`,`u.s. highway ${m[1]}`];return [];});return [camera.id,camera.sourceId,camera.name,camera.originalName,camera.road,camera.sourceRoad,camera.description,camera.region,camera.metro,camera.jurisdiction,camera.county,camera.city,camera.provider,camera.district,camera.direction,camera.facingDirection,camera.tollFacility,camera.nearbyPlace,...refs,...aliases,...(camera.roadAliases||[]),...(camera.aliases||[])].filter(Boolean).join(' ').toLowerCase();}
+function matches(camera,exclude=''){
+  if(exclude!=='query'&&model.byId.has(model.filters.query.trim())&&camera.id!==model.filters.query.trim())return false;
+  const words=model.filters.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if(exclude!=='query'&&words.some(word=>!camera._search.includes(word)))return false;
+  for(const key of FILTERS)if(key!==exclude&&model.filters[key]&&field(camera,key)!==model.filters[key])return false;
+  return true;
 }
-
-function buildMapUrl(slug) {
-  const region = REGIONS[slug];
-  const url = new URL('https://www.fl511.com/Map/EmbeddedMap');
-  if (region.code) {
-    url.searchParams.set('region', region.code);
-  } else {
-    url.searchParams.set('lat', region.lat);
-    url.searchParams.set('lng', region.lng);
-    url.searchParams.set('zoom', region.zoom);
+function optionsFor(key){const counts=new Map();for(const camera of model.cameras){if(!matches(camera,key))continue;const value=field(camera,key);if(value)counts.set(value,(counts.get(value)||0)+1);}return [...counts].sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));}
+function fillSelect(node,options,placeholder,current){node.replaceChildren();const blank=document.createElement('option');blank.value='';blank.textContent=placeholder;node.append(blank);for(const [value,count] of options){const opt=document.createElement('option');opt.value=value;opt.textContent=`${value} (${fmt.format(count)})`;node.append(opt);}node.value=current;if(node.value!==current)node.value='';}
+function readUrl(){const params=new URLSearchParams(location.search);model.filters.query=(params.get('q')||'').slice(0,180);for(const key of FILTERS)model.filters[key]=(params.get(key)||'').slice(0,180);model.page=Math.max(1,Math.min(100000,Number(params.get('page'))||1));model.view=params.get('view')==='wall'?'wall':'split';}
+function writeUrl(){const url=new URL(location.href);for(const [key,param] of Object.entries(PARAMS)){const value=model.filters[key];if(value)url.searchParams.set(param,value);else url.searchParams.delete(param);}if(model.page>1)url.searchParams.set('page',model.page);else url.searchParams.delete('page');if(model.view==='wall')url.searchParams.set('view','wall');else url.searchParams.delete('view');history.replaceState(null,'',url);}
+function renderFacets(){
+  for(let pass=0;pass<2;pass++)for(const key of FILTERS){const values=optionsFor(key);if(model.filters[key]&&!values.some(([value])=>value===model.filters[key]))model.filters[key]='';}
+  for(const key of FILTERS)fillSelect($(key),optionsFor(key),`All ${key==='jurisdiction'?'counties / jurisdictions':key==='availability'?'audit states':key==='toll'?'facilities':key==='media'?'media types':key+'s'}`,model.filters[key]);
+  $('query').value=model.filters.query;
+  const regions=optionsFor('region');$('region-shortcuts').replaceChildren();for(const region of REGIONS){const pair=regions.find(([value])=>value===region);if(!pair)continue;const button=document.createElement('button');button.type='button';button.textContent=`${region} · ${fmt.format(pair[1])}`;button.setAttribute('aria-pressed',String(model.filters.region===region));button.addEventListener('click',()=>{model.filters.region=model.filters.region===region?'':region;changeFilters();});$('region-shortcuts').append(button);}
+}
+function changeFilters(){model.page=1;renderAll(true);writeUrl();}
+function buildCard(camera,mode='wall'){
+  const card=document.createElement('article');card.className='camera-card';card.dataset.cameraId=camera.id;if(model.selectedId===camera.id)card.classList.add('is-selected');
+  const pinned=board().cameraIds.includes(camera.id),capability=label(camera),zone=camera.timezone||'America/New_York';
+  const statusClass=capability==='Live video'?'media-live':capability==='Official viewer'?'media-official':capability==='Unavailable'?'media-unavailable':'';
+  const capture=camera.sourceCaptureTime?`Captured ${date(camera.sourceCaptureTime,zone)}`:'Capture time unknown';
+  const direction=camera.direction?(camera.directionConfidence==='verified'?`${camera.direction} travel`:`Listed ${camera.direction} · travel unverified`):'Travel direction unknown';
+  const audit=camera.auditCheckedAt?`Media checked ${date(camera.auditCheckedAt,zone)}`:`Media unchecked · Catalog retrieved ${date(camera.sourceRetrievedAt,zone)}`;
+  card.innerHTML=`<div class="card-media"></div><div class="card-body"><div class="card-topline"><span>${html(camera.region||camera.metro||'Florida')}</span><span>${html(camera.provider||'FL511')}</span></div><h4>${html(camera.name)}</h4><p class="card-location">${html([camera.road,camera.jurisdiction,camera.metro].filter(Boolean).join(' · ')||camera.stateName)}</p><div class="card-meta"><span class="${statusClass}">${html(capability)}</span><span>${html(direction)}</span>${camera.tollFacility?`<span>${html(camera.tollFacility)}</span>`:''}</div><p class="card-source">${html(camera.district||camera.source||'Florida 511')} · ID ${html(camera.sourceId||camera.id)}<br>${html(audit)} · ${html(capture)}</p><div class="card-actions"><button type="button" data-action="view" class="primary-action">View</button>${camera.videoUrl?'<button type="button" data-action="play">Watch live</button>':''}${camera.imageStatus==='unavailable'?'<button type="button" data-action="retry">Retry image</button>':''}<button type="button" data-action="pin" aria-pressed="${pinned}">${pinned?'★ Pinned':'☆ Pin'}</button>${camera.hasCoordinates!==false&&Number.isFinite(camera.lat)&&Number.isFinite(camera.lon)?'<button type="button" data-action="locate">Locate on map</button>':''}<a href="${html(safeLink(camera.officialUrl))}" target="_blank" rel="noopener noreferrer">Official viewer ↗</a>${mode==='board'?'<button type="button" data-action="up">↑</button><button type="button" data-action="down">↓</button><button type="button" data-action="remove">Remove</button>':''}</div></div>`;
+  if(mode==='board'){
+    const ids=board().cameraIds,index=ids.indexOf(camera.id),up=card.querySelector('[data-action="up"]'),down=card.querySelector('[data-action="down"]'),remove=card.querySelector('[data-action="remove"]');
+    up.setAttribute('aria-label',`Move ${camera.name} up`);up.disabled=index===0;
+    down.setAttribute('aria-label',`Move ${camera.name} down`);down.disabled=index===ids.length-1;
+    remove.setAttribute('aria-label',`Remove ${camera.name} from ${board().name}`);
   }
-  url.searchParams.set('layers', ['Cameras', ...layerInputs.filter(input => input.checked).map(input => input.value)].join(','));
-  url.searchParams.set('size', '4');
-  return url.toString();
+  attachSnapshot(card.querySelector('.card-media'),camera,card);
+  card.addEventListener('click',event=>{const action=event.target.closest('[data-action]')?.dataset.action;if(action)act(action,camera,card);});
+  return card;
 }
-
-function renderMap(slug, announce = false) {
-  const region = REGIONS[slug];
-  if (!region) return;
-  regionSelect.value = slug;
-  regionCards.forEach(card => card.setAttribute('aria-pressed', String(card.dataset.region === slug)));
-  frame.title = `FL511 official camera map for ${region.label}`;
-  const url = buildMapUrl(slug);
-  if (frame.src !== url) frame.src = url;
-  if (announce) status.textContent = `Showing ${region.label} on the official FL511 map. Select a camera marker to view its feed.`;
+function attachSnapshot(container,camera,card,autoplay=true,force=false){
+  if(camera.imageStatus==='unavailable'&&!force){container.replaceChildren();const notice=document.createElement('span');notice.className='media-placeholder';notice.textContent='Unavailable at the dated media check · retry or open the official viewer';container.append(notice);return;}
+  media.snapshot(container,camera,{autoplay,onPlay:player=>{model.live.set(camera.id,{player,container});const button=card?.querySelector('[data-action="play"]');if(button){button.textContent='Stop';button.dataset.action='stop';}},onEnd:()=>{const active=model.live.get(camera.id);if(active?.container===container)model.live.delete(camera.id);const button=card?.querySelector('[data-action="stop"]');if(button){button.textContent='Watch live';button.dataset.action='play';}},onStatus:message=>{if(message)toast(message);}});
 }
-
-function setRegion(slug) {
-  if (!Object.hasOwn(REGIONS, slug)) return;
-  const url = new URL(window.location.href);
-  if (slug === 'statewide') url.searchParams.delete('region');
-  else url.searchParams.set('region', slug);
-  window.history.pushState(null, '', url);
-  renderMap(slug, true);
+function disposeMedia(container){const views=[container,...container.querySelectorAll('.camera-media')];for(const view of views)view.dataset.mediaDisposing='1';media.dispose(container);for(const view of views)delete view.dataset.mediaDisposing;}
+function playCamera(camera,container,card){
+  const old=model.live.get(camera.id);if(old)old.player.stop('Opened in another view');
+  const player=media.play(container,camera,{onStatus:toast,onEnd:()=>{const active=model.live.get(camera.id);if(active?.container===container)model.live.delete(camera.id);if(container.isConnected&&!container.dataset.mediaDisposing&&(!container.closest('dialog')||container.closest('dialog').open))attachSnapshot(container,camera,card,false);}});
+  if(player){model.live.set(camera.id,{player,container});const button=card?.querySelector('[data-action="play"]');if(button){button.textContent='Stop';button.dataset.action='stop';}}
 }
-
-regionSelect.addEventListener('change', () => setRegion(regionSelect.value));
-regionCards.forEach(card => card.addEventListener('click', () => {
-  setRegion(card.dataset.region);
-  document.querySelector('#live-map').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-}));
-layerInputs.forEach(input => input.addEventListener('change', () => renderMap(regionSelect.value, true)));
-window.addEventListener('popstate', () => renderMap(selectedRegion(), true));
-renderMap(selectedRegion());
+function act(action,camera,card){
+  if(action==='view')openDialog(camera);
+  else if(action==='pin'||action==='remove')togglePin(camera.id);
+  else if(action==='locate')locate(camera);
+  else if(action==='play')playCamera(camera,card.querySelector('.card-media'),card);
+  else if(action==='retry')attachSnapshot(card.querySelector('.card-media'),camera,card,false,true);
+  else if(action==='stop'){model.live.get(camera.id)?.player.stop('Video stopped');}
+  else if(action==='up'||action==='down')movePin(camera.id,action==='up'?-1:1);
+}
+function renderWall(){
+  disposeMedia($('camera-wall'));$('camera-wall').replaceChildren();const total=model.filtered.length;const pageCount=Math.max(1,Math.ceil(total/PAGE_SIZE));model.page=Math.max(1,Math.min(model.page,pageCount));const start=(model.page-1)*PAGE_SIZE;const page=model.filtered.slice(start,start+PAGE_SIZE);
+  $('wall-range').textContent=total?`${fmt.format(start+1)}–${fmt.format(start+page.length)} of ${fmt.format(total)}`:'No matching cameras';
+  if(!page.length){const empty=document.createElement('div');empty.className='wall-empty';empty.textContent=model.cameras.length?'No cameras match these filters. Clear a filter or try a different road.':'The camera catalog is unavailable. The official FL511 viewer remains available.';$('camera-wall').append(empty);}else for(const camera of page)$('camera-wall').append(buildCard(camera));
+  const nav=$('pagination');nav.replaceChildren();if(pageCount>1){for(const [text,target,disabled] of [['← Previous',model.page-1,model.page===1],[`${model.page} / ${pageCount}`,model.page,true],['Next →',model.page+1,model.page===pageCount]]){if(disabled&&text.includes('/')){const span=document.createElement('span');span.textContent=text;nav.append(span);}else{const button=document.createElement('button');button.type='button';button.textContent=text;button.disabled=disabled;button.addEventListener('click',()=>{model.page=target;renderWall();writeUrl();$('camera-wall').scrollIntoView({block:'start'});});nav.append(button);}}}
+}
+function initMap(){if(model.map||!window.L)return;model.map=L.map('camera-map',{preferCanvas:true,zoomControl:true,scrollWheelZoom:false}).fitBounds([[24.25,-88.1],[31.1,-79.7]],{padding:[12,12]});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(model.map);model.markerLayer=L.layerGroup().addTo(model.map);model.map.on('zoomend moveend',renderMarkers);}
+function renderMarkers(){if(!model.map)return;model.markerLayer.clearLayers();const zoom=model.map.getZoom(),bounds=model.map.getBounds().pad(.1);const cell=zoom<=7?.55:zoom<=8?.28:zoom<=9?.12:zoom<=10?.06:0;const groups=new Map();
+  for(const camera of model.mapCameras){if(!bounds.contains([camera.lat,camera.lon]))continue;const key=cell?`${Math.round(camera.lat/cell)}:${Math.round(camera.lon/cell)}`:`${camera.lat.toFixed(6)}:${camera.lon.toFixed(6)}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(camera);}
+  for(const group of groups.values()){if(group.length>1){const lat=group.reduce((n,c)=>n+c.lat,0)/group.length,lon=group.reduce((n,c)=>n+c.lon,0)/group.length;const icon=L.divIcon({className:'',html:`<span class="map-cluster">${group.length>99?'99+':group.length}</span>`,iconSize:[34,34],iconAnchor:[17,17]});const marker=L.marker([lat,lon],{icon}).addTo(model.markerLayer);marker.on('click',()=>{if(zoom>10&&group.every(camera=>Math.abs(camera.lat-lat)<.000001&&Math.abs(camera.lon-lon)<.000001)){const panel=document.createElement('div');panel.className='map-view-list';const title=document.createElement('strong');title.textContent=`${group.length} views at this location`;panel.append(title);for(const camera of group){const button=document.createElement('button');button.type='button';button.textContent=`${camera.name} · ${camera.direction||'direction unknown'}`;button.addEventListener('click',()=>{model.map.closePopup();selectFromMap(camera);});panel.append(button);}L.popup().setLatLng([lat,lon]).setContent(panel).openOn(model.map);}else{const b=L.latLngBounds(group.map(c=>[c.lat,c.lon]));model.map.fitBounds(b.pad(.35),{maxZoom:12});}});}else{const camera=group[0];const icon=L.divIcon({className:'',html:`<span class="map-dot${camera.id===model.selectedId?' selected':''}"></span>`,iconSize:[21,21],iconAnchor:[10,10]});const marker=L.marker([camera.lat,camera.lon],{icon}).addTo(model.markerLayer);marker.on('click',()=>selectFromMap(camera));}}
+  $('map-count').textContent=`${fmt.format(model.mapCameras.length)} located views match filters · ${fmt.format(groups.size)} markers shown`;
+}
+function selectFromMap(camera){model.selectedId=camera.id;const index=model.filtered.findIndex(item=>item.id===camera.id);if(index>=0){model.page=Math.floor(index/PAGE_SIZE)+1;renderWall();writeUrl();const card=[...$('camera-wall').children].find(node=>node.dataset.cameraId===camera.id);card?.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}renderMarkers();}
+function locate(camera){if(!model.map||!Number.isFinite(camera.lat)||!Number.isFinite(camera.lon))return;model.view='split';setView();model.map.invalidateSize();model.map.setView([camera.lat,camera.lon],Math.max(12,model.map.getZoom()));model.selectedId=camera.id;document.querySelectorAll('.camera-card').forEach(card=>card.classList.toggle('is-selected',card.dataset.cameraId===camera.id));renderMarkers();$('camera-map').scrollIntoView({block:'center'});}
+function renderMap(fit=false){model.mapCameras=model.filtered.filter(camera=>camera.hasCoordinates!==false&&Number.isFinite(camera.lat)&&Number.isFinite(camera.lon));initMap();if(!model.map)return;if(fit&&model.mapCameras.length&&model.mapCameras.length<500){const b=L.latLngBounds(model.mapCameras.map(c=>[c.lat,c.lon]));model.map.fitBounds(b.pad(.1),{maxZoom:11});}renderMarkers();}
+function setView(){$('desk-layout').classList.toggle('wall-only',model.view==='wall');$('view-split').setAttribute('aria-pressed',String(model.view==='split'));$('view-wall').setAttribute('aria-pressed',String(model.view==='wall'));if(model.view==='split')setTimeout(()=>model.map?.invalidateSize(),50);writeUrl();}
+function renderAll(fit=false){renderFacets();model.filtered=model.cameras.filter(camera=>matches(camera));$('filter-summary').textContent=`${fmt.format(model.filtered.length)} views match · audit results are dated`;renderWall();renderMap(fit);renderBoard();}
+function board(){return model.library.boards.find(item=>item.id===model.library.activeBoardId)||model.library.boards[0];}
+function persist(){if(!saveLibrary(model.library))toast('Browser storage is full or blocked. Export your boards to keep a copy.');}
+function renderBoard(){const select=$('board-select');select.replaceChildren();for(const item of model.library.boards){const option=document.createElement('option');option.value=item.id;option.textContent=`${item.name} (${item.cameraIds.length})`;select.append(option);}select.value=board().id;
+  const ids=board().cameraIds;const items=ids.map(id=>model.byId.get(id)).filter(Boolean);disposeMedia($('board-wall'));$('board-wall').replaceChildren();if(!items.length){const empty=document.createElement('div');empty.className='board-empty';empty.textContent=ids.length?'This board has no Florida views in the current catalog. Open it in Trip Desk for other states.':'Pin cameras from the wall to build this board.';$('board-wall').append(empty);}else for(const camera of items)$('board-wall').append(buildCard(camera,'board'));
+  $('board-message').textContent=`${items.length} Florida views on ${board().name}${ids.length>items.length?` · ${ids.length-items.length} other or unavailable IDs open in Trip Desk`:''}.`;
+  $('open-in-trip').href='../trip-camera-desk/?view=board';
+}
+function togglePin(id){const list=board().cameraIds,index=list.indexOf(id);if(index>=0)list.splice(index,1);else if(list.length<MAX_BOARD_CAMERAS)list.push(id);else{toast('This board is full. Create another board.');return;}persist();renderWall();renderBoard();toast(index>=0?'Camera removed from board.':`Camera pinned to ${board().name}.`);}
+function movePin(id,offset){const list=board().cameraIds,index=list.indexOf(id),target=index+offset;if(index<0||target<0||target>=list.length)return;[list[index],list[target]]=[list[target],list[index]];persist();renderBoard();}
+function openDialog(camera){model.selectedId=camera.id;renderMarkers();const dialog=$('camera-dialog');$('dialog-title').textContent=camera.name;$('dialog-meta').textContent=[camera.road,camera.jurisdiction,camera.provider,camera.direction?(camera.directionConfidence==='verified'?`${camera.direction} travel`:`Listed ${camera.direction} · travel unverified`):'Travel direction unknown',camera.facingDirection?`Faces ${camera.facingDirection}`:'Facing direction unknown'].filter(Boolean).join(' · ');const container=$('dialog-media');attachSnapshot(container,camera,null,false);const actions=$('dialog-actions');actions.replaceChildren();for(const [name,action] of [['Pin camera','pin'],...(camera.videoUrl?[['Watch live','play']]:[]),['Locate on map','locate']]){if(action==='locate'&&(!Number.isFinite(camera.lat)||!Number.isFinite(camera.lon)))continue;const button=document.createElement('button');button.type='button';button.textContent=name;button.addEventListener('click',()=>{if(action==='pin')togglePin(camera.id);else if(action==='play'){const active=model.live.get(camera.id);if(active?.container===container){active.player.stop('Video stopped');button.textContent='Watch live';}else{playCamera(camera,container,null);button.textContent='Stop';}}else{dialog.dataset.locating='1';closeDialog();locate(camera);}});actions.append(button);}const link=document.createElement('a');link.href=safeLink(camera.officialUrl);link.target='_blank';link.rel='noopener noreferrer';link.textContent='Official viewer ↗';actions.append(link);dialog.showModal();}
+function closeDialog(){const dialog=$('camera-dialog');disposeMedia($('dialog-media'));if(dialog.open)dialog.close();model.selectedId=null;renderMarkers();}
+function renderCorridors(){const refs=new Map();for(const camera of model.cameras)for(const ref of camera.primaryRouteRefs||camera.routeRefs||[]){if(!/^(I-|US-|FL-|SR-|CR-)|TURNPIKE|EXPRESSWAY|CAUSEWAY|BRIDGE/i.test(ref))continue;refs.set(ref,(refs.get(ref)||0)+1);}const ordered=[...refs].sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));fillSelect($('corridor-road'),ordered,'Select a listed road','');fillSelect($('corridor-direction'),[...new Map(model.cameras.map(c=>c.direction).filter(Boolean).map(d=>[d,model.cameras.filter(c=>c.direction===d).length]))].sort(([a],[b])=>a.localeCompare(b)),'Any direction','');fillSelect($('corridor-region'),REGIONS.map(region=>[region,model.cameras.filter(c=>c.region===region).length]).filter(([,n])=>n),'Any stretch','');$('corridor-summary').textContent=`Choose from ${ordered.length} normalized road references found in the current catalog.`;}
+function officialMap(){const details=$('official-map-details'),frame=$('official-map-frame');if(!details.open){frame.replaceChildren();return;}const select=$('official-region'),url=new URL('https://www.fl511.com/Map/EmbeddedMap');if(select.value==='keys'){url.searchParams.set('lat','24.72');url.searchParams.set('lng','-81.10');url.searchParams.set('zoom','9');}else url.searchParams.set('region',select.value);url.searchParams.set('layers','Cameras');url.searchParams.set('size','4');frame.replaceChildren();const iframe=document.createElement('iframe');iframe.title=`Official FL511 camera map for ${select.selectedOptions[0].textContent}`;iframe.src=url.href;iframe.loading='lazy';iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.allowFullscreen=true;frame.append(iframe);}
+async function copy(value,success){try{await navigator.clipboard.writeText(value);toast(success);}catch{window.prompt('Copy this link:',value);}}
+function events(){
+  let searchTimer;
+  $('filters').addEventListener('input',event=>{if(event.target.id==='query'){model.filters.query=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(changeFilters,180);}});
+  $('filters').addEventListener('submit',event=>{event.preventDefault();clearTimeout(searchTimer);model.filters.query=$('query').value;changeFilters();});
+  $('filters').addEventListener('change',event=>{if(FILTERS.includes(event.target.id)){model.filters[event.target.id]=event.target.value;changeFilters();}});
+  $('filters').addEventListener('reset',event=>{event.preventDefault();model.filters={query:'',...Object.fromEntries(FILTERS.map(key=>[key,'']))};changeFilters();});
+  $('share-filters').addEventListener('click',()=>{clearTimeout(searchTimer);model.filters.query=$('query').value;changeFilters();copy(location.href,'Filter link copied.');});
+  $('view-split').addEventListener('click',()=>{model.view='split';setView();});$('view-wall').addEventListener('click',()=>{model.view='wall';setView();});
+  $('autoplay-fl').checked=readAutoplay();$('autoplay-fl').addEventListener('change',()=>{const value=$('autoplay-fl').checked;media.setFLAutoplay(value);try{localStorage.setItem('trip-camera-desk-fl-autoplay',value?'on':'off');}catch{};});
+  $('live-limit').value=matchMedia('(max-width:700px)').matches?'1':'2';$('live-limit').addEventListener('change',()=>media.setLimit($('live-limit').value));
+  $('stop-all').addEventListener('click',()=>{media.stopAll('Stopped by you');$('autoplay-fl').checked=false;media.setFLAutoplay(false);try{localStorage.setItem('trip-camera-desk-fl-autoplay','off');}catch{}toast('All live streams stopped. Autoplay is off until you enable it.');});
+  $('board-select').addEventListener('change',()=>{model.library.activeBoardId=$('board-select').value;persist();renderBoard();renderWall();});
+  $('new-board').addEventListener('click',()=>{if(model.library.boards.length>=30){toast('You can keep up to 30 boards.');return;}const name=window.prompt('Name your new board:','Florida watchboard');if(name===null)return;const item={id:newId(),name:name.trim().slice(0,120)||'Florida watchboard',cameraIds:[]};model.library.boards.push(item);model.library.activeBoardId=item.id;persist();renderBoard();});
+  $('rename-board').addEventListener('click',()=>{const name=window.prompt('Board name:',board().name);if(name===null)return;board().name=name.trim().slice(0,120)||board().name;persist();renderBoard();});
+  $('delete-board').addEventListener('click',()=>{if(!confirm(`Delete ${board().name} from this browser?`))return;model.library.boards=model.library.boards.filter(item=>item.id!==board().id);if(!model.library.boards.length)model.library.boards.push({id:newId(),name:'My watchboard',cameraIds:[]});model.library.activeBoardId=model.library.boards[0].id;persist();renderBoard();});
+  $('share-board').addEventListener('click',()=>{try{const url=new URL(location.href);url.search='';url.hash='share='+encodeShare({type:'board',board:board()});copy(url.href,'Board link copied.');}catch(error){toast(error.message);}});
+  $('export-boards').addEventListener('click',()=>{const data={format:'trip-camera-desk',version:1,...model.library};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='camera-desk-boards-and-trips.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);});
+  $('import-boards').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>2_000_000)throw new Error('Import is larger than 2 MB.');const data=JSON.parse(await file.text());if(data.format!=='trip-camera-desk'||data.version!==1||!Array.isArray(data.boards)||!Array.isArray(data.trips))throw new Error('Choose a Trip Camera Desk export.');mergeLibrary(model.library,data);persist();renderBoard();toast('Import complete. Existing boards and trips were kept.');}catch(error){toast(error.message);}event.target.value='';});
+  $('browse-corridor').addEventListener('click',()=>{const road=$('corridor-road').value;if(!road){toast('Choose a listed highway first.');return;}model.filters={query:road,...Object.fromEntries(FILTERS.map(key=>[key,'']))};model.filters.direction=$('corridor-direction').value;model.filters.region=$('corridor-region').value;changeFilters();$('cameras').scrollIntoView({block:'start'});});
+  $('official-map-details').addEventListener('toggle',officialMap);$('official-region').addEventListener('change',officialMap);
+  $('close-dialog').addEventListener('click',closeDialog);$('camera-dialog').addEventListener('close',()=>{disposeMedia($('dialog-media'));if($('camera-dialog').dataset.locating==='1'){delete $('camera-dialog').dataset.locating;return;}model.selectedId=null;renderMarkers();});$('camera-dialog').addEventListener('click',event=>{if(event.target===$('camera-dialog'))closeDialog();});
+  window.addEventListener('popstate',()=>{readUrl();renderAll();setView();});
+}
+async function load(){events();readUrl();setView();try{const response=await fetch('../trip-camera-desk/data/FL.json',{cache:'no-cache'});if(!response.ok)throw new Error(`Catalog request failed (${response.status}).`);const data=await response.json();if(!Array.isArray(data.cameras))throw new Error('Catalog has no camera records.');model.cameras=data.cameras.filter(camera=>camera&&typeof camera.id==='string'&&camera.id.startsWith('FL:')).map(camera=>({...camera,_search:searchable(camera)}));model.byId=new Map(model.cameras.map(camera=>[camera.id,camera]));const videoReady=model.cameras.some(camera=>camera.videoUrl&&camera.videoStatus==='available');$('playback-controls').hidden=!videoReady;$('video-access-note').hidden=videoReady;const locations=new Set(model.cameras.map(c=>c.siteId||c.sourceSiteId||c.id));$('view-count').textContent=fmt.format(model.cameras.length);$('location-count').textContent=fmt.format(locations.size);$('audit-date').textContent=data.auditCheckedAt?new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/New_York'}).format(new Date(data.auditCheckedAt)):'Not checked';$('catalog-message').textContent=`${fmt.format(model.cameras.length)} individual views indexed from the dated FL511 catalog. Availability can change; snapshots load only when visible.`;renderCorridors();renderAll();if(location.hash.startsWith('#share=')){try{const share=decodeShare(location.hash.slice(7));const incoming=share.type==='board'?cleanBoard(share.board):null;if(!incoming)throw new Error('Invalid board link.');if(model.library.boards.length>=30)throw new Error('Board limit reached. Export or remove one first.');incoming.id=newId();model.library.boards.push(incoming);model.library.activeBoardId=incoming.id;persist();renderBoard();toast('Shared board added to this browser.');history.replaceState(null,'',location.pathname+location.search);}catch(error){toast(`Share link could not load: ${error.message}`);}}}catch(error){$('catalog-message').textContent=`Florida catalog unavailable: ${error.message}. Open the official FL511 viewer while this is repaired.`;$('catalog-message').classList.add('is-error');$('camera-wall').innerHTML='<div class="wall-empty">The catalog could not load. <a href="https://www.fl511.com/cctv" target="_blank" rel="noopener noreferrer">Open FL511 cameras ↗</a></div>';}}
+load();

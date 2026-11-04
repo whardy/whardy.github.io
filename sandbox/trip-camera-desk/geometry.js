@@ -1,3 +1,5 @@
+import {pointInFlorida} from './florida.js?v=20261104fl3';
+
 // Distances use WGS84-style coordinates and metres. Camera-to-road matching is
 // deliberately conservative: location proximity is never a verified road view.
 const EARTH = 6371008.8;
@@ -25,20 +27,26 @@ export function bearing(a, b) {
 }
 
 export function normalizeRouteRef(value) {
-  const text = String(value || '').toUpperCase().trim().replace(/[‐‑–—]/g, '-');
+  const text = String(value || '').toUpperCase().trim().replace(/[‐‑–—]/g, '-').replace(/[’‘]/g,"'");
+  if(/^(?:FLORIDA'?S?|RONALD REAGAN) TURNPIKE(?: MAINLINE)?$/.test(text))return 'FL-TURNPIKE';
+  if(/^(?:FL|FLORIDA)[ -]*(?:(?:STATE )?(?:ROAD|ROUTE|HIGHWAY)[ -]*)?A1A$/.test(text))return 'FL-A1A';
+  if(/^(?:SR|STATE ROAD|STATE ROUTE)[ -]*A1A$/.test(text))return 'SR-A1A';
   const m = text.match(/^(?:INTERSTATE|I)[ -]*(\d+[A-Z]?)$/);
   if (m) return `I-${m[1]}`;
   const us = text.match(/^(?:US|U\.S\.|US ROUTE|U\.S\. ROUTE)[ -]*(\d+[A-Z]?)$/);
   if (us) return `US-${us[1]}`;
-  return text.replace(/\b(?:OREGON|ORE)[ -]*(\d+[A-Z]?)/g, 'OR-$1').replace(/\b(?:WASHINGTON)[ -]*(\d+[A-Z]?)/g, 'WA-$1').replace(/\b(?:NEVADA)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)/g, 'NV-$1').replace(/\b(?:STATE ROUTE|STATE ROAD|SR|SH)[ -]*(\d+[A-Z]?)/g, 'SR-$1').replace(/\s+/g, ' ');
+  return text.replace(/\b(?:OREGON|ORE)[ -]*(\d+[A-Z]?)/g, 'OR-$1').replace(/\b(?:WASHINGTON)[ -]*(\d+[A-Z]?)/g, 'WA-$1').replace(/\b(?:NEVADA)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)/g, 'NV-$1').replace(/\b(?:FLORIDA)[ -]*(?:(?:STATE )?(?:ROAD|ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)/g, 'FL-$1').replace(/\b(?:COUNTY ROAD|COUNTY ROUTE|CR)[ -]*(\d+[A-Z]?)/g, 'CR-$1').replace(/\b(?:STATE ROUTE|STATE ROAD|SR|SH)[ -]*(\d+[A-Z]?)/g, 'SR-$1').replace(/\s+/g, ' ');
 }
 
 export function extractRouteRefs(values) {
   const result = new Set();
   for (const raw of Array.isArray(values) ? values : [values]) {
-    const text = String(raw || '').toUpperCase().replace(/[‐‑–—]/g, '-').replace(/FARM[ -]+TO[ -]+MARKET(?: ROAD)?/g,'FM').replace(/RANCH[ -]+TO[ -]+MARKET(?: ROAD)?/g,'RM').replace(/BELTWAY/g,'BW').replace(/\bLOOP\b/g,'LP').replace(/\bSPUR\b/g,'SP');
-    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|SR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY|CA|WA|ORE|OR|NV|CC)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
-    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK|CALIFORNIA|WASHINGTON|OREGON|NEVADA)[ -]*(?:(?:STATE )?(?:ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY',CALIFORNIA:'CA',WASHINGTON:'WA',OREGON:'OR',NEVADA:'NV'}[m[1]]}-${m[2]}`);
+    const text = String(raw || '').toUpperCase().replace(/[‐‑–—]/g, '-').replace(/[’‘]/g,"'").replace(/FARM[ -]+TO[ -]+MARKET(?: ROAD)?/g,'FM').replace(/RANCH[ -]+TO[ -]+MARKET(?: ROAD)?/g,'RM').replace(/BELTWAY/g,'BW').replace(/\bLOOP\b/g,'LP').replace(/\bSPUR\b/g,'SP');
+    for (const m of text.matchAll(/\b(INTERSTATE|I|U\.?S\.?|US ROUTE|STATE ROUTE|STATE ROAD|COUNTY ROAD|COUNTY ROUTE|SR|CR|SH|FM|RM|BW|LP|SP|WV|OH|PA|VA|TX|MD|AZ|DC|NY|CA|WA|ORE|OR|NV|FL|CC)[ -]*(\d+[A-Z]?)(?!\d)/g)) result.add(normalizeRouteRef(`${m[1]}-${m[2]}`));
+    for (const m of text.matchAll(/\b(WEST VIRGINIA|OHIO|PENNSYLVANIA|VIRGINIA|TEXAS|MARYLAND|ARIZONA|DISTRICT OF COLUMBIA|NEW YORK|CALIFORNIA|WASHINGTON|OREGON|NEVADA|FLORIDA)[ -]*(?:(?:STATE )?(?:ROAD|ROUTE|HIGHWAY)[ -]*)?(\d+[A-Z]?)(?!\d)/g))result.add(`${{'WEST VIRGINIA':'WV',OHIO:'OH',PENNSYLVANIA:'PA',VIRGINIA:'VA',TEXAS:'TX',MARYLAND:'MD',ARIZONA:'AZ','DISTRICT OF COLUMBIA':'DC','NEW YORK':'NY',CALIFORNIA:'CA',WASHINGTON:'WA',OREGON:'OR',NEVADA:'NV',FLORIDA:'FL'}[m[1]]}-${m[2]}`);
+    for(const m of text.matchAll(/\b(?:FL|FLORIDA|SR|STATE ROAD|STATE ROUTE)[ -]*A1A\b/g))result.add(normalizeRouteRef(m[0]));
+    if(/\b(?:FLORIDA'?S?|RONALD REAGAN) TURNPIKE\b/.test(text))result.add('FL-TURNPIKE');
+    for(const m of text.matchAll(/\bFL-CR-(\d+[A-Z]?)\b/g))result.add(`FL-CR-${m[1]}`);
   }
   return [...result];
 }
@@ -147,11 +155,13 @@ function refsForMatching(refs,state) {
   const normalized=new Set((refs||[]).map(normalizeRouteRef));
   // Valhalla usually spells a state route with the state's abbreviation. SR
   // metadata can only be expanded within this camera's own state.
-  for(const value of [...normalized])if(/^SR-\d/.test(value)&&state)normalized.add(value.replace('SR-',`${state}-`));
+  for(const value of [...normalized])if(/^SR-(?:\d|A1A)/.test(value)&&state)normalized.add(value.replace('SR-',`${state}-`));
+  if(state==='FL')for(const value of [...normalized])if(/^CR-\d/.test(value))normalized.add(value.replace('CR-','FL-CR-'));
   return normalized;
 }
 
 function directionBearing(camera) {
+  if(camera.state==='FL'&&camera.directionConfidence!=='verified')return null;
   if(typeof camera.directionBearing==='number'&&Number.isFinite(camera.directionBearing))return camera.directionBearing;
   const key=String(camera.direction||'').trim().toUpperCase().replace(/BOUND$/,'').trim();
   return {N:0,NORTH:0,NE:45,NORTHEAST:45,E:90,EAST:90,SE:135,SOUTHEAST:135,S:180,SOUTH:180,SW:225,SOUTHWEST:225,W:270,WEST:270,NW:315,NORTHWEST:315,NB:0,EB:90,SB:180,WB:270}[key]??null;
@@ -166,11 +176,12 @@ export function matchRouteCameras(cameras,route,{corridorMeters=1609.344,directi
     if(camera.lon<route.bounds.west-lonDelta||camera.lon>route.bounds.east+lonDelta||camera.lat<route.bounds.south-latDelta||camera.lat>route.bounds.north+latDelta)continue;
     const projection=projectPointOnRoute(route,camera,{maxDistanceMeters:radius});
     if(!projection)continue;
+    if(camera.state==='FL'&&!pointInFlorida(projection.coordinate[0],projection.coordinate[1]))continue;
     const cameraRefs=refsForMatching(camera.primaryRouteRefs??(camera.routeRefs?.length?camera.routeRefs:extractRouteRefs(camera.road)),camera.state);
     const routeRefs=refsForMatching(projection.routeRefs,camera.state);
     const referenceMatch=[...cameraRefs].some(ref=>routeRefs.has(ref));
     const sourceRoad=plainRoad(camera.road);
-    const nameMatch=sourceRoad.length>=5&&projection.roadNames.some(name=>plainRoad(name)===sourceRoad);
+    const nameMatch=camera.state!=='FL'&&sourceRoad.length>=5&&projection.roadNames.some(name=>plainRoad(name)===sourceRoad);
     const roadMatch=referenceMatch||nameMatch;
     const publishedBearing=directionBearing(camera);
     const angle=publishedBearing===null?null:Math.abs(((publishedBearing-projection.bearing+540)%360)-180);

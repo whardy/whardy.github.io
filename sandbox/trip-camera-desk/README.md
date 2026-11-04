@@ -2,22 +2,22 @@
 
 Public site: https://whardy.github.io/sandbox/trip-camera-desk/
 
-A responsive trip planner and public traffic-camera desk combining West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, California, Washington, Oregon, and the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
+A responsive trip planner and public traffic-camera desk combining 13 states—West Virginia, Ohio, Pennsylvania, Virginia, Texas, Maryland, Arizona, New York, California, Washington, Oregon, Nevada, and Florida—plus the District of Columbia. The interface and dated camera metadata are static files hosted on GitHub Pages. Camera pictures and video load from their established sources.
 
 ## Use the desk
 
 - **Plan:** choose a start, destination and up to six intermediate stops through manual place search, latitude/longitude entry, or map selection. Calculate real driving directions and select an alternative when available. A route corridor finds cameras across state lines, ordered by progress along the journey.
-- **Route wall:** browse 25 camera views per page, with state, area, jurisdiction, road, media and dated-availability filters. Highway and direction filters apply to the selected trip stretch. Unknown direction is retained and labeled.
+- **Route wall:** browse 25 camera views per page, with state, area, jurisdiction, provider, district, road, media and dated-availability filters. Highway and direction filters apply to the selected trip stretch. Unknown direction is retained and labeled.
 - **Look ahead:** move along the route to see nearby camera checkpoints and elapsed driving estimates. Representative selection picks cameras at intervals, with additional choices near routing-service highway junctions where camera coverage exists.
-- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Visible WV and supported California feeds also autoplay muted by default. Desktop defaults to two live slots; narrow screens default to one, with a selectable limit of one, two or four. Independent feeds are not synchronized.
+- **Watchboard:** pin views from multiple states, name boards, reorder or remove views, and start supported live video explicitly. Eligible WV, California and Nevada feeds also autoplay muted by default. Florida autoplay is available only for videos with verified direct playback; none are marked eligible in the current Florida shard. Desktop defaults to two live slots; narrow screens default to one. Independent feeds are not synchronized.
 - **Explore:** browse and map the full catalog without calculating a trip.
 - **Saved trips:** keep up to 50 trips and 30 boards with up to 500 camera IDs per board in this browser. Export/import JSON to transfer them, or deliberately share a trip or board link. Large shares require JSON export instead of a URL.
 
-The map clusters markers, highlights the selected route, shows a moving look-ahead position, and marks stretches without listed camera checkpoints. A marker near a road does not establish that the camera overlooks that road. Primary road references and published directional metadata produce stronger matches; crossing roads, parallel roads and unknown metadata remain labeled conservatively. Gap markings describe camera-location spacing, not continuous visual coverage of the pavement.
+The map clusters markers, highlights the selected route, shows a moving look-ahead position, and marks stretches without listed camera checkpoints. A marker near a road does not establish that the camera overlooks that road. Primary road references produce stronger matches; crossing roads, parallel roads and unknown metadata remain labeled conservatively. FL511's listed direction is not documented as traffic direction, so Florida route labels do not claim same or opposite traffic direction. Gap markings describe camera-location spacing, not continuous visual coverage of the pavement.
 
 ## Dated catalog and availability
 
-The Oregon and Washington integration contains **20,927 views at 20,547 source-catalog locations** across 12 catalogs (11 states and DC). These are source/site identifiers, not independently deduplicated physical devices. Four views have no usable coordinates and remain searchable while excluded from geographic matching.
+The current `data/index.json` contains **26,569 listed views at 26,189 source-catalog locations** across 14 catalogs (13 states and DC). These are source/site identifiers, not independently verified physical devices. Four views have no usable coordinates and remain searchable while excluded from geographic matching. Florida contributes 4,991 listed views at 4,991 source-site locations; its physical-device count is unknown.
 
 | Catalog | Source locations | Listed views | Latest dated availability check |
 | --- | ---: | ---: | --- |
@@ -33,8 +33,10 @@ The Oregon and Washington integration contains **20,927 views at 20,547 source-c
 | California | 3,770 | 4,110 | 2026-11-04T03:30:33Z |
 | Washington | 1,645 | 1,645 | 2026-11-04T00:03:18.580670Z |
 | Oregon | 1,177 | 1,179 | 2026-11-04T03:28:04.193798Z |
+| Nevada | 651 | 651 | 2026-11-04T03:50:55.203472Z |
+| Florida | 4,991 | 4,991 | 2026-11-04T04:27Z (four-image sample) |
 
-Media categories are configured capabilities: **6,474 video**, **12,831 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 15,860 available, 1,195 unavailable, 51 stale, 1,557 official, 2,264 unchecked.
+Media categories are configured capabilities: **7,102 video**, **17,845 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 15,880 available, 1,199 unavailable, 51 stale, 1,557 official, 7,882 unchecked. Florida's 4,991 primary categories are snapshots; its listed HLS URLs are not directly playable from this site's origin.
 
 California contributes **4,110 views at 3,770 source location groups**: 3,645 Caltrans snapshot-capable views, including 2,326 configured HLS capabilities, and 465 Santa Clara County official-viewer views grouped at 126 intersections. The GIS comparison supplied 33 additional currently reachable views absent from the district files; their older GIS provenance remains explicit.
 
@@ -46,17 +48,17 @@ The source dates, per-media checks, overrides, counts and shard hashes are in `d
 
 ## Media delivery
 
-West Virginia, Virginia, Maryland, New York and California support public HLS connections where available. Other states mainly provide refreshing snapshots and official-viewer links. Snapshots load only when visible, with at most four requests in progress and a minimum 60-second refresh interval. California nominal image update intervals are respected when longer. Oregon and Washington use five-minute source cadence, including failed-request retry spacing; offscreen active snapshots are canceled. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
+West Virginia, Virginia, Maryland, New York, California and Nevada support public HLS connections where available. Florida uses direct FL511 snapshots and its official viewer for video; the public FL511 HLS paths require origin-bound authorization that was not available for this GitHub Pages origin. Snapshots load only when visible, with at most four requests in progress and a minimum 60-second refresh interval. Florida uses a 120-second cadence without an unapproved cache-busting query. California nominal image update intervals are respected when longer. Oregon and Washington use five-minute source cadence, including failed-request retry spacing; offscreen active snapshots are canceled. Hidden tabs pause images and stop video. Videos stop when removed, closed, hidden or scrolled out of view; playback failure returns to a snapshot or source link.
 
 Texas keeps its existing owned relay at `https://texas-camera-relay.wintrytiger33.chatgpt.site` for media already dependent on it. This site does not change that relay's deployment or allowlist. Austin sources retain direct delivery; external-only TranStar views remain official-viewer links. Publishing this directory cannot fix a separate relay or provider outage.
 
 No media is stored in this repository. The release does not record footage or create an image-history archive. Mobile viewport testing does not substitute for testing on physical iOS hardware; native playback controls and a user-start action remain available for autoplay restrictions.
 
-### WV and California autoplay
+### Autoplay and media limits
 
-Visible WV and supported California feeds start muted and inline by default, including camera-wall previews, enlarged views and WV watchboard slots. Native controls are hidden for WV and California to avoid the large pause/play overlay; external Watch live/Stop video actions remain available. Other states retain their native controls and user-start behavior.
+Visible WV, supported California and Nevada feeds start muted and inline by default, including camera-wall previews, enlarged views and watchboard slots. Florida uses the same playback controls only when a direct video is verified and allowed; this release has none. Native controls are hidden for these inline feeds to avoid the large pause/play overlay; external Watch live/Stop video actions remain available. Other states retain their native controls and user-start behavior.
 
-The separate **Autoplay WV** and **Autoplay CA** checkboxes remember their preferences in this browser. The established WV preference key is unchanged. Automatic previews share the existing global video-slot limit (two on desktop, one by default on narrow screens); manually selected streams take priority. Offscreen previews release their slots and resume when visible. Enlarging a camera pauses automatic previews behind the dialog. **Stop all** disables both autoplay preferences until deliberately enabled again. Individual visible previews expose a Stop video action. Dated failed California video checks retain snapshots and require an explicit video retry.
+Separate state autoplay checkboxes remember preferences in this browser. The established WV and California keys remain unchanged. Automatic previews share the existing global video-slot limit (two on desktop, one by default on narrow screens); manually selected streams take priority. Florida's provider limit defaults to two desktop streams and one narrow-screen stream unless a lower source limit is supplied. Offscreen previews release their slots and resume when visible. Enlarging a camera pauses automatic previews behind the dialog. **Stop all** disables autoplay preferences until deliberately enabled again. Individual visible previews expose a Stop video action. Dated failed video checks retain snapshots and require an explicit retry.
 
 A browser autoplay rejection or source error suppresses automatic retries for that view. Use Watch live, Refresh now, or re-enable the relevant autoplay preference to retry. iOS power-saving and browser policies can still require a tap; the site keeps a user-start fallback instead of repeatedly requesting blocked playback. See [WebKit’s autoplay policy](https://webkit.org/blog/6784/new-video-policies-for-ios/).
 
@@ -76,36 +78,21 @@ Place queries and route coordinates are sent to the selected service; camera and
 
 ## Source and maintenance
 
-The maintained source for this published California integration is `california-camera-desk/.integration/trip-camera-desk/` in the existing camera-site workspace. No package installation or frontend build is needed. Node.js runs checks; Python 3 previews the static files and compiles metadata.
+The maintained frontend, compiler, tests and published shard files live in this `sandbox/trip-camera-desk/` directory of `whardy/whardy.github.io`. This static frontend has no package installation or build step. Refresh source catalogs with each state site's maintained tools first. Florida's bounded catalog refresh and dated media audit are documented in [Florida's source audit](../florida-camera-desk/docs/source-audit.md); it retains last-known-good data on failure. The Trip compiler reads the validated Florida shard without reinterpreting FL511's direction or media fields. A missing or invalid Florida shard makes the unified build fail instead of silently removing the state.
 
-The maintained source for this California release is `california-camera-desk/.integration/trip-camera-desk/`. It was isolated from other concurrent state work to preserve the nine existing catalog IDs and add California only. From this release directory, rebuild the unified catalog:
-
-```sh
-python3 scripts/build-catalog.py
-```
-
-The compiler discovers the enclosing workspace’s `whardy-github-pages/` checkout or the enclosing published repository. California uses its maintained `california-camera-desk/dist/` catalog when present, with the published catalog as fallback. To use another checkout or output directory:
+From a complete repository clone, stage a unified rebuild in a temporary directory and inspect the totals before copying its index and changed shards into `sandbox/trip-camera-desk/data/`:
 
 ```sh
-python3 scripts/build-catalog.py --repository /path/to/whardy.github.io --california-source /path/to/california-camera-desk/dist --output /path/to/output/data
+python3 sandbox/trip-camera-desk/_tools/build-catalog.py --repository . --output /tmp/trip-catalog-review
+python3 sandbox/florida-camera-desk/_tools/check-catalog.py
+python3 sandbox/trip-camera-desk/_tools/check-catalog.py
+node sandbox/trip-camera-desk/_tools/check-florida.mjs
+node sandbox/trip-camera-desk/_tools/check-routing.mjs
+node sandbox/trip-camera-desk/_tools/check-media.mjs
+node sandbox/trip-camera-desk/_tools/check-waypoints.mjs
 ```
 
-Refresh and audit individual state catalogs with their own maintained tools first when new source data is required. Then rebuild the unified shards, run checks, review changed counts and dates, and publish the index and all changed shards together. The compiler preserves state/provider/view IDs, location IDs, primary-road versus crossing-road references, county/city/ward/borough distinctions, geographic overrides, and missing coordinates.
-
-From the local project directory:
-
-```sh
-node scripts/check.mjs
-node scripts/check-routing.mjs
-node scripts/check-media.mjs
-python3 scripts/check-data.py
-node scripts/check-california.mjs
-python3 -m http.server 4190 --bind 127.0.0.1 --directory dist
-```
-
-`node scripts/check-california.mjs --live` checks the five California trips, real route ordering, timed lookahead and California–Arizona coverage. It retains large response shapes only in a local `.route-check-cache/`, with the small report in `docs/california-route-validation.json`. `node scripts/check-routing.mjs --live` deliberately sends a small set of requests to the selected routing and search providers. Routine checks use only local data and synthetic geometry.
-
-Publish `dist/` to `sandbox/trip-camera-desk/` in `whardy/whardy.github.io`, include this README in the published directory, and preserve vendor licenses. Existing state-site headers link to Trip Desk and California. Changes to their bundled headers require their own maintained build steps. Keep unrelated state projects and work intact.
+For a different source directory, pass `--state-source STATE=/absolute/catalog/directory`; the Florida override accepts its validated `data/FL.json`. The compiler requests no camera media. Publish `index.json` with every changed shard so its hashes and totals remain consistent. `node sandbox/trip-camera-desk/_tools/check-florida-routes.mjs` makes a deliberately small set of live FOSSGIS requests and writes [the dated route report](docs/florida-route-validation.json). It checked Tampa–Orlando, Miami–Key West, Jacksonville–Miami, Pensacola–Jacksonville, Miami–Washington DC, dense Miami, sparse rural Florida, Georgia-only coverage, and an Orlando–Sanford route past two directional views at one coordinate. Routing summaries are ordinary estimates and not traffic aware.
 
 ## Primary sources
 
@@ -115,6 +102,7 @@ Publish `dist/` to `sandbox/trip-camera-desk/` in `whardy/whardy.github.io`, inc
 - [Photon public-demo policy](https://github.com/komoot/photon#demo-server)
 - [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/) and [attribution](https://www.openstreetmap.org/copyright)
 - [California Caltrans CCTV sources and fair-use policy](https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html) and [California Camera Desk](https://whardy.github.io/sandbox/california-camera-desk/)
+- [FL511 cameras](https://www.fl511.com/cctv), [official Florida conditions](https://www.fl511.com/) and [Florida source audit](../florida-camera-desk/docs/source-audit.md)
 - Individual state providers, catalog URLs and source-site links in [the data index](data/index.json)
 - [Leaflet](https://leafletjs.com/) and [hls.js](https://github.com/video-dev/hls.js/)
 
@@ -160,9 +148,11 @@ For previewing a maintained catalog before publication, repeat `--state-source S
 
 Unconfirmed or partially edited route points remain off the map until validated. Find my route resolves typed coordinate pairs together; malformed saved trips are rejected before changing the active draft.
 
-## Florida access
+## Florida catalog and access
 
-Florida Camera Desk uses FL511’s official embedded map and regional links. FL511’s published conditions require FDOT’s express written consent for independent reuse of its camera content. This Trip Desk release provides official Florida links for Florida route sections and Explore mode, but does not index, match, pin, or play individual FL511 cameras. FL511 views are not used in camera counts or coverage-gap calculations; Florida stretches may appear as gaps. Individual camera integration requires an applicable FDOT data/video agreement or another verified permitted source.
+The project owner confirmed permission for individual Florida traffic-camera content. The current Florida shard holds 4,991 FL511-listed snapshots from FDOT districts, Florida's Turnpike Enterprise, Central Florida Expressway Authority, Greater Miami Expressway Agency, and listed local/partner groups. Each has a stable `FL:<provider>:<source-id>` identity. These records participate in Trip's filters, route wall, map, lookahead, representative selection, coverage gaps, saved boards, sharing and JSON import/export. Source locations equal 4,991; physical-device identity is not verified. FL511's listed direction is searchable but does not establish traffic travel or camera-facing direction. Florida road and county-road references keep an FL namespace, and the state boundary prevents a nearby Georgia route from acquiring Florida views.
+
+The 2026-11-04 UTC audit visually checked three roadway snapshots and one offline card; the remaining 4,987 image views were unchecked for visual availability at that date. FL511's public viewer lists 4,372 HLS URLs, but its origin-bound authorization did not grant playback to `whardy.github.io`, so Trip does not publish these as direct video URLs. Visitors can watch direct snapshots here and open the official FL511 viewer for video and current conditions. Browser retrieval time is distinct from capture time, which FL511 did not verify. The Florida snapshot cadence is 120 seconds while visible, with provider caching respected. See [the Florida source audit](../florida-camera-desk/docs/source-audit.md) for provider counts, media evidence, source dates, limits and recovery steps. A whardy-origin allowlist or separately approved video delivery endpoint is needed before direct Florida HLS can be enabled.
 
 ## Nevada catalog
 

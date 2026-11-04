@@ -1,25 +1,50 @@
-# Florida camera sources and permissions
+# Florida camera sources and access
 
-Audit: 2026-11-03 (Eastern time). This is a source and permission inventory, not a live camera availability audit.
+Updated 2026-11-04 UTC. See the [detailed dated source audit](source-audit.md),
+[machine-readable counts](source-audit.json) and
+[refresh status](../data/refresh-status.json).
 
-| Provider | Official public access | Independent reuse status | Used here |
-|---|---|---|---|
-| FDOT / FL511 | [Camera viewer](https://www.fl511.com/cctv), [map](https://www.fl511.com/), [website embed tool](https://www.fl511.com/Map/EmbeddedMapSetup) | [FL511 conditions](https://www.fl511.com/privacy) require FDOT's express written consent for reuse of service content. The page links separate FDOT data and video agreements. FL511 [expressly offers its map embed for websites](https://www.fl511.com/about). | Official map iframe and viewer links only. No copied catalog, image, video URL, or metadata. |
-| FDOT districts | [District 2 traffic camera map](https://northeastfloridatraffic.com/traffic-camera-map/) | District 2 says its map is an embedded FL511 resource. No separate grant for a district camera catalog or media was found. | Covered through the FL511 embed; no district catalog. |
-| Florida's Turnpike Enterprise | [Traffic management](https://floridasturnpike.com/traveler-resources/traffic-management/) | The page describes cameras monitored by its TMC and points travelers to FL511. No independent public reuse terms were found. Its monitored-device count is not a count of public site views. | FL511 map and official links only. |
-| Central Florida Expressway Authority | [Traveler information](https://www.cfxway.com/for-travelers/traveler-help-center/using-our-expressways/) | The page links an interactive map showing camera locations. No independent catalog or media reuse grant was found. | No CFX records copied. |
-| Greater Miami Expressway Agency | [Partner information](https://www.gmx-way.com/help/partners/) | The agency points travelers to FL511. No independent camera reuse grant was found. | No GMX records copied. |
-| Palm Beach County | [Traffic camera page](https://discover.pbc.gov/iss/Pages/LIVE-Traffic-Cams.aspx) | Its prior camera page redirected to a missing page in this audit; no usable current feed or reuse terms were verified. | None. |
-| PortMiami / Miami-Dade County | [Terminal cameras](https://www.miamidade.gov/portmiami/webcams.page) | Public terminal webcams are outside the road camera scope; no independent reuse terms were found. | None. |
+The project owner confirmed permission for public display of individual
+Florida traffic-camera snapshots and video from FDOT, the named Florida
+partners, and FL511-listed local source groups. No signed agreement text or
+private delivery credentials were supplied in this workspace, so there are no
+additional agreement-specific limits or expiry terms to quote here. FL511's
+[published conditions](https://www.fl511.com/privacy) call for FDOT's express
+written consent for independent reuse; the owner's permission confirmation
+is treated as established for this project.
 
-FDOT's [FION description](https://www.fdot.gov/traffic/its/fion) reports more than 4,000 live feeds distributed to FL511. This is a network operations figure, **not** a count of cameras accessible through this site or a grant to republish them.
+| FL511 source groups | Provider/attribution | Listed views |
+| --- | --- | ---: |
+| DIVAS-District 1–7, DIVAS-District I595 | FDOT district and I-595 feeds | 3,219 |
+| DIVAS-Turnpike SG C | Florida's Turnpike Enterprise | 864 |
+| DIVAS-CFX | Central Florida Expressway Authority | 340 |
+| DIVAS-MDX | Greater Miami Expressway Agency; MDX source label retained | 117 |
+| DIVAS-COT | City of Tallahassee feed; local identity inferred from Leon coverage | 228 |
+| DIVAS-BCTD | Broward County feed; raw source label retained | 223 |
+| **Total** | **Actual FL511 list records** | **4,991** |
 
-## Current site data and maintenance
+The catalog comes from the official [FL511 camera viewer](https://www.fl511.com/cctv)
+list and retains every source group, district, source image ID, source-site ID,
+original name and road wording. The public
+[`/List/GetData/Cameras`](https://www.fl511.com/cctv) response supplies the
+records; the builder validates and pages its responses. The source supplied
+4,991 distinct views and 4,991 source-site IDs on the dated refresh, with no
+independently verified physical-device count. FDOT's
+[FION description](https://fdot.gov/traffic/its/fion) reports a larger
+network-wide feed count; it is not this site's catalog count.
 
-- Independently cataloged Florida views: **0**. Source locations and verified physical devices are **not counted** because no individual records are stored here.
-- Official map coverage: statewide plus the six FL511 regions in its embed tool. The Keys shortcut uses the official embed's chosen-location coordinates.
-- Media capabilities: the official FL511 embed can show camera snapshots and video, subject to its availability and browser behavior. This site has no separate Florida player or refresh timer.
-- Credentials, API quotas, and Florida data service: none used by this site. The FL511 embed has no published uptime or unlimited-use promise here.
-- Next step for an independent catalog, watchboard, Trip Desk route matching, thumbnails, or player: obtain FDOT's express written consent and the applicable data/video agreement, or verify another source's explicit public reuse license and technical access terms.
+FL511 serves direct `/map/Cctv/<image-id>` snapshots. A small visual audit
+confirmed four roadway images and one CFX offline placeholder. The remaining
+4,986 images were not visually verified. FL511 HLS video uses short-lived DIVAS
+authorization for most rows. Tested non-auth URLs returned 401 from the
+published site's origin. No Florida HLS stream is yet labeled playable on this
+site; the [official FL511 viewer](https://www.fl511.com/cctv) is the video
+fallback. The [official embed tool](https://www.fl511.com/Map/EmbeddedMapSetup)
+supports the secondary map.
 
-Trip Camera Desk offers official Florida region links for routes and Explore mode. It does not include FL511 cameras in its counts or geographic matching. Camera coverage gaps on Florida stretches reflect that limitation.
+The catalog stores no private keys, session tokens, images, video segments,
+recordings, or capture history. Source creation/update timestamps are not
+treated as image capture times. Cached image responses do not prove that a feed
+is live or current. Official links for closures, detours, drawbridges, road
+weather, hurricane/evacuation guidance and toll advisories remain the
+appropriate source for travel decisions.

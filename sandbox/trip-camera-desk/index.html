@@ -8,10 +8,10 @@
   <title>Trip Camera Desk — Across states. One journey.</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23172824'/%3E%3Cpath d='M18 47 27 17h10l9 30M22 35h20M32 21v7m0 9v7' fill='none' stroke='%23d7edb5' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="vendor/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=20261104fl2">
+  <link rel="stylesheet" href="styles.css?v=20261104fl3">
   <script src="vendor/leaflet.js" defer></script>
   <script src="vendor/hls.min.js" defer></script>
-  <script src="app.js?v=20261104fl2" type="module"></script>
+  <script src="app.js?v=20261104fl3" type="module"></script>
 </head>
 <body class="mode-plan">
   <a class="skip-link" href="#main-content">Skip to trip planner</a>
@@ -85,7 +85,7 @@
       </div>
 
       <section id="florida-context" class="florida-context" aria-labelledby="florida-context-title" hidden>
-        <div class="florida-context-copy"><p class="eyebrow">OFFICIAL FLORIDA VIEWS</p><h2 id="florida-context-title">Check the Florida stretch.</h2><p id="florida-context-note">FL511 camera views open in its official map. Florida cameras are not counted in this independent catalog.</p></div>
+        <div class="florida-context-copy"><p class="eyebrow">FLORIDA CAMERA RESOURCES</p><h2 id="florida-context-title">Florida views along your route.</h2><p id="florida-context-note">Florida camera views are included in Trip Desk. FL511 remains available for official conditions.</p></div>
         <div class="florida-context-actions"><a class="button primary-button" href="https://whardy.github.io/sandbox/florida-camera-desk/">Florida Camera Desk <span aria-hidden="true">↗</span></a><a class="button secondary-button" href="https://www.fl511.com/cctv" target="_blank" rel="noopener noreferrer">Official FL511 viewer <span aria-hidden="true">↗</span></a></div>
         <div id="florida-route-regions" class="florida-route-regions" aria-label="Florida regions along this route"></div>
       </section>
@@ -103,17 +103,19 @@
       </section>
 
       <section id="live-tray" class="live-tray" aria-labelledby="live-title" hidden>
-        <div class="live-heading"><div><p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>LIVE VIDEO</p><h2 id="live-title">Watch together</h2><p class="small-note">Independent feeds show their own capture times. Streams are not synchronized.</p></div><div class="live-controls"><label class="inline-field" for="live-limit">Video slots <select id="live-limit"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label><span id="live-count" class="small-note">0 active</span><button id="stop-all-video" class="small-button" type="button">Stop all</button></div></div>
+        <div class="live-heading"><div><p class="eyebrow"><span class="live-dot" aria-hidden="true"></span>LIVE VIDEO</p><h2 id="live-title">Watch together</h2><p class="small-note">Capture times appear only when verified. Streams are not synchronized.</p></div><div class="live-controls"><label class="inline-field" for="live-limit">Video slots <select id="live-limit"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label><span id="live-count" class="small-note">0 active</span><button id="stop-all-video" class="small-button" type="button">Stop all</button></div></div>
         <div id="live-slots" class="live-slots"></div>
       </section>
 
       <section id="camera-results" class="camera-results" aria-labelledby="results-title">
-        <div class="results-heading-row"><div class="results-heading" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="results-eyebrow">CAMERAS FOR YOUR JOURNEY</p><h2 id="results-title"><span id="result-count">—</span> <span id="result-detail">camera views</span></h2></div><div class="refresh-tools"><label class="check-label" title="Visible WV feeds start muted within the selected video-slot limit"><input id="wv-autoplay" type="checkbox" checked>Autoplay WV</label><label class="check-label" title="Visible California video starts muted within the selected video-slot limit"><input id="ca-autoplay" type="checkbox" checked>Autoplay CA</label><label class="check-label" title="Visible Nevada video starts muted within the selected video-slot limit"><input id="nv-autoplay" type="checkbox" checked>Autoplay NV</label><label class="check-label"><input id="snapshot-refresh" type="checkbox" checked>Refresh visible snapshots</label><button id="refresh-visible" class="text-button" type="button"><span aria-hidden="true">↻</span>Refresh now</button></div></div>
+        <div class="results-heading-row"><div class="results-heading" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="results-eyebrow">CAMERAS FOR YOUR JOURNEY</p><h2 id="results-title"><span id="result-count">—</span> <span id="result-detail">camera views</span></h2></div><div class="refresh-tools"><label class="check-label" title="Visible WV feeds start muted within the selected video-slot limit"><input id="wv-autoplay" type="checkbox" checked>Autoplay WV</label><label class="check-label" title="Visible California video starts muted within the selected video-slot limit"><input id="ca-autoplay" type="checkbox" checked>Autoplay CA</label><label class="check-label" title="Visible Nevada video starts muted within the selected video-slot limit"><input id="nv-autoplay" type="checkbox" checked>Autoplay NV</label><label id="fl-autoplay-control" class="check-label" title="Verified Florida video starts muted within the selected video-slot limit" hidden><input id="fl-autoplay" type="checkbox" checked>Autoplay FL</label><span id="fl-video-note" class="small-note">Florida video opens in the official FL511 viewer</span><label class="check-label"><input id="snapshot-refresh" type="checkbox" checked>Refresh visible snapshots</label><button id="refresh-visible" class="text-button" type="button"><span aria-hidden="true">↻</span>Refresh now</button></div></div>
         <div class="filter-panel" aria-label="Filter cameras">
           <label class="field query-field" for="query"><span>Find a camera</span><input id="query" type="search" placeholder="Road, place or camera ID" autocomplete="off"></label>
           <label class="field" for="state"><span>State</span><select id="state"><option value="">All states + DC</option></select></label>
           <label class="field" for="metro"><span>City / area</span><select id="metro"><option value="">All areas</option></select></label>
           <label class="field" for="jurisdiction"><span>County / jurisdiction</span><select id="jurisdiction"><option value="">All jurisdictions</option></select></label>
+          <label class="field" for="provider"><span>Provider</span><select id="provider"><option value="">All providers</option></select></label>
+          <label class="field" for="district"><span>District</span><select id="district"><option value="">All districts</option></select></label>
           <label class="field" for="road"><span>Road</span><select id="road"><option value="">All roads</option></select></label>
           <label class="field" for="media"><span>Media</span><select id="media"><option value="">All media</option><option value="video">Live video</option><option value="snapshot">Refreshing snapshot</option><option value="official">Official viewer</option></select></label>
           <label class="field" for="status"><span>Last check</span><select id="status"><option value="">All availability</option><option value="available">Checked available</option><option value="unavailable">Unavailable / disabled</option><option value="stale">Older image at last check</option><option value="official">Official viewer only</option><option value="unchecked">Not checked</option></select></label>

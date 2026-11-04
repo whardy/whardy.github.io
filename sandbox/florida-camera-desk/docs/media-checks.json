@@ -1,0 +1,27 @@
+{
+  "1": {
+    "imageStatus": "available",
+    "imageCheckedAt": "2026-11-04T04:27Z",
+    "reason": "Roadway image visually verified; source bytes changed in a later request. Audit time rounded to minute."
+  },
+  "3860": {
+    "imageStatus": "unavailable",
+    "imageCheckedAt": "2026-11-04T04:22Z",
+    "reason": "CFX supplied a visually verified 540×330 offline card despite HTTP 200; known PNG SHA-256 e608c39b77e5480ce13682b571638e4246ff519dd6c79402c393db5e273aab19. Audit time rounded to minute."
+  },
+  "3972": {
+    "imageStatus": "available",
+    "imageCheckedAt": "2026-11-04T04:27Z",
+    "reason": "CFX roadway image visually verified. Audit time rounded to minute."
+  },
+  "4160": {
+    "imageStatus": "available",
+    "imageCheckedAt": "2026-11-04T04:27Z",
+    "reason": "GMX/MDX roadway image visually verified. Burned-in clock not treated as a general capture timestamp. Audit time rounded to minute."
+  },
+  "4263": {
+    "imageStatus": "available",
+    "imageCheckedAt": "2026-11-04T04:41Z",
+    "reason": "FL511 I-595 district feed roadway image visually verified at Turnpike/Griffin Rd. Burned-in clock not used as capture metadata. Audit completion time rounded to minute."
+  }
+}

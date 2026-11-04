@@ -1,0 +1,306 @@
+{
+  "checkedAt": "2026-11-04T04:49:38.389Z",
+  "note": "Real driving routes and ordinary estimates, without live traffic. Counts use listed camera locations within one mile; they do not establish the road a camera overlooks or prove continuous visual coverage.",
+  "summaries": [
+    {
+      "name": "Tampa → Orlando",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 136.4,
+      "durationMinutes": 83,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "tampa-bay",
+        "central"
+      ],
+      "views": 274,
+      "floridaViews": 274,
+      "floridaRoadMatches": 124,
+      "floridaNearbyOrUncertain": 150,
+      "oppositeDirection": 0,
+      "representativeViews": 14,
+      "coverageGaps": 0,
+      "gapKilometers": 0,
+      "firstFloridaIds": [
+        "FL:fdot-d7:2417",
+        "FL:fdot-d7:5661",
+        "FL:fdot-d7:5778",
+        "FL:fdot-d7:5721",
+        "FL:fdot-d7:5642",
+        "FL:fdot-d7:2718",
+        "FL:fdot-d7:2672",
+        "FL:fdot-d7:2704"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Miami → Key West",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 256,
+      "durationMinutes": 175,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "southeast",
+        "keys"
+      ],
+      "views": 170,
+      "floridaViews": 170,
+      "floridaRoadMatches": 112,
+      "floridaNearbyOrUncertain": 58,
+      "oppositeDirection": 0,
+      "representativeViews": 20,
+      "coverageGaps": 8,
+      "gapKilometers": 44.5,
+      "firstFloridaIds": [
+        "FL:fdot-d6:5359",
+        "FL:fdot-d6:435",
+        "FL:fdot-d6:5488",
+        "FL:fdot-d6:5487",
+        "FL:fdot-d6:5477",
+        "FL:fdot-d6:5504",
+        "FL:fdot-d6:424",
+        "FL:fdot-d6:5505"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Jacksonville → Miami",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 556.7,
+      "durationMinutes": 318,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "northeast",
+        "central",
+        "southeast"
+      ],
+      "views": 638,
+      "floridaViews": 638,
+      "floridaRoadMatches": 504,
+      "floridaNearbyOrUncertain": 134,
+      "oppositeDirection": 0,
+      "representativeViews": 43,
+      "coverageGaps": 0,
+      "gapKilometers": 0,
+      "firstFloridaIds": [
+        "FL:fdot-d2:1785",
+        "FL:fdot-d2:5908",
+        "FL:fdot-d2:1567",
+        "FL:fdot-d2:5019",
+        "FL:fdot-d2:5016",
+        "FL:fdot-d2:1793",
+        "FL:fdot-d2:1466",
+        "FL:fdot-d2:1554"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Pensacola → Jacksonville",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 573.2,
+      "durationMinutes": 316,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "panhandle",
+        "northeast"
+      ],
+      "views": 485,
+      "floridaViews": 485,
+      "floridaRoadMatches": 422,
+      "floridaNearbyOrUncertain": 63,
+      "oppositeDirection": 0,
+      "representativeViews": 39,
+      "coverageGaps": 1,
+      "gapKilometers": 8.4,
+      "firstFloridaIds": [
+        "FL:fdot-d3:5418",
+        "FL:fdot-d3:5417",
+        "FL:fdot-d3:3554",
+        "FL:fdot-d3:3561",
+        "FL:fdot-d3:3563",
+        "FL:fdot-d3:3553",
+        "FL:fdot-d3:3802",
+        "FL:fdot-d3:3803"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Miami → Washington, DC",
+      "provider": "OSRM / FOSSGIS",
+      "distanceKm": 1696.1,
+      "durationMinutes": 1166,
+      "ordinaryEstimate": true,
+      "warnings": [
+        "OSRM was used for this long-distance trip. Its route estimates do not include live traffic."
+      ],
+      "loadedStates": [
+        "DC",
+        "FL",
+        "MD",
+        "OH",
+        "VA",
+        "WV"
+      ],
+      "floridaRegions": [
+        "southeast",
+        "central",
+        "northeast"
+      ],
+      "views": 948,
+      "floridaViews": 671,
+      "floridaRoadMatches": 534,
+      "floridaNearbyOrUncertain": 137,
+      "oppositeDirection": 0,
+      "representativeViews": 66,
+      "coverageGaps": 9,
+      "gapKilometers": 936.2,
+      "firstFloridaIds": [
+        "FL:fdot-d6:5488",
+        "FL:fdot-d6:435",
+        "FL:fdot-d6:5359",
+        "FL:fdot-d6:425",
+        "FL:fdot-d6:5489",
+        "FL:fdot-d6:5498",
+        "FL:fdot-d6:5425",
+        "FL:fdot-d6:5424"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Downtown Miami → Miami Beach",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 11.1,
+      "durationMinutes": 11,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "southeast"
+      ],
+      "views": 15,
+      "floridaViews": 15,
+      "floridaRoadMatches": 2,
+      "floridaNearbyOrUncertain": 13,
+      "oppositeDirection": 0,
+      "representativeViews": 1,
+      "coverageGaps": 0,
+      "gapKilometers": 0,
+      "firstFloridaIds": [
+        "FL:fdot-d6:5488",
+        "FL:fdot-d6:435",
+        "FL:fdot-d6:5359",
+        "FL:fdot-d6:425",
+        "FL:fdot-d6:5489",
+        "FL:fdot-d6:5498",
+        "FL:fdot-d6:450",
+        "FL:fdot-d6:5424"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Apalachicola → Perry",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 172.1,
+      "durationMinutes": 127,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "panhandle"
+      ],
+      "views": 5,
+      "floridaViews": 5,
+      "floridaRoadMatches": 4,
+      "floridaNearbyOrUncertain": 1,
+      "oppositeDirection": 0,
+      "representativeViews": 2,
+      "coverageGaps": 2,
+      "gapKilometers": 163,
+      "firstFloridaIds": [
+        "FL:fdot-d3:5611",
+        "FL:fdot-d3:5610",
+        "FL:fdot-d2:1733",
+        "FL:fdot-d2:1789",
+        "FL:fdot-d2:1755"
+      ],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Valdosta → Macon, Georgia",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 244.7,
+      "durationMinutes": 138,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [],
+      "views": 0,
+      "floridaViews": 0,
+      "floridaRoadMatches": 0,
+      "floridaNearbyOrUncertain": 0,
+      "oppositeDirection": 0,
+      "representativeViews": 0,
+      "coverageGaps": 1,
+      "gapKilometers": 244.7,
+      "firstFloridaIds": [],
+      "directionalPairMatched": []
+    },
+    {
+      "name": "Orlando → Sanford via I-4",
+      "provider": "Valhalla / FOSSGIS",
+      "distanceKm": 42.7,
+      "durationMinutes": 34,
+      "ordinaryEstimate": true,
+      "warnings": [],
+      "loadedStates": [
+        "FL"
+      ],
+      "floridaRegions": [
+        "central"
+      ],
+      "views": 135,
+      "floridaViews": 135,
+      "floridaRoadMatches": 71,
+      "floridaNearbyOrUncertain": 64,
+      "oppositeDirection": 0,
+      "representativeViews": 3,
+      "coverageGaps": 1,
+      "gapKilometers": 5.4,
+      "firstFloridaIds": [
+        "FL:cfx:3962",
+        "FL:cfx:4118",
+        "FL:cfx:4001",
+        "FL:fdot-d5:995",
+        "FL:fdot-d5:966",
+        "FL:cfx:4114",
+        "FL:cfx:5255",
+        "FL:fdot-d5:838"
+      ],
+      "directionalPairMatched": [
+        "FL:fdot-d5:865",
+        "FL:fdot-d5:5918"
+      ]
+    }
+  ]
+}

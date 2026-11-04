@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Normalize the published camera catalogs without requesting camera media.
 
-Run from the workspace: python3 trip-camera-desk/scripts/build-catalog.py
+Run from a whardy.github.io clone: python3 sandbox/trip-camera-desk/_tools/build-catalog.py --repository . --output sandbox/trip-camera-desk/data
 For another repository use --repository /path/to/whardy.github.io.
 The output consists of an index and independent JSON state shards.
 """
@@ -32,6 +32,7 @@ STATES = [
     ('WA', 'Washington', 'washington-camera-desk', 'wsdot'),
     ('OR', 'Oregon', 'oregon-camera-desk', 'tripcheck'),
     ('NV', 'Nevada', 'nevada-camera-desk', 'nv511'),
+    ('FL', 'Florida', 'florida-camera-desk', 'fl511'),
 ]
 PUBLIC_ROOT = 'https://whardy.github.io/sandbox/'
 RELAY_ROOT = 'https://texas-camera-relay.wintrytiger33.chatgpt.site'
@@ -409,10 +410,58 @@ def refresh_stats(shard, stats):
     })
 
 
+def build_florida(repository: Path, source_path: Path | None = None):
+    """Reuse the validated FL511 shard without reinterpreting source direction or media."""
+    if source_path:
+        path = source_path if source_path.is_file() else source_path / 'data' / 'FL.json'
+    else:
+        primary = repository / 'sandbox/florida-camera-desk/data/FL.json'
+        fallback = repository / 'sandbox/trip-camera-desk/data/FL.json'
+        path = primary if primary.exists() else fallback
+    if not path.exists():
+        raise FileNotFoundError('Florida last-known-good shard is missing; the unified index was not rebuilt')
+    shard = read_json(path)
+    cameras = shard.get('cameras')
+    if shard.get('state') != 'FL' or not isinstance(cameras, list) or not cameras:
+        raise ValueError('Florida shard is invalid; the unified index was not rebuilt')
+    ids = set()
+    for camera in cameras:
+        ident = camera.get('id')
+        if not isinstance(ident, str) or not ident.startswith('FL:') or ident in ids:
+            raise ValueError('Florida shard has a missing, duplicate or non-namespaced ID')
+        ids.add(ident)
+        if not str(camera.get('siteId', '')).startswith('FL:') or not camera.get('providerKey') or not camera.get('sourceId'):
+            raise ValueError(f'Florida source identity is incomplete: {ident}')
+        lat, lon = coordinates(camera)
+        if camera.get('hasCoordinates') != (lat is not None and lon is not None):
+            raise ValueError(f'Florida coordinate state is inconsistent: {ident}')
+        for field in ('imageUrl', 'videoUrl', 'iosVideoUrl', 'officialUrl'):
+            url = camera.get(field)
+            if url and https_url(url) != url:
+                raise ValueError(f'Florida {field} is not a safe HTTPS URL: {ident}')
+        expected = 'video' if camera.get('videoUrl') else 'snapshot' if camera.get('imageUrl') else 'official'
+        if camera.get('mediaType') != expected:
+            raise ValueError(f'Florida media capability is inconsistent: {ident}')
+    stats = {
+        'state': 'FL', 'stateName': 'Florida', 'file': 'data/FL.json',
+        'siteUrl': PUBLIC_ROOT + 'florida-camera-desk/',
+        'sourceUpdatedAt': shard.get('sourceUpdatedAt'),
+        'sourceRetrievedAt': shard.get('sourceRetrievedAt'),
+        'auditCheckedAt': shard.get('auditCheckedAt'),
+        'source': 'FL511 public camera list (FDOT and partner groups)',
+        'sourceUrl': 'https://www.fl511.com/cctv',
+        'catalogUrl': PUBLIC_ROOT + 'florida-camera-desk/data/FL.json',
+        'sourceAuditUrl': PUBLIC_ROOT + 'florida-camera-desk/docs/source-audit.json',
+        'physicalDevicesVerified': None,
+    }
+    refresh_stats(shard, stats)
+    return shard, stats
+
+
 def main():
     project = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--repository', type=Path, default=project.parent / 'whardy-github-pages')
+    parser.add_argument('--repository', type=Path, default=project.parents[1])
     parser.add_argument('--output', type=Path, default=project / 'dist/data')
     parser.add_argument('--state-source', action='append', default=[], metavar='STATE=PATH', help='Explicit maintained catalog directory override; repeat for multiple states.')
     parser.add_argument('--california-source', type=Path, help='Override California catalog directory; default uses maintained source when available, published copy otherwise.')
@@ -427,6 +476,9 @@ def main():
         overrides[code] = Path(directory)
     for state, name, slug, provider in STATES:
         source_path = overrides.get(state) or (args.california_source if state == 'CA' else None)
+        if state == 'FL':
+            built.append(build_florida(args.repository, source_path))
+            continue
         if state == 'CA' and source_path is None:
             maintained = project.parent / 'california-camera-desk/dist'
             if (maintained / 'camera-catalog.json').exists():
@@ -437,10 +489,11 @@ def main():
         shard, stats = build_state(args.repository, state, name, slug, provider, source_path)
         built.append((shard, stats))
     reconciliation = reconcile_border_views(built)
+    payloads = []
     for shard, stats in built:
         refresh_stats(shard, stats)
         payload = (json.dumps(shard, separators=(',', ':'), ensure_ascii=False) + '\n').encode()
-        (args.output / f"{shard['state']}.json").write_bytes(payload)
+        payloads.append((args.output / f"{shard['state']}.json", payload))
         stats['sha256'] = hashlib.sha256(payload).hexdigest()
         stats['bytes'] = len(payload)
         states.append(stats)
@@ -466,11 +519,14 @@ def main():
             'Texas TxDOT relay image URLs preserve the existing owned relay. Official-only Houston views remain external links.',
             'California Caltrans recordTimestamp is catalog metadata, not image capture time. Direction describes travel side separately from facingDirection. County postmiles are not a statewide route odometer.',
             'Nevada 511 Direction describes camera facing, not verified traffic direction. Source update times are catalog metadata, not image capture times.',
+            'Florida FL511 listed direction is not interpreted as verified travel or camera-facing direction. Direct FL snapshots use provider caching; listed HLS paths require origin-bound authorization and remain official-viewer-only here.',
             'Oregon and Washington snapshots respect their source refresh cadence (normally five minutes). Oregon camera viewing orientation is not treated as verified travel direction.',
             'Exact shared Oregon/Washington image URLs are counted once in the hub, with original catalog IDs retained as aliases. Different images at nearby positions remain separate views.',
             'No camera media was requested or recorded while building these shards.',
         ],
     }
+    for path, payload in payloads:
+        path.write_bytes(payload)
     (args.output / 'index.json').write_text(json.dumps(index, indent=2, ensure_ascii=False) + '\n')
     print(json.dumps({'output': str(args.output), 'totals': index['totals'], 'states': [{k: s[k] for k in ('state', 'views', 'locations', 'withoutCoordinates')} for s in states]}, indent=2))
 

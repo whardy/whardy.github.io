@@ -1,6 +1,7 @@
-// FL511's approved map is linked separately from this site's camera catalog.
-// These deliberately coarse regions only choose useful official map entry points;
-// they do not assert a camera location or calculate route coverage.
+import {FLORIDA_RINGS} from './florida-boundary.js';
+
+// Regions provide browsing shortcuts. Florida catalog coordinates, not these
+// region labels, determine camera matches and route coverage.
 export const FLORIDA_REGIONS = Object.freeze({
   panhandle: 'Panhandle',
   northeast: 'Northeast Florida',
@@ -11,15 +12,25 @@ export const FLORIDA_REGIONS = Object.freeze({
   keys: 'Florida Keys',
 });
 
+export function pointInFlorida(lon,lat) {
+  if(!Number.isFinite(lon)||!Number.isFinite(lat)||lat<24.3||lat>31.1||lon<-87.7||lon>-79.9)return false;
+  return FLORIDA_RINGS.some(ring=>{
+    let inside=false;
+    for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const [xi,yi]=ring[i],[xj,yj]=ring[j];
+      if((yi>lat)!==(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)inside=!inside;
+    }
+    return inside;
+  });
+}
+
 export function floridaRouteRegions(route) {
   const regions = new Set();
   for (const coordinate of route?.coordinates || []) {
     if (!Array.isArray(coordinate) || coordinate.length < 2) continue;
     const [lon, lat] = coordinate;
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
-    if (lat < 24.3 || lat > 31.0 || lon < -87.7 || lon > -80) continue;
-    // East of the Panhandle, nearby south Georgia sits inside the broad bounding box.
-    if (lon > -85 && lat > 30.73) continue;
+    if (!pointInFlorida(lon,lat)) continue;
 
     if (lat < 25.45 && lon > -82.3) regions.add('keys');
     else if (lon < -83.2 && lat >= 29.2) regions.add('panhandle');

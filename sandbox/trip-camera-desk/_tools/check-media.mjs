@@ -92,6 +92,17 @@ try {
   modalManager.setAutoplayScope(dialog);modalManager.snapshot(dialog,wv('DIALOG'));visible(dialog,true);await flush();assert.equal(videoIn(wall),undefined);assert.ok(videoIn(dialog));assert.equal(modalManager.count,1);
   modalManager.dispose(dialog);modalManager.setAutoplayScope(null);await flush();assert.ok(videoIn(wall));assert.equal(modalManager.count,1);
   modalManager.dispose(root);await flush();assert.equal(modalManager.count,0);
+  // Florida starts only verified video, keeps provider caps, and does not
+  // duplicate a feed when the visitor opens the same view manually.
+  const fl=id=>({id:`FL:fdot:D07:${id}`,state:'FL',providerKey:'fdot',name:id,videoUrl:`https://example.com/${id}.m3u8`,imageUrl:null,videoStatus:'available',disabled:false});
+  const florida=manager(),flRoot=new Element(),flA=new Element(),flB=new Element(),flC=new Element(),flDialog=new Element();flRoot.append(flA,flB,flC,flDialog);florida.setLimit(4);
+  florida.snapshot(flA,fl('A'));florida.snapshot(flB,fl('B'));florida.snapshot(flC,fl('C'));
+  visible(flA,true);visible(flB,true);visible(flC,true);await flush();assert.equal(florida.count,2,'Florida provider default caps concurrent playback at two');
+  const selected=florida.play(flDialog,fl('A'));await flush();assert.ok(selected);assert.equal(florida.count,2);assert.equal(videoIn(flA),undefined,'Selected view replaces duplicate automatic playback');
+  selected.stop();florida.setFLAutoplay(false);await flush();assert.equal(florida.count,0);
+  florida.dispose(flRoot);
+  const unverified=manager(),uncheckedRoot=new Element(),uncheckedView=new Element();uncheckedRoot.append(uncheckedView);unverified.snapshot(uncheckedView,{...fl('UNCHECKED'),videoStatus:'unchecked'});visible(uncheckedView,true);await flush();assert.equal(unverified.count,0,'Unverified Florida video must not autoplay');
+  assert.ok(unverified.play(uncheckedView,{...fl('UNCHECKED'),videoStatus:'unchecked'}),'Visitor can deliberately try an unverified source');unverified.dispose(uncheckedRoot);
   // Source cadence applies to both successful and failed Oregon retrievals.
   let now=1_000_000;Date.now=()=>now;
   const snapshotManager=manager(),snapshotRoot=new Element(),oregonView=new Element();snapshotRoot.append(oregonView);
@@ -104,6 +115,10 @@ try {
   now+=240_000;intervals.forEach(callback=>callback());assert.equal(images.length,startImages+3);
   visible(oregonView,false);assert.equal(snapshotManager.debug().running,0,'Offscreen images cancel active requests');
   snapshotManager.dispose(snapshotRoot);
+  const floridaSnapshot=manager(),flImageRoot=new Element(),flImageView=new Element();flImageRoot.append(flImageView);
+  floridaSnapshot.snapshot(flImageView,{id:'FL:fdot:D03:still',state:'FL',name:'Florida still',imageUrl:'https://example.com/florida.jpg',videoUrl:null,sourceCaptureTime:'2026-11-03T12:00:00Z',timezone:'America/Chicago',snapshotUpdateSeconds:300});visible(flImageView,true);images.at(-1).onload();
+  assert.match(flImageView.children.find(node=>node.className==='media-time').textContent,/CST/,'Florida capture time uses the camera timezone');
+  floridaSnapshot.dispose(flImageRoot);
   const concurrentManager=manager(),concurrentRoot=new Element();const activeViews=[];const beforeConcurrent=images.length;
   for(let i=0;i<6;i++){const view=new Element();concurrentRoot.append(view);activeViews.push(view);concurrentManager.snapshot(view,{...oregon,id:oregon.id+i});visible(view,true);}
   assert.equal(images.length,beforeConcurrent+4);assert.equal(concurrentManager.debug().running,4);assert.equal(concurrentManager.debug().queued,2);
@@ -113,7 +128,7 @@ try {
   console.log('Passed Oregon snapshot cadence, failure backoff, capture-time labeling, four-request concurrency, offscreen cancellation, and hidden-tab cleanup.');
   assert.equal(observers.reduce((sum,observer)=>sum+observer.targets.size,0),0,'Disposed views must not retain visibility observations');
   assert.equal(timers.size,0,'Connection timeouts must be cleared after stop/dispose');
-  console.log('Passed WV autoplay: muted inline/no native controls, shared stream cap, manual priority, offscreen/tab resume, blocked/source failure retry guards, autoplay toggle, stop-all hold, modal scope, and disposal cleanup.');
+  console.log('Passed WV and Florida autoplay: muted inline/no native controls, verified Florida gating, provider cap, duplicate suppression, manual priority, offscreen/tab resume, blocked/source failure retry guards, autoplay toggle, stop-all hold, modal scope, and disposal cleanup.');
 } finally {
   Date.now=originalDateNow;
   for(const [key,descriptor]of originals){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}
