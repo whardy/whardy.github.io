@@ -8,7 +8,7 @@
   <title>Florida Camera Desk · Individual camera views</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../trip-camera-desk/vendor/leaflet.css">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=20261104resources1">
   <script defer src="../trip-camera-desk/vendor/leaflet.js"></script>
   <script defer src="../trip-camera-desk/vendor/hls.min.js"></script>
   <script type="module" src="./app.js"></script>
@@ -92,7 +92,7 @@
           <div class="filter-grid"><label>Region<select id="region" name="region"></select></label><label>Metro area<select id="metro" name="metro"></select></label><label>County or jurisdiction<select id="jurisdiction" name="jurisdiction"></select></label><label>Provider or district<select id="provider" name="provider"></select></label><label>Road<select id="road" name="road"></select></label><label>Listed direction<select id="direction" name="direction"></select></label><label>Toll facility<select id="toll" name="toll"></select></label><label>Media<select id="media" name="media"></select></label><label>Availability at audit<select id="availability" name="availability"></select></label></div>
           <div class="filter-actions"><button type="reset" class="text-button">Reset filters</button><button id="share-filters" type="button" class="text-button">Copy filter link</button><span id="filter-summary" aria-live="polite"></span></div>
         </form>
-        <div class="desk-toolbar"><div class="view-tabs" role="group" aria-label="Camera view"><button type="button" id="view-split" aria-pressed="true">Map + wall</button><button type="button" id="view-wall" aria-pressed="false">Wall only</button></div><p id="video-access-note" class="video-access-note" hidden>Direct video requires the approved relay connection. Use each card’s official viewer for video.</p><div class="playback-controls" id="playback-controls" hidden><label><input id="autoplay-fl" type="checkbox" checked> Autoplay permitted video</label><label>Live slots <select id="live-limit"><option value="1">1</option><option value="2">2</option><option value="4">4</option></select></label><button type="button" id="stop-all">Stop all</button></div></div>
+        <div class="desk-toolbar"><div class="view-tabs" role="group" aria-label="Camera view"><button type="button" id="view-split" aria-pressed="true">Map + wall</button><button type="button" id="view-wall" aria-pressed="false">Wall only</button></div><p id="video-access-note" class="video-access-note" hidden>Direct video is currently unavailable. Use each card’s official viewer for video.</p><div class="playback-controls" id="playback-controls" hidden><label><input id="autoplay-fl" type="checkbox" checked> Autoplay permitted video</label><label>Live slots <select id="live-limit"><option value="1">1</option><option value="2">2</option><option value="4">4</option></select></label><button type="button" id="stop-all">Stop all</button></div></div>
         <div class="desk-layout" id="desk-layout"><div class="camera-map-panel"><div id="camera-map" role="region" aria-label="Map of filtered Florida cameras"></div><div class="map-caption"><span id="map-count">Map loading…</span><span>Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></span></div></div><div class="camera-wall-panel"><div class="wall-heading"><h3>Camera wall</h3><p id="wall-range" aria-live="polite"></p></div><div id="camera-wall" class="camera-wall"></div><nav id="pagination" class="pagination" aria-label="Camera pages"></nav></div></div>
       </section>
 
@@ -112,6 +112,22 @@
           <a class="tool-card" href="https://www.fl511.com/" target="_blank" rel="noopener noreferrer"><span class="tool-symbol" aria-hidden="true">◎</span><span class="tool-eyebrow">02 / CONDITIONS</span><strong>Check the full road picture</strong><span>See FL511 closures, detours, traffic, incidents, and road alerts.</span><span class="tool-action">Open FL511 <span aria-hidden="true">↗</span></span></a>
           <a class="tool-card" href="https://www.fl511.com/emergencyinfo" target="_blank" rel="noopener noreferrer"><span class="tool-symbol" aria-hidden="true">◇</span><span class="tool-eyebrow">03 / EMERGENCIES</span><strong>Travel during a storm</strong><span>Find official hurricane and evacuation information before leaving.</span><span class="tool-action">View emergency info <span aria-hidden="true">↗</span></span></a>
           <a class="tool-card" href="https://floridasturnpike.com/traveler-resources/" target="_blank" rel="noopener noreferrer"><span class="tool-symbol" aria-hidden="true">$</span><span class="tool-eyebrow">04 / TOLL ROADS</span><strong>Turnpike information</strong><span>See official traveler and toll resources. This desk does not quote live toll prices.</span><span class="tool-action">Florida’s Turnpike <span aria-hidden="true">↗</span></span></a>
+        </div>
+        <div class="official-resources" aria-labelledby="official-resources-title">
+          <h3 id="official-resources-title">Official road status and operator notices</h3>
+          <p>Select the named layer on FL511 for closures, detours, drawbridges, and road weather. Operator pages publish their own advisories and toll information.</p>
+          <div class="official-resource-links">
+            <a href="https://www.fl511.com/" target="_blank" rel="noopener noreferrer">Closures &amp; detour routes on FL511 ↗</a>
+            <a href="https://www.fl511.com/" target="_blank" rel="noopener noreferrer">Drawbridge crossings on FL511 ↗</a>
+            <a href="https://www.fl511.com/" target="_blank" rel="noopener noreferrer">Road weather alerts on FL511 ↗</a>
+            <a href="https://www.fl511.com/list/alerts" target="_blank" rel="noopener noreferrer">Dated FL511 travel alerts ↗</a>
+            <a href="https://www.floridadisaster.org/planprepare/disaster-preparedness-maps/" target="_blank" rel="noopener noreferrer">Hurricane evacuation maps ↗</a>
+            <a href="https://floridasturnpike.com/traveler-resources/construction-updates/" target="_blank" rel="noopener noreferrer">Turnpike construction updates ↗</a>
+            <a href="https://floridasturnpike.com/TollCalc/index.htm" target="_blank" rel="noopener noreferrer">Turnpike toll calculator ↗</a>
+            <a href="https://www.cfxway.com/construction-alerts/" target="_blank" rel="noopener noreferrer">CFX construction alerts ↗</a>
+            <a href="https://www.cfxway.com/for-travelers/tolls/toll-rates/" target="_blank" rel="noopener noreferrer">CFX toll information ↗</a>
+            <a href="https://gmx-way.com/help/advisories" target="_blank" rel="noopener noreferrer">GMX traffic advisories ↗</a>
+          </div>
         </div>
       </section>
 
