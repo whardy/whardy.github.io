@@ -85,7 +85,7 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
             }
             status(item,placeholder?'Provider maintenance image · check official source':`Fetched ${clock(item.lastLoaded)}${captureLabel(item.camera)}`);
             if(observedPlaceholder===true){recordMediaResult(item.camera,'snapshot','unavailable','placeholder',{verificationMethod:'browser-placeholder-probes',failureCategory:'placeholder'});onHealth(item.camera,'snapshot','unavailable');}
-            else if(!placeholder){recordMediaResult(item.camera,'snapshot','available','',{verifiedNonPlaceholder:observedPlaceholder===false});onHealth(item.camera,'snapshot','available');}
+            else if(!placeholder&&observedPlaceholder===false){recordMediaResult(item.camera,'snapshot','available','',{verifiedNonPlaceholder:true});onHealth(item.camera,'snapshot','available');}
           }
           else if(!cancelled){if(item.camera.state==='CA')caRetryAfter.set(item.camera.imageUrl,Date.now()+Math.max(snapshotInterval(item.camera),300000));status(item,item.lastLoaded?`Refresh failed · last image fetched ${clock(item.lastLoaded)}`:'Snapshot unavailable');item.placeholder.textContent='Try Refresh or open the official viewer';item.placeholder.hidden=!!item.lastLoaded;if(item.camera.state==='CA'){recordMediaResult(item.camera,'snapshot','unavailable',item.lastLoaded?'image-refresh-error':'image-decode-or-network');onHealth(item.camera,'snapshot','unavailable');}}
         }

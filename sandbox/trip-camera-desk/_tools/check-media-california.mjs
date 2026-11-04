@@ -40,7 +40,7 @@ class VisibilityObserver {
   disconnect(){this.targets.clear();}
 }
 const document={hidden:false,createElement:tag=>tag==='video'?new Video():tag==='canvas'?new Canvas():new Element(tag),addEventListener(type,callback){if(!documentEvents.has(type))documentEvents.set(type,new Set());documentEvents.get(type).add(callback);}};
-replace('document',document);replace('window',{Hls:{isSupported:()=>false}});replace('navigator',{userAgent:'iPhone test browser'});replace('matchMedia',()=>({matches:false}));replace('IntersectionObserver',VisibilityObserver);replace('Image',class extends Element{constructor(){super('img');this.naturalWidth=640;images.push(this);}});
+replace('document',document);replace('window',{Hls:{isSupported:()=>false}});replace('navigator',{userAgent:'iPhone test browser'});replace('matchMedia',()=>({matches:false}));replace('IntersectionObserver',VisibilityObserver);replace('Image',class extends Element{constructor(){super('img');this.naturalWidth=640;this.naturalHeight=480;images.push(this);}});
 replace('setTimeout',(callback,delay)=>{const id=++timerId;timers.set(id,{callback,delay});return id;});replace('clearTimeout',id=>timers.delete(id));replace('setInterval',callback=>{intervals.push(callback);return intervals.length;});
 const flush=async()=>{for(let i=0;i<6;i++)await Promise.resolve();};
 function visible(container,value){for(const observer of observers)if(observer.targets.has(container))observer.callback([{target:container,isIntersecting:value}]);}
@@ -183,7 +183,7 @@ try {
   const placeholderEvents=[],placeholderManager=manager({onHealth:(camera,kind,status)=>placeholderEvents.push(`${kind}:${status}`)}),placeholderView=new Element();
   const placeholderCamera={...ca('PLACEHOLDER'),providerKey:'caltrans',videoUrl:null,imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/unavailable.jpg',mediaHealth:{snapshot:{status:'unavailable',verificationMethod:'image-decoded',failureCategory:'placeholder',checkedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+86400_000).toISOString()}}};
   placeholderManager.snapshot(placeholderView,placeholderCamera);visible(placeholderView,true);await flush();
-  assert.equal(images.at(-1).crossOrigin,'anonymous');images.at(-1).onload();
+  assert.equal(images.at(-1).crossOrigin,'anonymous');images.at(-1).naturalWidth=320;images.at(-1).naturalHeight=260;canvasBlocked=true;images.at(-1).onload();canvasBlocked=false;
   assert.equal(californiaHealth(placeholderCamera).workingSnapshot,false,'Unverifiable canvas cannot promote a known placeholder');
   const beforePlaceholderRefresh=images.length;placeholderManager.refresh();await flush();assert.equal(images.length,beforePlaceholderRefresh+1,'Explicit Refresh bypasses automatic maintenance-image backoff');let nextImage=images.at(-1);nextImage.naturalWidth=320;nextImage.naturalHeight=260;nextImage.onload();
   assert.equal(californiaHealth(placeholderCamera).snapshot.verificationMethod,'browser-placeholder-probes');
@@ -191,6 +191,9 @@ try {
   placeholderManager.refresh();await flush();nextImage=images.at(-1);nextImage.naturalWidth=320;nextImage.naturalHeight=260;canvasPixels.set([200,20,30,255],(10*320+10)*4);nextImage.onload();
   assert.equal(californiaHealth(placeholderCamera).workingSnapshot,true,'New non-placeholder pixels recover a dated placeholder failure');
   assert.deepEqual(placeholderEvents,['snapshot:unavailable','snapshot:available']);placeholderManager.dispose(placeholderView);
+  const unreadableManager=manager(),unreadableView=new Element(),unreadableCamera={...ca('CANVAS-UNREADABLE'),videoUrl:null,providerKey:'caltrans',imageUrl:'https://cwwp2.dot.ca.gov/data/d3/cctv/image/canvas-unreadable.jpg',mediaHealth:{}};
+  unreadableManager.snapshot(unreadableView,unreadableCamera);visible(unreadableView,true);await flush();const unreadableImage=images.at(-1);unreadableImage.naturalWidth=320;unreadableImage.naturalHeight=260;canvasBlocked=true;unreadableImage.onload();canvasBlocked=false;
+  assert.equal(californiaHealth(unreadableCamera).workingSnapshot,false,'Unreadable image pixels cannot turn an unchecked camera into a working snapshot');unreadableManager.dispose(unreadableView);
 
   // Failed California images back off across card re-renders and visibility
   // changes; deliberate Refresh can still retry immediately.

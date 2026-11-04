@@ -72,7 +72,8 @@ export function createMediaManager({onChange=()=>{},onMessage=()=>{},onHealth=()
             status(item,placeholder?'Provider maintenance image · check official source':`Snapshot fetched ${clock(item.lastLoaded)}`);
             if(observedPlaceholder===true)report(item.camera,'snapshot','known-placeholder',{status:'unavailable',verificationMethod:'browser-placeholder-probes',failureCategory:'placeholder'});
             else if(placeholder)report(item.camera,'snapshot','known-placeholder');
-            else report(item.camera,'snapshot','decoded',{status:'available',verificationMethod:'browser-image-decoded',verifiedNonPlaceholder:observedPlaceholder===false});
+            else if(observedPlaceholder===false)report(item.camera,'snapshot','decoded',{status:'available',verificationMethod:'browser-image-decoded',verifiedNonPlaceholder:true});
+            else report(item.camera,'snapshot','unverified-image',{reason:'canvas-unreadable'});
           }
           else if(!cancelled){const retained=!!item.lastLoaded;status(item,retained?`Refresh failed · ${item.placeholderIdentified?'maintenance image':'last fetched '+clock(item.lastLoaded)}`:'Snapshot unavailable');item.placeholder.textContent='Try Refresh or open the official viewer';item.placeholder.hidden=retained;report(item.camera,'snapshot',retained?'refresh-failed':'failed',retained?{failureCategory:'browser-image-error'}:{status:'unavailable',failureCategory:'browser-image-error'});}
         }
