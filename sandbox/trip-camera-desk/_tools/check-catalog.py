@@ -24,6 +24,8 @@ for state in index['states']:
     cameras.extend(shard['cameras'])
 
 assert len(cameras) == index['totals']['views']
+california_index = next(state for state in index['states'] if state['state'] == 'CA')
+assert california_index['sourceGeographyOverridesApplied'] == sum(bool(c.get('geographicOverride')) for c in cameras if c['state'] == 'CA')
 assert len({c['id'] for c in cameras}) == len(cameras)
 assert len({c['siteId'] for c in cameras}) == index['totals']['locations']
 assert len(set(c['sourceId'] for c in cameras)) < len(cameras), 'Fixture still exercises cross-state raw ID collisions'
@@ -34,6 +36,8 @@ for camera in cameras:
     assert camera['mediaType'] == ('video' if camera['videoUrl'] else 'snapshot' if camera['imageUrl'] else 'official')
     if camera['videoStatus'] == 'available' and not camera['disabled']:
         assert camera['availability'] == 'available', 'A failed snapshot must not hide available video'
+    if camera['state'] == 'CA' and camera['videoStatus'] == 'available':
+        assert camera['mediaHealth']['video']['verificationMethod'] in {'ffmpeg-decoded-segment', 'browser-playback'}, 'Structural HLS alone is not available video'
     if camera['imageStatus'] == 'available' and not camera['disabled']:
         assert camera['availability'] == 'available', 'A failed video must not hide available snapshot'
     for field in ['imageUrl', 'videoUrl', 'iosVideoUrl', 'officialUrl']:

@@ -10,11 +10,11 @@ On-demand chain controls load the selected reporting district from official CORS
 
 ## Source and coverage
 
-The release inventory assembled 2026-11-04 03:30 UTC contains **4,110 listed views / 3,770 source-location groups**: 3,645 Caltrans views and 465 Santa Clara County official-viewer entries. All have usable coordinates. Media capabilities include 3,645 snapshots and 2,326 HLS video URLs (overlapping capabilities). A dated partial audit checked 1,358 of 5,964 unique media endpoints; the rest remain unchecked. Exact methods, results and source dates are in the source documentation and JSON.
+The 2026-11-04 inventory contains **4,110 listed views / 3,770 source-location groups**: 3,645 Caltrans views and 465 Santa Clara County official-viewer entries. All have usable coordinates. Media capabilities include 3,645 snapshots and 2,326 HLS video views (overlapping capabilities), corresponding to 3,645 unique image and 2,319 unique video endpoints. A bounded reliability audit attempted all 5,964 unique endpoints; the original release had checked only 1,358 with weaker methods. The current audit found 2,716 decoded camera snapshots, 925 known maintenance notices, 1,517 frame-decoded video endpoints, three structure-only video candidates and ten indeterminate video checks. These are dated endpoint results, not a current uptime guarantee. Exact methods, results, expiry times and source dates are in the source documentation and JSON.
 
 Read [source documentation](docs/sources.md) for provider links, reuse/fair-use considerations, grouping and geography, timestamps, audits, local-road coverage limitations, and source-refresh behavior. Read [interface notes](docs/interface.md) for behavior, controls and limitations.
 
-`dist/camera-catalog.json` contains the current counts, dated source manifests and reconciliation. Individual directional views and provider source-location groups are distinct; these groups are not verified physical-device counts. `dist/source-audit.json` records the exact partial-check coverage, methods and per-endpoint dates. A manifest response does not prove video playback; representative browser decoding is verified separately. Unchecked feeds remain unchecked.
+`dist/camera-catalog.json` contains the current counts, dated source manifests, per-view independent snapshot/video health and reconciliation. Individual directional views and provider source-location groups are distinct; these groups are not verified physical-device counts. `dist/source-audit.json` records the exact per-endpoint coverage, methods and dates. A manifest response does not prove video playback; representative advancing browser playback is verified separately. Unchecked and expired feeds are labeled accordingly. See [feed reliability](docs/reliability.md).
 
 All twelve Caltrans districts are included. Santa Clara County expressway views link to the county’s public viewer; no county gateway credential is reused. This is coverage of participating public sources, not every camera installed in California. Provider catalog timestamps are not image capture times. Image capture time remains unknown unless explicitly supplied and verified.
 
@@ -32,17 +32,35 @@ Refresh official sources, retain last-known-good district records on failures, a
 python3 scripts/refresh-catalog.py
 ```
 
-For a bounded stratified availability sample, covering up to twelve image URLs and twelve HLS URLs in each reporting district:
+For a quick legacy manifest/structure diagnostic sample, covering up to twelve image URLs and twelve HLS URLs in each reporting district:
 
 ```sh
 python3 scripts/refresh-catalog.py --audit --audit-sample-per-district 12
 ```
 
-For a full bounded endpoint audit, use `--audit` without the sampling flag. It makes many requests and should not be run repeatedly. Provider fair-use limits apply; the script uses at most four concurrent requests and never continuously streams or records.
+The refresh script's `--audit` only checks image structure or HLS manifest syntax; those checks do not qualify a camera as recently verified media. Use the stricter resumable audit below to update visitor-facing health. Provider fair-use limits apply; neither script continuously streams or records.
+
+For a resumable, stricter media audit with decoded snapshots and HLS child/segment checks, install the pinned decode dependencies and run:
+
+```sh
+python3 -m pip install -r scripts/requirements-audit.txt
+python3 scripts/audit-media.py --output dist --workers 2 --request-gap 0.25
+```
+
+The script checkpoints every 25 endpoints and resumes after interruption. Its `--rotate-oldest --limit 1000` mode supports a conservative maintenance batch. Successful checks remain recent for seven days, failed checks for two days; the UI then treats them as expired. Exact methods and schedule limits are in [feed reliability](docs/reliability.md).
 
 `--from-cache` reuses saved district/GIS metadata, while GIS omission candidates and travel-source discovery still use the network. `--output /absolute/path` controls the generated destination. The directory contains `camera-catalog.json`, `source-audit.json`, `travel-sources.json` and raw source records. Preserve raw records and manifests for reproducibility and failure fallback.
 
-From a published GitHub Pages checkout, the maintenance copy is under `_tools`; use `python3 _tools/refresh-catalog.py --output .` so its output targets the published directory explicitly.
+From a published GitHub Pages checkout, the maintenance copy is under `_tools` and the data files are in that directory's parent (the site root). For example:
+
+```sh
+python3 -m pip install -r _tools/requirements-audit.txt
+python3 _tools/refresh-catalog.py --output .
+python3 _tools/audit-media.py --output . --rotate-oldest --limit 1000 --workers 2 --request-gap 0.25
+python3 _tools/check-data.py
+```
+
+The tools detect `scripts` versus `_tools` for their default data directory; the explicit `--output` above keeps the destination reviewable.
 
 Validation:
 

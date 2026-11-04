@@ -19,7 +19,7 @@ The release covers participating public sources, not every camera installed in C
 
 The original district fetch found 3,612 listed views (D01 149, D02 91, D03 274, D04 771, D05 181, D06 128, D07 592, D08 505, D09 23, D10 154, D11 324, D12 420). The official statewide map list contained 3,299 entries, all of whose snapshot slugs were already present in those district catalogs.
 
-The GIS layer contained 2,936 records. The builder first requests all object IDs, then retrieves every ID in batches of 100 to avoid its record/URI limits. An ID absent from the current district catalog is not automatically a new view: endpoint aliases are identified first. Additional GIS endpoints are included only after a fresh bounded check succeeds, and are labeled `official-gis-supplement`. These GIS metadata may be older than the district inventories. Final reconciliation and additions/rejections are recorded in the catalog.
+The GIS layer contained 2,936 records. The builder first requests all object IDs, then retrieves every ID in batches of 100 to avoid its record/URI limits. An ID absent from the current district catalog is not automatically a new view: endpoint aliases are identified first. New GIS endpoints are included only after a fresh bounded check succeeds, and are labeled `official-gis-supplement`. Once included, a temporarily failed refresh retains the prior stable view for saved-board identity and records the fresh reachability failure in reconciliation. These GIS metadata may be older than the district inventories. Final reconciliation, additions and retained/rejected candidates are recorded in the catalog.
 
 The county metadata contains 126 intersection entries. One has only zero placeholders; after omitting these, 465 directional views remain at 125 source intersection groups. Zero IDs are never treated as feeds. These entries are labeled Official viewer, rather than promising embedded media.
 
@@ -29,6 +29,7 @@ The county metadata contains 126 intersection entries. One has only zero placeho
 - A documented Caltrans `-number` index suffix designates additional images at one location. It is preserved in the view ID and removed only for source-location grouping. Current district records need not contain any such suffix.
 - County directional views group by the county intersection ID. Counts are source groups, not independently verified physical-device counts. Co-located source records are not arbitrarily collapsed.
 - Coordinates are WGS84 decimal degrees. Invalid/absent coordinates remain searchable but are excluded from geographic matching. Original coordinates remain in saved raw records.
+- The source county field is retained separately as `sourceCounty`. A 2026-11-04 audit found 18 Caltrans rows whose published county contradicted their coordinates (often a default `Alameda`). The explicit corrections in `geographic-overrides.json` use [US Census Geocoder county point lookups](https://geocoding.geo.census.gov/geocoder/Geocoding_Services_API.html), keep the original value and per-ID source URL, and apply only while both provider county and coordinates still match the verified record. The official [Caltrans district/county chart](https://cwwp2.dot.ca.gov/documentation/district-map-county-chart.html) was used to identify candidates, not to assign counties blindly: some valid cameras are served by a neighboring district. Stable camera IDs and locations are unchanged.
 - `direction` is the Caltrans published travel-side field. `facingDirection` is a separate explicit “Looking …” label or a county view orientation. A county NB/EB view does not establish which travel lane is being observed.
 - `nearbyPlace` is a provider nearby-place label derived from ZIP geography, not a verified city boundary. `county` and `district` remain provider jurisdictions. Display regions are editorial browsing groups defined in the refresh script, with explicit coordinate splits for large counties (Sacramento foothills/Tahoe, Antelope Valley, eastern Inland Empire). They are not formal metropolitan boundaries.
 - Original road labels are retained as `sourceRoad`; SR-n becomes CA-n for consistent browsing. Local-road primary labels are separated from cross-street names.
@@ -40,7 +41,7 @@ The county metadata contains 126 intersection entries. One has only zero placeho
 
 `inService` is the provider report, with false and unknown distinguished. It is independent of a dated media check: a working snapshot is not suppressed just because a stream failed, and a reachable audited image is retained even if service metadata reports false.
 
-Audits make at most one bounded request per selected unique HTTPS snapshot or HLS manifest in the main audit pass, at a maximum of four concurrent requests, without continuous recording or streaming. GIS omission candidates are checked independently before inclusion. The release uses an explicit partial sample covering every district/media type, retaining earlier completed endpoint checks. Unchecked endpoints stay unchecked. Exact numerator/denominator coverage and individual check dates are in `auditCoverage` and `source-audit.json`. A full audit remains available with `--audit`; `--audit --audit-sample-per-district 12` selects up to twelve snapshots and twelve HLS URLs per reporting district. Images are checked for complete JPEG/PNG structure and dimensions; playlists for HLS syntax and entries. HTTP 200 alone is insufficient. Representative image decoding and advancing browser video playback are tested separately. A manifest check does not establish working video playback in every browser.
+The first release used a partial manifest/structure audit. The stricter `audit-media.py` checks every listed unique HTTPS endpoint with bounded, resumable requests: actual snapshot pixel decoding, HLS master and child playlist parsing, a fetched media segment, and an FFmpeg frame decode where available. This is still not a blanket claim of browser playback; representative streams must be tested advancing in a browser. Exact numerator/denominator coverage, methods, failures and timestamps are in `auditCoverage` and `source-audit.json`. `mediaHealth.snapshot` and `.video` are independent per-view summaries. Results expire for display after seven days if successful or two days if failed. A dated, expired result becomes “Not recently checked.” See [feed reliability](reliability.md) for methods, cost and maintenance commands.
 
 Known unavailable notices may be recognized by visually verified image hashes; unknown placeholders cannot be guaranteed detected. Identical bytes alone do not prove a frozen camera. HTTP Last-Modified is not substituted for source capture time. No separate feeds are claimed to be synchronized.
 
@@ -66,8 +67,9 @@ From the maintained source directory:
 
 ```sh
 python3 scripts/refresh-catalog.py
-python3 scripts/refresh-catalog.py --audit
 ```
+
+The older `refresh-catalog.py --audit` option is only a quick image-structure/HLS-manifest diagnostic. Its successes do not qualify for recently verified media filters. Use the decoded media audit below for visitor-facing health.
 
 For a rebuild using saved source records (GIS supplemental checks and travel-source discovery still use the network):
 
@@ -75,18 +77,31 @@ For a rebuild using saved source records (GIS supplemental checks and travel-sou
 python3 scripts/refresh-catalog.py --from-cache
 ```
 
+For a full stronger media sweep followed by daily oldest-first maintenance batches, use:
+
+```sh
+python3 -m pip install -r scripts/requirements-audit.txt
+python3 scripts/audit-media.py --output dist --workers 2 --request-gap 0.25
+python3 scripts/audit-media.py --output dist --rotate-oldest --limit 1000 --workers 2 --request-gap 0.25
+```
+
+For a published checkout, replace `scripts/` with `_tools/` and `--output dist` with `--output .`; install from `_tools/requirements-audit.txt`. Published `camera-catalog.json`, `source-audit.json` and geographic overrides sit in the site root.
+
 `--output /absolute/path` supports publishing tooling. The builder validates district structure before replacing raw records, and retains last-known-good records on network errors, invalid/empty responses, or an unreviewed loss of more than half a district’s records. The source manifest records per-district success, cached retention and errors. Partial failures remain visible in catalog metadata and do not silently erase a district. An initial build without any usable source for a district fails instead of publishing incomplete coverage.
 
 Media is requested from Caltrans or viewed on the county’s official site. No new relay, Cloudflare Worker, R2 storage, API subscription, recording service or paid routing provider is required. GitHub Pages, public map tiles, routing and search each retain their own usage policies; zero incremental service subscriptions is not a promise of unlimited free capacity or uptime. Source catalogs require refresh; the dated static inventory does not update itself merely because media remains live.
 
 ## Release inventory and audit coverage
 
-Catalog assembled **2026-11-04 03:30:33 UTC** (2026-11-03 19:30:33 Pacific). All twelve district catalogs were fetched successfully between 03:23:45 and 03:23:53 UTC.
+Catalog rebuilt **2026-11-04 06:20:14 UTC** from saved official source files. All twelve district catalogs had been fetched successfully between 03:23:45 and 03:23:53 UTC. A fresh official-catalog comparison around 04:00 UTC found the same 3,612 district IDs and media URLs. The media audit first reached full 5,964-key coverage at **06:14:45 UTC**; its later 30-stream continuation sample finished **06:18:52 UTC**. Individual endpoint check times vary across the sweep.
 
 - **4,110 listed views**, **3,770 source-location groups**, all 4,110 with usable coordinates. The physical-device count is unknown.
 - **3,645 Caltrans views**: 3,612 district entries plus 33 fresh-reachable GIS omission candidates. Of 49 GIS IDs absent from current district catalogs, 14 reused existing media endpoints; 35 distinct candidates were checked, 33 retained and two unreachable candidates excluded. Their older GIS origin remains explicit.
 - **465 Santa Clara County views**, at 125 nonempty intersection groups, link to the official viewer. Source metadata has 126 rows; one row contains only zero placeholders.
 - **3,645 snapshot capabilities**, **2,326 direct HLS capabilities**, and **465 official-viewer-only views**. Snapshot/video capabilities overlap and must not be summed as distinct camera totals.
-- **1,358 of 5,964 unique listed media endpoints checked**: 1,218 image endpoints (1,216 structurally available, two unavailable) and 140 HLS manifests (86 available, 54 unavailable). The remaining 4,606 unique endpoints were not checked in this release. Some capabilities share endpoints; view counts and endpoint counts differ.
+- **5,964 of 5,964 unique listed media endpoints attempted** in the November 4 reliability audit: 3,645 image URLs and 2,319 video URLs. Some directional views share a video endpoint, so the 2,326 video-capable views are a different denominator. Per-endpoint results record independently decoded images, HLS playlist/segment checks, PNG-frame evidence where obtainable, known maintenance placeholders, failures and indeterminate checks. Exact status/method totals and dates are in `source-audit.json`.
+- Of the **3,645 image endpoints**, **2,716 decoded to camera images**, **925 decoded to one of six visually verified Caltrans maintenance notices**, and **four returned HTTP errors** during the dated audit. An HTTP 200 for a notice is not a working snapshot. These are endpoint counts, not additional physical cameras.
+- Of the **2,319 video endpoints**, **1,517 emitted a decoded PNG frame from HLS media**, **three had valid playlist/segment structure without a decoded frame**, **789 returned HTTP 404**, and **ten were indeterminate because listed segments could not be verified**. The 30-endpoint live-playlist sample obtained 27 follow-up playlists: 26 advanced their media sequence and one was inconclusive. These checks do not certify browser playback for every stream.
+- At the view level, **2,747 of 4,110 views** have at least one recently decoded embedded method (2,716 decoded snapshots and 1,521 frame-decoded video views, with overlap). Twenty-nine video views had a frame-decoded HLS segment while their snapshot showed a maintenance notice; 263 snapshot views decoded while their video had no frame-decoded check. These counts are tied to this audit and expire visibly; frame decoding alone does not establish playback in every browser.
 
-The media check is an explicit partial sample, with all district/media combinations represented where published, plus completed earlier snapshot checks and GIS candidate checks. The sampling run completed at 03:30:33 UTC. Individual check times and methods are retained; no manifest-only result claims guaranteed decoded video. Browser playback evidence is documented separately with publication validation. There were no repeated identical snapshot hashes in the inspected endpoint sample, so no unverified automatic placeholder classification was added.
+Before this repair, a partial structure/manifest sample had checked **1,358 of 5,964** endpoints at 03:30:33 UTC: 1,218 images (1,216 structurally available, two unavailable) and 140 HLS manifests (86 available, 54 unavailable). The remaining 4,606 had no dated audit. The full audit supersedes those weaker checks. It still does not claim that every video plays in a browser or that any source will stay available; representative advancing playback is tested separately. Six visually verified Caltrans maintenance-image variants are detected, while other placeholder designs may require future verification.

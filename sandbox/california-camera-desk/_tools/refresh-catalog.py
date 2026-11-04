@@ -11,6 +11,7 @@ import argparse, ast, collections, concurrent.futures, datetime as dt
 import email.utils, gzip, hashlib, json, math, re, struct, time
 import urllib.error, urllib.parse, urllib.request
 from pathlib import Path
+from audit_media import integrate as integrate_media_health
 
 HOME = 'https://cwwp2.dot.ca.gov/'
 PAGE = HOME + 'closed-circuit-television-cameras.html'
@@ -120,7 +121,7 @@ def normalized_record(raw,origin='district',official_url=None):
     # The remainder link to QuickMap rather than advertising guessed pages.
     return {'id':f'caltrans:{district}:{index}','siteId':f'caltrans:{district}:{re.sub(r"-\d+$", "", index)}','sourceId':index,'provider':'Caltrans','providerKey':'caltrans',
       'name':name,'location':name,'imageDescription':desc,'nearbyPlace':clean(location.get('nearbyPlace')),'city':'','metro':region(location),'region':region(location),
-      'district':district,'county':clean(location.get('county')),'lat':lat,'lon':lon,'hasValidCoordinates':valid,
+      'district':district,'county':clean(location.get('county')),'sourceCounty':clean(location.get('county')),'countySource':'Caltrans catalog','lat':lat,'lon':lon,'hasValidCoordinates':valid,
       'road':road_name(location.get('route')),'sourceRoad':clean(location.get('route')),'direction':clean(location.get('direction')),'directionSource':'published-travel-side','facingDirection':facing,
       'elevationFeet':number(location.get('elevation')),'postmile':clean(location.get('postmile')),'milepost':number(location.get('milepost')),'postmilePrefix':clean(location.get('postmilePrefix')),'routeSuffix':clean(location.get('routeSuffix')),'alignment':clean(location.get('alignment')),
       'imageUrl':image_url,'videoUrl':video,'sourceVideoUrl':stream,'officialUrl':official_url or 'https://quickmap.dot.ca.gov/',
@@ -147,6 +148,24 @@ def county_records(rows):
               'imageStatus':'official','videoStatus':'official','checkedAt':None,'embedMode':'official','recordTimestamp':{},'sourceUpdatedAt':None,'captureTime':None,'catalogOrigin':'county-public-viewer','category':'Local roads',
               'sourceStatus':'Official viewer · choose the named intersection and direction','officialInstructions':f"Choose {r['name']}, then {facing}. The county does not publish a verified per-camera deep link.",'countyCameraId':clean(r.get(facing+'Cam'))})
     return result
+
+def apply_geographic_overrides(cameras,override_path):
+    if not override_path.exists():return {'file':str(override_path),'status':'missing','applied':0,'skipped':[]}
+    data=json.loads(override_path.read_text());overrides=data.get('overrides',{});applied=[];skipped=[]
+    by_id={c['id']:c for c in cameras}
+    for ident,override in overrides.items():
+        c=by_id.get(ident)
+        if not c or c.get('providerKey')!='caltrans':skipped.append({'id':ident,'reason':'ID not in current Caltrans catalog'});continue
+        source_county=c.get('sourceCounty') or c.get('county')
+        if source_county!=override['sourceCounty']:
+            skipped.append({'id':ident,'reason':'Provider county changed; manual review needed'});continue
+        if c['lat'] is None or c['lon'] is None or abs(c['lat']-override['latitude'])>0.0001 or abs(c['lon']-override['longitude'])>0.0001:
+            skipped.append({'id':ident,'reason':'Coordinates changed; manual review needed'});continue
+        c['county']=override['county'];c['countySource']=override['method']
+        c['geographicOverride']={'verifiedAt':override['verifiedAt'],'sourceUrl':override['sourceUrl'],'sourceCounty':override['sourceCounty'],'county':override['county']}
+        c['metro']=c['region']=region({'county':c['county'],'latitude':c['lat'],'longitude':c['lon']})
+        applied.append(ident)
+    return {'file':override_path.name,'sourceDocumentation':data.get('sourceDocumentation'),'applied':len(applied),'appliedIds':applied,'skipped':skipped}
 
 def fetch_source(raw_dir,key,url,refresh=True):
     file=raw_dir/key
@@ -243,7 +262,9 @@ def reconcile(raw_dir,rows,refresh):
             image=safe_url(a.get('currentImageURL'));video=safe_url(a.get('streamingVideoURL'))
             if (image and endpoint_key(image) in images) or (video and endpoint_key(video) in videos):aliases.append({'id':ident,'name':a['locationName']});continue
             absent.append(a)
-        report['gis']={'fetchedAt':gis.get('fetchedAt'),'records':len(gis['features']),'pagination':'returnIdsOnly, all object IDs in batches of 100','absentIds':len(absent)+len(aliases),'endpointAliases':aliases,'additionalCandidates':len(absent),'added':[],'rejected':[]}
+        report['gis']={'fetchedAt':gis.get('fetchedAt'),'records':len(gis['features']),'pagination':'returnIdsOnly, all object IDs in batches of 100','absentIds':len(absent)+len(aliases),'endpointAliases':aliases,'additionalCandidates':len(absent),'added':[],'retainedLastKnownGood':[],'rejected':[]}
+        prior_catalog_file=raw_dir.parent/'camera-catalog.json'
+        prior_by_id={r['id']:r for r in json.loads(prior_catalog_file.read_text()).get('cameras',[]) if r.get('catalogOrigin')=='official-gis-supplement'} if prior_catalog_file.exists() else {}
         # GIS is an older inventory. Only add missing records after a fresh
         # endpoint check and label its origin. Avoid resurrecting dead feeds.
         def check_supplement(a):
@@ -256,6 +277,11 @@ def reconcile(raw_dir,rows,refresh):
             for c,tests in pool.map(check_supplement,absent):
                 if any(t['status']=='available' for t in tests):
                     c['supplementAudit']=tests;cameras.append(c);report['gis']['added'].append(c['id'])
+                elif c['id'] in prior_by_id:
+                    retained=prior_by_id[c['id']].copy()
+                    retained['supplementAudit']=tests
+                    cameras.append(retained)
+                    report['gis']['retainedLastKnownGood'].append({'id':c['id'],'reason':'Fresh candidate reachability failed; prior stable view retained for search and saved boards','checks':tests})
                 else:report['gis']['rejected'].append({'id':c['id'],'name':c['name'],'checks':tests})
     except Exception as e:
         retained=[]
@@ -270,6 +296,8 @@ def reconcile(raw_dir,rows,refresh):
 
 def build(args):
     out=args.output.resolve();raw_dir=out/'raw';raw_dir.mkdir(parents=True,exist_ok=True)
+    previous_catalog_file=out/'camera-catalog.json'
+    previous_full_sweep=(json.loads(previous_catalog_file.read_text()).get('fullSweepCompletedAt') if previous_catalog_file.exists() else None)
     travel_path=out/'travel-sources.json'
     try:
         chain_page=HOME+'chain-controls.html'
@@ -322,6 +350,12 @@ def build(args):
     except Exception as e:
         county_error=str(e);reconciliation['santaClaraCounty']={'error':county_error}
         if county_file.exists():cameras.extend(county_records(json.loads(county_file.read_text())))
+    override_path=out/'geographic-overrides.json'
+    if not override_path.exists():
+        project_root=Path(__file__).resolve().parents[1]
+        default_data=project_root if Path(__file__).resolve().parent.name=='_tools' else project_root/'dist'
+        override_path=default_data/'geographic-overrides.json'
+    reconciliation['geographicOverrides']=apply_geographic_overrides(cameras,override_path)
     # Restore dated audit records when rebuilding metadata without a media audit.
     audit_path=out/'source-audit.json';old_audit=json.loads(audit_path.read_text()) if audit_path.exists() else {};endpoints={}
     for e in old_audit.get('endpoints',[]):endpoints[endpoint_key(e['url'])]=e
@@ -345,7 +379,13 @@ def build(args):
         if args.audit_limit:tasks=tasks[:args.audit_limit]
         with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
             for index,(key,result) in enumerate(pool.map(audit_endpoint,tasks),1):
-                endpoints[key]=result
+                previous=endpoints.get(key)
+                # This legacy diagnostic checks only image structure or a
+                # top-level playlist. It must never erase a decoded check.
+                if not (previous and previous.get('verificationMethod') in {
+                    'image-decoded','image-decode-attempt','hls-segment-structure',
+                    'ffmpeg-decoded-segment','hls-segment-attempt'}):
+                    endpoints[key]=result
                 if index%100==0:
                     print(f'Audited {index}/{len(tasks)} endpoints',flush=True)
                     write_json(out/'audit-progress.json',{'startedAt':audit_start,'checkedAt':now(),'done':index,'total':len(tasks),'endpoints':list(endpoints.values())})
@@ -354,7 +394,14 @@ def build(args):
         image=endpoints.get(endpoint_key(c['imageUrl'])) if c.get('imageUrl') else None
         video=endpoints.get(endpoint_key(c['videoUrl'])) if c.get('videoUrl') else None
         for e in c.pop('supplementAudit',[]):
-            endpoints[endpoint_key(e['url'])]=e
+            key=endpoint_key(e['url'])
+            previous=endpoints.get(key)
+            # Reconciliation rechecks older GIS omission candidates to decide
+            # inclusion, but its quick structure/manifest probe must not erase
+            # a stronger decoded media audit for the same listed endpoint.
+            if previous and previous.get('verificationMethod') in {'image-decoded','image-decode-attempt','hls-segment-structure','ffmpeg-decoded-segment','hls-segment-attempt'}:
+                e=previous
+            else:endpoints[key]=e
             if e['kind']=='image':image=e
             else:video=e
         c['imageStatus']=image['status'] if image else c['imageStatus'];c['videoStatus']=video['status'] if video else c['videoStatus']
@@ -370,18 +417,25 @@ def build(args):
     all_endpoints={(kind,endpoint_key(c[field])) for c in cameras for kind,field in [('image','imageUrl'),('video','videoUrl')] if c.get(field)}
     endpoints={key:value for key,value in endpoints.items() if (value['kind'],key) in all_endpoints}
     coverage={'scope':'Dated partial endpoint sample' if len(endpoints)<len(all_endpoints) else 'Dated all-listed-endpoint check','listedUniqueEndpoints':len(all_endpoints),'checkedUniqueEndpoints':len(endpoints),'uncheckedUniqueEndpoints':len(all_endpoints)-len(endpoints),'method':'Retained completed endpoint checks plus stratified district/media samples and all GIS supplement candidates; no continuous streaming.' if args.audit_sample_per_district else 'Bounded endpoint checks; see per-endpoint dates and methods.','imageChecks':sum(e['kind']=='image' for e in endpoints.values()),'videoManifestChecks':sum(e['kind']=='video' for e in endpoints.values()),'samplePerDistrictMedia':args.audit_sample_per_district or None}
-    fetched=now();catalog={'version':1,'auditCoverage':coverage,'fetchedAt':fetched,'source':'Caltrans CWWP2 and official Santa Clara County local-road viewer','sourceUrl':PAGE,'sources':sources,'auditCompletedAt':now() if args.audit else old_audit.get('completedAt'),'stats':stats,'reconciliation':reconciliation,'cameraLocationMethod':'Provider source groups; Caltrans district-local index base before a documented -number view suffix, Santa Clara County intersection IDs. These are not independently verified physical devices.','regionMethod':'Editorial county groups with explicit coordinate splits in large counties; nearbyPlace is a provider nearby-place label, not a municipal boundary.','cameras':cameras}
+    fetched=now();catalog={'version':1,'auditCoverage':coverage,'fetchedAt':fetched,'source':'Caltrans CWWP2 and official Santa Clara County local-road viewer','sourceUrl':PAGE,'sources':sources,'auditCompletedAt':now() if args.audit else old_audit.get('completedAt'),'fullSweepCompletedAt':previous_full_sweep,'stats':stats,'reconciliation':reconciliation,'cameraLocationMethod':'Provider source groups; Caltrans district-local index base before a documented -number view suffix, Santa Clara County intersection IDs. These are not independently verified physical devices.','regionMethod':'Editorial county groups with explicit coordinate splits in large counties; nearbyPlace is a provider nearby-place label, not a municipal boundary.','cameras':cameras}
+    catalog,health_manifest=integrate_media_health(catalog,endpoints,audit_start if args.audit else old_audit.get('startedAt'),now() if args.audit else old_audit.get('completedAt'),args)
+    # The catalog embeds the compact per-view health needed by both sites;
+    # source-audit is the dated, auditable per-endpoint maintenance manifest.
     write_json(out/'camera-catalog.json',catalog)
-    write_json(audit_path,{'startedAt':audit_start if args.audit else old_audit.get('startedAt'),'completedAt':now() if args.audit else old_audit.get('completedAt'),'method':'One full image structure check or one HLS manifest request per unique HTTPS endpoint, concurrency <=4, no continuous stream. Browser decode verified separately. HTTP Last-Modified is not a verified capture timestamp.','stats':stats,'coverage':coverage,'cameras':audit_rows,'endpoints':sorted(endpoints.values(),key=lambda e:(e['kind'],e['url']))})
+    write_json(audit_path,health_manifest)
     (out/'audit-progress.json').unlink(missing_ok=True)
     print(json.dumps(stats,indent=2),flush=True)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output',type=Path,default=Path(__file__).resolve().parents[1]/'dist')
+    project_root=Path(__file__).resolve().parents[1]
+    default_output=project_root if Path(__file__).resolve().parent.name=='_tools' else project_root/'dist'
+    parser.add_argument('--output',type=Path,default=default_output)
     parser.add_argument('--from-cache',action='store_true',help='Reuse saved official catalogs; GIS candidates are still checked before inclusion')
     parser.add_argument('--audit',action='store_true',help='Make one bounded check for every unique media endpoint')
     parser.add_argument('--audit-limit',type=int,help='For an explicitly partial diagnostic audit only')
     parser.add_argument('--audit-sample-per-district',type=int,help='Explicit partial audit: this many image and HLS URLs per reporting district')
     parser.add_argument('--workers',type=int,default=4,choices=range(1,5))
+    parser.add_argument('--success-ttl-hours',type=float,default=168)
+    parser.add_argument('--failure-ttl-hours',type=float,default=48)
     build(parser.parse_args())

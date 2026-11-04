@@ -30,13 +30,13 @@ The current `data/index.json` contains **26,569 listed views at 26,189 source-ca
 | Arizona | 644 | 678 | 2026-11-03T23:00:44.555065Z |
 | District of Columbia | 137 | 137 | 2026-11-03T23:14:02.604603+00:00 |
 | New York | 2,863 | 2,863 | 2026-11-03T23:35:31Z |
-| California | 3,770 | 4,110 | 2026-11-04T03:30:33Z |
+| California | 3,770 | 4,110 | 2026-11-04T06:18:52Z (full sweep completed 06:14:45Z) |
 | Washington | 1,645 | 1,645 | 2026-11-04T00:03:18.580670Z |
 | Oregon | 1,177 | 1,179 | 2026-11-04T03:28:04.193798Z |
 | Nevada | 651 | 651 | 2026-11-04T03:50:55.203472Z |
 | Florida | 4,991 | 4,991 | 2026-11-04T04:27Z (four-image sample) |
 
-Media categories are configured capabilities: **7,102 video**, **17,845 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 15,880 available, 1,199 unavailable, 51 stale, 1,557 official, 7,882 unchecked. Florida's 4,991 primary categories are snapshots; its listed HLS URLs are not directly playable from this site's origin.
+Media categories are configured capabilities: **7,102 video**, **17,845 snapshot**, **1,622 official**. A video-capable view may also provide a snapshot. These primary categories count each view once, and do not guarantee playback. Combined dated availability: 17,368 available, 1,975 unavailable, 51 stale, 1,557 official, 5,618 unchecked. California counts only decoded snapshots or decoded video frames as available; an HLS playlist or segment structure alone remains unchecked for playback. Florida's 4,991 primary categories are snapshots; its listed HLS URLs are not directly playable from this site's origin.
 
 California contributes **4,110 views at 3,770 source location groups**: 3,645 Caltrans snapshot-capable views, including 2,326 configured HLS capabilities, and 465 Santa Clara County official-viewer views grouped at 126 intersections. The GIS comparison supplied 33 additional currently reachable views absent from the district files; their older GIS provenance remains explicit.
 

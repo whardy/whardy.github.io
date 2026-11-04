@@ -237,6 +237,10 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
                 if state == 'TX' and embed == 'relay' and re.fullmatch(r'txdot-[a-z]{3}-[a-f0-9]{16}', source_id):
                     image_url = RELAY_ROOT + '/api/snapshot/' + source_id
             video_status = normalize_status(checked.get('status')) if is_wv else normalize_status(camera.get('videoStatus')) if video_url else 'unchecked'
+            if state == 'CA' and video_status == 'available' and camera.get('mediaHealth', {}).get('video', {}).get('verificationMethod') not in {'ffmpeg-decoded-segment', 'browser-playback'}:
+                # Reachable playlists or segment structure alone are not
+                # decoded video for the hub's dated availability summary.
+                video_status = 'unchecked'
             image_url, video_url = https_url(image_url), https_url(video_url)
             media_type = 'video' if video_url else 'snapshot' if image_url else 'official'
             disabled = bool(camera.get('disabled'))
@@ -357,6 +361,7 @@ def build_state(repository, state, state_name, slug, base_provider, source_path=
         'geographyOverridesApplied': len(overrides),
     }
     if state == 'CA':
+        stats['sourceGeographyOverridesApplied'] = sum(bool(c.get('geographicOverride')) for c in source_sites)
         stats['auditCoverage'] = audit.get('coverage')
         stats['sourceAuditUrl'] = published + 'source-audit.json'
     return {'schemaVersion': 1, 'state': state, 'stateName': state_name, 'sourceUpdatedAt': fetched_at, 'auditCheckedAt': audit_at, 'cameras': cameras}, stats
