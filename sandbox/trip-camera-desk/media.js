@@ -24,7 +24,7 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
   const snapshotInterval=camera=>Math.max(60,Number(camera.snapshotUpdateSeconds)||60)*1000;
   function eligible(item){
     const camera=item.camera;
-    const caReady=camera.state==='CA'?californiaHealth(camera).checkedVideo:true;
+    const caReady=camera.state==='CA'?californiaHealth(camera).checkedVideo&&camera.mediaHealth?.video?.browserCors!==false:true;
     const flReady=camera.state!=='FL'||camera.videoStatus==='available'&&camera.videoAutoplayAllowed!==false;
     return stateAutoplay(camera.state)&&item.autoplay&&caReady&&flReady&&!(camera.state!=='WV'&&camera.state!=='CA'&&camera.videoStatus==='unavailable')&&camera.videoUrl&&(!camera.disabled||camera.state==='CA'&&caReady)&&item.visible&&!item.disposed&&!item.blocked&&!item.suspended&&(!autoplayScope||autoplayScope.contains(item.container));
   }

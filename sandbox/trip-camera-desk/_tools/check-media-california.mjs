@@ -140,6 +140,9 @@ try {
   const unavailableManager=manager();const unavailable=new Element();unavailableManager.snapshot(unavailable,{...ca('FAILED'),videoStatus:'unavailable',mediaHealth:{video:{status:'unavailable',verificationMethod:'ffmpeg-decoded-segment',checkedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+86400_000).toISOString()}},imageUrl:'https://example.com/current.jpg',snapshotUpdateSeconds:300});
   visible(unavailable,true);await flush();assert.equal(unavailableManager.count,0);assert.equal(videoIn(unavailable),undefined);assert.ok(images.at(-1).src.includes('current.jpg'));
   images.at(-1).onload();unavailableManager.dispose(unavailable);
+  const corsBlockedManager=manager(),corsBlockedView=new Element(),corsBlockedCamera=ca('CORS-BLOCKED');
+  corsBlockedCamera.mediaHealth.video.browserCors=false;corsBlockedManager.snapshot(corsBlockedView,corsBlockedCamera);visible(corsBlockedView,true);await flush();
+  assert.equal(corsBlockedManager.count,0,'Source-decoded HLS with known browser CORS restriction does not autoplay');corsBlockedManager.dispose(corsBlockedView);
 
   // A CA player must prove advancing playback before it is labeled LIVE.
   // A subsequent stall gets one bounded reconnect, then a snapshot fallback.
