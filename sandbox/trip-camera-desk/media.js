@@ -193,6 +193,7 @@ export function createMediaManager({onChange=()=>{},onHealth=()=>{},onMessage=()
       onStatus('Video failed in this browser. Showing a snapshot where available; retry or open the official viewer.');
     };
     video.addEventListener('error',()=>fail('video-element-error'));
+    video.addEventListener('pause',()=>{if(stopped||camera.state!=='CA'||!verified)return;verified=false;player.verified=false;label.textContent='Playback paused · checking feed';onChange(players.size);});
     video.addEventListener('timeupdate',progress);
     video.addEventListener('playing',()=>{if(stopped)return;clearTimeout(timer);if(camera.state==='CA'){label.textContent='Video started · checking progress…';progressAt=Date.now();lastTime=Number(video.currentTime)||0;clearTimeout(watchdog);watchdog=setTimeout(checkProgress,5000);}else{player.verified=true;label.textContent='LIVE · source delay varies';onChange(players.size);onStatus('Live video connected. Separate feeds are not synchronized.');}});
     video.addEventListener('waiting',()=>{if(!stopped&&camera.state==='CA'){verified=false;player.verified=false;label.textContent='Buffering video…';onChange(players.size);}});

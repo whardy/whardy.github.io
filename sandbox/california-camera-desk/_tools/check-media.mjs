@@ -164,8 +164,10 @@ try {
   stalled.currentTime=2;stalled.emit('timeupdate');await flush();assert(healthEvents.some(event=>event.phase==='playing'));
   const initialSuccesses=healthEvents.filter(event=>event.phase==='playing'&&event.status==='available').length,renewNow=Date.now;let renewClock=renewNow();Date.now=()=>renewClock+6*60000;
   try{stalled.currentTime=2.3;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.filter(event=>event.phase==='playing'&&event.status==='available').length,initialSuccesses+1,'Advancing long-running video renews browser health before expiry');}finally{Date.now=renewNow;}
+  stalled.paused=true;stalled.emit('pause');await flush();assert.equal(healthEvents.at(-1).phase,'buffering','A browser pause clears LIVE immediately');
+  stalled.paused=false;stalled.currentTime=2.6;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.at(-1).phase,'playing','Advancing after pause restores LIVE');
   stalled.emit('stalled');await flush();assert.equal(healthEvents.at(-1).phase,'buffering','stalled event must clear LIVE immediately without failing source');
-  stalled.currentTime=2.5;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.at(-1).phase,'playing','advancing playback recovers LIVE');
+  stalled.currentTime=2.9;stalled.emit('timeupdate');await flush();assert.equal(healthEvents.at(-1).phase,'playing','advancing playback recovers LIVE');
   const oldClock=Date.now;let stallClock=oldClock();Date.now=()=>stallClock;
   try{stallClock+=13000;await runTimer(3500);assert(healthEvents.some(event=>event.phase==='reconnecting'));
     await runTimer(3500);stallClock+=31000;await runTimer(3500);assert(healthEvents.some(event=>event.phase==='failed'&&event.failureCategory==='no-decoded-progress'));
