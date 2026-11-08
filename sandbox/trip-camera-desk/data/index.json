@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "builtAt": "2026-11-07T16:02:43.333528Z",
+  "builtAt": "2026-11-08T16:26:37.955926Z",
   "totals": {
     "statesAndDistricts": 14,
     "views": 26569,
@@ -13,8 +13,8 @@
       "official": 1622
     },
     "availabilityCounts": {
-      "available": 17383,
-      "unavailable": 1958,
+      "available": 17390,
+      "unavailable": 1951,
       "stale": 51,
       "official": 1557,
       "unchecked": 5620
@@ -386,14 +386,14 @@
         "official": 465
       },
       "availabilityCounts": {
-        "available": 2762,
-        "unavailable": 880,
+        "available": 2769,
+        "unavailable": 873,
         "unchecked": 3,
         "official": 465
       },
       "imageStatusCounts": {
-        "available": 2728,
-        "unavailable": 917,
+        "available": 2731,
+        "unavailable": 914,
         "unchecked": 465
       },
       "videoStatusCounts": {
@@ -402,7 +402,7 @@
         "available": 1315
       },
       "sourceUpdatedAt": "2026-11-04T06:20:14Z",
-      "auditCheckedAt": "2026-11-07T16:02:39Z",
+      "auditCheckedAt": "2026-11-08T16:26:34Z",
       "source": "Caltrans CWWP2 and official Santa Clara County local-road viewer",
       "sourceUrl": "https://cwwp2.dot.ca.gov/closed-circuit-television-cameras.html",
       "catalogUrl": "https://whardy.github.io/sandbox/california-camera-desk/camera-catalog.json",
@@ -417,7 +417,7 @@
         "imageChecks": 3645,
         "videoChecks": 2319,
         "pngFrameChecks": 1312,
-        "knownPlaceholderImages": 913,
+        "knownPlaceholderImages": 910,
         "hlsCorsIncompatible": 0,
         "methodCounts": {
           "image-decoded": 3641,
@@ -427,8 +427,8 @@
           "hls-segment-structure": 3
         },
         "statusCounts": {
-          "available": 4043,
-          "unavailable": 1742,
+          "available": 4046,
+          "unavailable": 1739,
           "unchecked": 179
         },
         "successTtlHours": 168.0,
@@ -436,8 +436,8 @@
         "method": "One bounded decode attempt per listed image endpoint; HLS master, child, segment and FFmpeg frame attempts where each prior stage is reachable. Browser playback is sampled separately."
       },
       "sourceAuditUrl": "https://whardy.github.io/sandbox/california-camera-desk/source-audit.json",
-      "sha256": "4144e12a897ef9de706ff40aee62e13f77111a342a2dd5e8d364e70e42933b24",
-      "bytes": 12315748
+      "sha256": "dc6af2d352e061c6d4441a933da208fd65b64279370d595c6e42e3138f531996",
+      "bytes": 12315922
     },
     {
       "state": "WA",
